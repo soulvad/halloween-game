@@ -1,5 +1,9 @@
 extends Node
 
+func _frames(n: int) -> void:
+	for i in n: await get_tree().physics_frame
+
+
 func _ready() -> void:
 	var menu = load("res://scenes/main_menu.tscn").instantiate()
 	add_child(menu)
@@ -10,74 +14,89 @@ func _ready() -> void:
 	add_child(g)
 	var p = g.get_node("Player")
 	var st = func(n): return g.find_child(n, true, false)
-	await get_tree().physics_frame
+	var spawn: Vector3 = p.global_position
+	await _frames(1)
 
-	# level 1: invisible, only outer/sealed walls block, hunters absent
+	# level 1: invisible, only outer walls block, hunters absent, priest walks
 	assert(GameState.level == 1 and p.collision_mask == 1)
-	assert(not st.call("Hunter1").visible)
-	st.call("Candle").interact(p)
-	st.call("Candle").interact(p)  # cooldown: no second charge
+	assert(not st.call("HunterKitchen").visible and st.call("Priest").visible)
+	st.call("Mirror").interact(p)
+	st.call("Mirror").interact(p)  # cooldown: no second charge
 	assert(GameState.charge == 1.0)
-	st.call("Portrait").interact(p)  # needs level 2
-	assert(GameState.charge == 1.0)
-	for n in ["Clock", "Mirror", "Ouija"]: st.call(n).interact(p)
+	st.call("CrystalBall").interact(p)  # needs level 2
+	st.call("Letter").interact(p)  # too weak to carry
+	assert(GameState.charge == 1.0 and p.held == "")
+	for n in ["Clock", "Ouija", "MusicBox"]: st.call(n).interact(p)
 	assert(GameState.charge == 4.0)
 
-	# altar: level 2, walls of solid_from 2 now block, hunters appear
+	# altar needs the threshold but spends nothing; the level then burns charge
 	st.call("Altar").interact(p)
-	assert(GameState.level == 2 and GameState.charge == 0.0 and p.collision_mask == 3)
-	assert(st.call("Hunter1").visible and not st.call("Hunter2").visible)
+	assert(GameState.level == 2 and GameState.charge == 4.0 and p.collision_mask == 3)
+	assert(st.call("HunterKitchen").visible and not st.call("HunterHall").visible)
+	st.call("Altar").interact(p)  # 4 < 8: no level 3 yet
+	assert(GameState.level == 2)
+	await _frames(10)
+	assert(GameState.charge < 4.0)
 
-	# a good person who notices the ghost believes once (+2)
-	p.global_position = st.call("Neighbor").global_position + Vector3(1, 0, 0)
-	for i in 3: await get_tree().physics_frame
-	assert(st.call("Neighbor").believes and GameState.charge == 2.0)
-	for i in 3: await get_tree().physics_frame
-	assert(GameState.charge == 2.0)
-
-	# door + memento
-	var door = st.call("BedroomDoor")
-	door.interact(p)
-	assert(door.used and door.collision_layer == 8)
-	st.call("Photo").interact(p)
-	assert(p.held == "Фото")
-
-	# fade: costs charge, nobody sees, inner walls pass
-	GameState.charge = 3.0
-	assert(GameState.fade())
-	assert(GameState.is_fading() and p.collision_mask == 1 and not GameState.visible_to(1))
-	assert(GameState.charge == 1.0)
-	GameState.fade_left = 0.01
-	await get_tree().process_frame
-	await get_tree().process_frame
-	assert(not GameState.is_fading() and p.collision_mask == 3)
-
-	# hunter touch drains charge, empty charge drops a level
-	GameState.charge = 5.0
-	var hunter = st.call("Hunter1")
-	p.global_position = hunter.global_position + Vector3(0.5, 0, 0)
-	for i in 5: await get_tree().physics_frame
-	assert(GameState.charge < 5.0)
-	GameState.drain(100)
-	assert(GameState.level == 1 and GameState.is_fading() and not hunter.visible)
-
-	# goal: Mom hears only at level 3, memento in hands -> let go
+	# memories go to Mom one by one; she can't be let go before level 3
 	var mom = st.call("Mom")
+	for n in ["Letter", "Ring", "Photo"]:
+		st.call(n).interact(p)
+		assert(p.held != "")
+		mom.interact(p)
+		assert(p.held == "")
+	assert(GameState.memories == 3)
 	mom.interact(p)
 	assert(GameState.phase == GameState.Phase.PLAY)
-	GameState.set_level(3)
-	assert(p.collision_mask == 7 or GameState.is_fading())
+
+	# blow out a holy candle for charge
+	var c1 = st.call("Candle1")
+	GameState.charge = 5.0
+	c1.interact(p)
+	assert(not c1.lit and GameState.charge == 4.0)
+
+	# holy ground burns: empty charge drops a level, then a grace period
+	p.global_position = st.call("Candle2").global_position
+	GameState.charge = 0.05
+	await _frames(5)
+	assert(GameState.level == 1 and GameState.grace > 0)
+	# at level 1 an empty charge banishes back to the spawn
+	GameState.grace = 0.0
+	GameState.charge = 0.05
+	await _frames(5)
+	assert(p.global_position.distance_to(spawn) < 0.1)
+
+	# upkeep alone drops the level when charge runs out
+	GameState.grace = 0.0
+	GameState.set_level(2)
+	GameState.charge = 0.001
+	await _frames(3)
+	assert(GameState.level == 1)
+
+	# win: level 3 + all memories
+	GameState.charge = 9.0
+	assert(GameState.level_up() and GameState.level_up() and GameState.level == 3)
 	g._update_hud()
 	print("HUD: ", g.get_node("HUD/InfoLabel").text.replace("\n", " | "))
 	mom.interact(p)
 	assert(GameState.phase == GameState.Phase.END and GameState.won)
-	assert(g.get_node("HUD/MenuButton").visible)
+	g.queue_free()
+	await _frames(2)
 
-	# midnight = loss
-	GameState.reset()
-	g.time_left = 0.0
-	await get_tree().process_frame
-	await get_tree().process_frame
+	# loss: the priest walks his route and lights every candle (fast-forwarded)
+	g = load("res://scenes/game.tscn").instantiate()
+	add_child(g)
+	g.get_node("Player").set_physics_process(false)
+	Engine.time_scale = 30.0
+	Engine.max_physics_steps_per_frame = 64
+	var t0 := Time.get_ticks_msec()
+	var game_t := 0.0
+	while GameState.phase == GameState.Phase.PLAY and Time.get_ticks_msec() - t0 < 60000:
+		await get_tree().physics_frame
+		game_t += get_physics_process_delta_time()
+	Engine.time_scale = 1.0
+	var lit := get_tree().get_nodes_in_group("holy_candle").filter(func(c): return c.lit).size()
+	print("Priest lit %d candles, round lasted ~%d s, priest at %s" % [lit, game_t, g.find_child("Priest", true, false).global_position])
 	assert(GameState.phase == GameState.Phase.END and not GameState.won)
 	print("ALL TESTS OK")
 	get_tree().quit()

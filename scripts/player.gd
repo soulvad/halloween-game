@@ -10,6 +10,7 @@ const ALPHA := [0.0, 0.25, 0.55, 0.9]  ## body opacity per visibility level
 const FADE_ALPHA := 0.1
 
 var held := ""  ## memento name or ""
+var held_color := Color.WHITE
 var _held_visual: Node3D
 var _t := 0.0
 
@@ -20,6 +21,7 @@ var _t := 0.0
 
 func _ready() -> void:
 	add_to_group("player")
+	GameState.player = self
 	GameState.visibility_changed.connect(_on_visibility_changed)
 	_on_visibility_changed()
 
@@ -61,6 +63,7 @@ func target_station():
 
 func set_held(item: String, color := Color.WHITE) -> void:
 	held = item
+	held_color = color
 	if _held_visual:
 		_held_visual.queue_free()
 		_held_visual = null

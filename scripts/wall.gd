@@ -55,3 +55,28 @@ static func box(s: Vector3, c: Color) -> MeshInstance3D:
 	var m := MeshInstance3D.new()
 	m.mesh = mesh
 	return m
+
+
+## Glowing floor circle + warm light marking holy ground (lit candle, priest).
+static func holy_glow(radius: float) -> Node3D:
+	var root := Node3D.new()
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(1, 0.85, 0.35, 0.3)
+	var disc := CylinderMesh.new()
+	disc.top_radius = radius
+	disc.bottom_radius = radius
+	disc.height = 0.02
+	disc.material = mat
+	var m := MeshInstance3D.new()
+	m.mesh = disc
+	m.position.y = 0.02
+	root.add_child(m)
+	var light := OmniLight3D.new()
+	light.light_color = Color(1, 0.8, 0.45)
+	light.omni_range = radius * 1.6
+	light.light_energy = 1.5
+	light.position.y = 1.2
+	root.add_child(light)
+	return root

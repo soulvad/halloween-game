@@ -3,12 +3,15 @@ extends CharacterBody3D
 ## Living person, wanders around its spawn point. Walls always block it.
 ## GOOD: the first time it notices the ghost it believes in it and gives charge.
 ## HUNTER: exists from `active_from`, chases a visible ghost, its touch drains charge.
+## PRIEST: walks `route`, prays at every unlit candle and lights it; his aura is holy ground.
 
 const Wall = preload("res://scripts/wall.gd")
 
-enum Kind { GOOD, HUNTER }
+enum Kind { GOOD, HUNTER, PRIEST }
 
-const SPEED := [2.0, 4.2]  ## by kind; the ghost (6) is faster
+const SPEED := [2.0, 4.2, 1.6]  ## by kind; the ghost (6) is faster
+const PRAY_TIME := 30.0
+const AURA := 2.0
 const SIGHT := 6.0
 const TOUCH := 1.3
 const WANDER := 3.0
@@ -22,8 +25,11 @@ const WALLS := 7  ## layers 1-3
 @export_range(1, 3) var sees_from := 2
 @export_range(1, 3) var active_from := 1
 @export var color := Color(0.9, 0.75, 0.55)
+@export var route: Array[NodePath] = []  ## PRIEST: waypoints and candles, looped
 
 var believes := false
+var pray := 0.0  ## PRIEST: seconds prayed at the current candle
+var _route_i := 0
 var _home: Vector3
 var _wander := Vector3.ZERO
 var _wander_t := 0.0
@@ -50,6 +56,8 @@ func _ready() -> void:
 	_label.pixel_size = 0.006
 	_label.position.y = 2.1
 	add_child(_label)
+	if kind == Kind.PRIEST:
+		add_child(Wall.holy_glow(AURA))
 	GameState.visibility_changed.connect(_on_visibility_changed)
 	_on_visibility_changed()
 
@@ -76,7 +84,10 @@ func _physics_process(delta: float) -> void:
 	if sees and kind == Kind.GOOD and not believes:
 		believes = true
 		GameState.add_charge(BELIEF_CHARGE)
-	if sees and kind == Kind.HUNTER:
+	if kind == Kind.PRIEST:
+		target = _priest_target(delta)
+		GameState.burn_near(global_position, AURA, delta)
+	elif sees and kind == Kind.HUNTER:
 		target = player().global_position
 	else:
 		_wander_t -= delta
@@ -92,7 +103,26 @@ func _physics_process(delta: float) -> void:
 	_label.text = _label_text(sees)
 
 
+## Walk to the next route node; at an unlit candle stay and pray, then light it.
+func _priest_target(delta: float) -> Vector3:
+	if route.is_empty():
+		return global_position
+	var n := get_node(route[_route_i]) as Node3D
+	if _flat_dist(n) > 0.5:
+		return n.global_position
+	if n.has_method("light") and not n.lit:
+		pray += delta
+		if pray >= PRAY_TIME:
+			n.light()
+			pray = 0.0
+		return global_position
+	_route_i = (_route_i + 1) % route.size()
+	return n.global_position
+
+
 func _label_text(sees: bool) -> String:
+	if kind == Kind.PRIEST:
+		return "%s: молиться %d с" % [title_text, ceili(PRAY_TIME - pray)] if pray > 0 else title_text
 	if kind == Kind.HUNTER:
 		return "Мисливець: бачу тебе!" if sees else title_text
 	return title_text + (" (вірить)" if believes else "")
