@@ -12,6 +12,9 @@ extends StaticBody3D
 		solid_from = v
 		_build()
 @export var color := Color(0.45, 0.42, 0.5)
+@export var people_only := false  ## blocks only people (layer 7) — e.g. rubble the ghost floats through
+
+const LAYER_PEOPLE_ONLY := 64
 
 var _mesh: MeshInstance3D
 
@@ -36,13 +39,13 @@ func _build() -> void:
 	shape.shape = BoxShape3D.new()
 	shape.shape.size = size
 	add_child(shape)
-	collision_layer = 1 << (solid_from - 1)
+	collision_layer = LAYER_PEOPLE_ONLY if people_only else 1 << (solid_from - 1)
 	collision_mask = 0
 
 
 ## Walls the ghost can pass right now look see-through.
 func _on_visibility_changed() -> void:
-	var passable := GameState.is_fading() and solid_from > 1 or GameState.level < solid_from
+	var passable := not people_only and (GameState.is_fading() and solid_from > 1 or GameState.level < solid_from)
 	_mesh.transparency = 0.65 if passable else 0.0
 
 

@@ -1,10 +1,30 @@
 extends Node
 
 func _frames(n: int) -> void:
-	for i in n: await get_tree().physics_frame
+	for i in n:
+		await get_tree().physics_frame
+		await get_tree().process_frame
+
+
+## Fast-forward (time_scale) until `cond` holds or `max_s` game seconds pass; returns game seconds waited.
+func _until(cond: Callable, max_s: float) -> float:
+	Engine.time_scale = 10.0
+	var t := 0.0
+	while not cond.call() and t < max_s:
+		await get_tree().physics_frame
+		t += get_physics_process_delta_time()
+	Engine.time_scale = 1.0
+	return t
 
 
 func _ready() -> void:
+	Engine.max_physics_steps_per_frame = 16
+	var UI = load("res://scripts/ui.gd")  # UI kit builds without errors
+	for c in [UI.button("Грати", "primary", "Enter", "play"), UI.pill("1 · Тінь", UI.CYAN, 17, "ghost"), UI.action_tile("E", "hand", UI.GOLD, "Взаємодія"), UI.title("Відпусти"), UI.vignette(UI.RED)]:
+		add_child(c)
+		c.queue_free()
+	assert(UI.icon_texture("ghost", 30).get_width() == 30)
+
 	var menu = load("res://scenes/main_menu.tscn").instantiate()
 	add_child(menu)
 	assert(menu.get_node("Box/Play") is Button)
@@ -13,59 +33,77 @@ func _ready() -> void:
 	var g = load("res://scenes/game.tscn").instantiate()
 	add_child(g)
 	var p = g.get_node("Player")
+	var hud = g.get_node("HUD")
 	var st = func(n): return g.find_child(n, true, false)
+	var olena = st.call("Olena")
+	var taras = st.call("Taras")
+	var priest = st.call("Priest")
 	var spawn: Vector3 = p.global_position
-	await _frames(1)
+	await _frames(2)
 
-	# level 1: invisible, only outer walls block, hunters absent, priest walks
-	assert(GameState.level == 1 and p.collision_mask == 1)
-	assert(not st.call("HunterKitchen").visible and st.call("Priest").visible)
-	st.call("Mirror").interact(p)
-	st.call("Mirror").interact(p)  # cooldown: no second charge
+	# level 1: invisible shadow in its own room, the priest hasn't come yet
+	assert(GameState.level == 1 and p.collision_mask == 1 and GameState.stage == GameState.Stage.HAUNT)
+	assert(not priest.visible and olena.visible)
+	st.call("Icon").interact(p)
+	st.call("Icon").interact(p)  # cooldown: no second charge
 	assert(GameState.charge == 1.0)
-	st.call("CrystalBall").interact(p)  # needs level 2
-	st.call("Letter").interact(p)  # too weak to carry
-	assert(GameState.charge == 1.0 and p.held == "")
-	for n in ["Clock", "Ouija", "MusicBox"]: st.call(n).interact(p)
+	for n in ["Toy", "Mirror", "Beads"]: st.call(n).interact(p)
 	assert(GameState.charge == 4.0)
 
-	# altar needs the threshold but spends nothing; the level then burns charge
-	st.call("Altar").interact(p)
-	assert(GameState.level == 2 and GameState.charge == 4.0 and p.collision_mask == 3)
-	assert(st.call("HunterKitchen").visible and not st.call("HunterHall").visible)
-	st.call("Altar").interact(p)  # 4 < 8: no level 3 yet
-	assert(GameState.level == 2)
-	await _frames(10)
-	assert(GameState.charge < 4.0)
+	# your bones = altar: the modal pauses, confirm needs the threshold but spends nothing
+	st.call("Bones").interact(p)
+	assert(hud._altar != null and get_tree().paused and GameState.level == 1)
+	await _frames(1)
+	hud._altar_confirm()
+	assert(not get_tree().paused and GameState.level == 2 and GameState.charge == 4.0 and p.collision_mask == 3)
 
-	# memories go to Mom one by one; she can't be let go before level 3
-	var mom = st.call("Mom")
-	for n in ["Letter", "Ring", "Photo"]:
-		st.call(n).interact(p)
-		assert(p.held != "")
-		mom.interact(p)
-		assert(p.held == "")
-	assert(GameState.memories == 3)
-	mom.interact(p)
-	assert(GameState.phase == GameState.Phase.PLAY)
+	# book, map, pause overlays open and close
+	hud.toggle_book()
+	await _frames(2)
+	assert(hud._book.visible)
+	hud.toggle_book()
+	hud.toggle_map()
+	await _frames(2)
+	assert(hud._map.visible)
+	hud.toggle_map()
+	hud.open_pause()
+	assert(get_tree().paused)
+	await _frames(1)
+	hud.resume()
+	assert(not get_tree().paused)
 
-	# blow out a holy candle for charge
-	var c1 = st.call("Candle1")
-	GameState.charge = 5.0
-	c1.interact(p)
-	assert(not c1.lit and GameState.charge == 4.0)
+	# HAUNT: a noise costs charge, archaeologists in earshot get uneasy and go check it; far ones don't hear
+	var bell = st.call("Bell")
+	GameState.charge = 6.0
+	bell.interact(p)  # archaeologists still at the entrance: too far
+	assert(GameState.unease == 0.0 and GameState.charge == 5.0 and GameState.haunts == 1)
+	bell.cooldown = 0.0
+	olena.global_position = bell.global_position + Vector3(2, 0, 1)
+	taras.global_position = bell.global_position + Vector3(3, 0, 1)
+	bell.interact(p)
+	assert(GameState.unease == 2.0 and olena._investigate > 0)
+	# a sighting at level 2 scares them once per level
+	p.global_position = olena.global_position + Vector3(1.5, 0, 0)
+	await _frames(3)
+	assert(GameState.unease == 6.0)
+	await _frames(3)
+	assert(GameState.unease == 6.0)
 
-	# holy ground burns: empty charge drops a level, then a grace period
-	p.global_position = st.call("Candle2").global_position
+	# priest's holy aura: empty charge drops a level (grace), at level 1 you're banished to your bones
+	GameState.unease = GameState.UNEASE_TO_CALL
+	await _frames(2)
+	assert(GameState.stage == GameState.Stage.PRIEST_COMING)
+	g.priest_in = 0.01
+	await _frames(3)
+	assert(GameState.stage == GameState.Stage.LURE and priest.visible)
+	p.global_position = priest.global_position
 	GameState.charge = 0.05
-	await _frames(5)
+	await _frames(3)
 	assert(GameState.level == 1 and GameState.grace > 0)
-	# at level 1 an empty charge banishes back to the spawn
 	GameState.grace = 0.0
 	GameState.charge = 0.05
-	await _frames(5)
+	await _frames(3)
 	assert(p.global_position.distance_to(spawn) < 0.1)
-
 	# upkeep alone drops the level when charge runs out
 	GameState.grace = 0.0
 	GameState.set_level(2)
@@ -73,30 +111,50 @@ func _ready() -> void:
 	await _frames(3)
 	assert(GameState.level == 1)
 
-	# win: level 3 + all memories
+	# LURE: a knock behind the rubble pulls the group up the passage; they start digging
 	GameState.charge = 9.0
-	assert(GameState.level_up() and GameState.level_up() and GameState.level == 3)
-	g._update_hud()
-	print("HUD: ", g.get_node("HUD/InfoLabel").text.replace("\n", " | "))
-	mom.interact(p)
+	GameState.set_level(2)
+	olena.global_position = Vector3(10.5, 0, -6)
+	taras.global_position = Vector3(9.5, 0, -5.5)
+	priest.global_position = Vector3(8, 0, -6)
+	p.global_position = spawn
+	st.call("Knock").interact(p)
+	var t := await _until(func(): return GameState.stage == GameState.Stage.DIG, 30)
+	print("Lured to the rubble in %.1f s" % t)
+	assert(GameState.stage == GameState.Stage.DIG)
+	t = await _until(func(): return GameState.stage == GameState.Stage.EVIDENCE, 30)
+	print("Dug through in %.1f s" % t)
+	assert(GameState.stage == GameState.Stage.EVIDENCE and g.get_node_or_null("Level/Rubble") == null)
+
+	# EVIDENCE: shown only with an archaeologist close by; all three → ritual
+	var ev := ["Shackles", "Tally", "Bowl"].map(func(n): return st.call(n))
+	assert(not ev[0].can_use() or ev[0].witness())
+	t = await _until(func(): return ev.all(func(e): return e.witness()), 40)
+	print("Archaeologists in your room after %.1f s" % t)
+	for e in ev:
+		assert(e.can_use())
+		e.interact(p)
+		assert(e.shown and not e.can_use())
+	assert(GameState.evidence == 3)
+	await _frames(2)
+	assert(GameState.stage == GameState.Stage.RITUAL)
+
+	# RITUAL: the priest prays in the circle; then at level 3 hold E there; releasing starts over
+	t = await _until(func(): return GameState.ritual >= 1.0, 60)
+	print("Ritual done after %.1f s" % t)
+	assert(GameState.ritual >= 1.0 and not GameState.release_ready())
+	GameState.charge = 9.0
+	GameState.set_level(3)
+	assert(GameState.release_ready() and st.call("Circle").can_use())
+	g._release(true, 1.0)
+	g._release(false, 0.1)
+	assert(g.hold == 0.0 and GameState.phase == GameState.Phase.PLAY)
+	for i in 3: g._release(true, 1.0)
 	assert(GameState.phase == GameState.Phase.END and GameState.won)
+	await _frames(2)
+	assert(hud._end != null)
 	g.queue_free()
 	await _frames(2)
-
-	# loss: the priest walks his route and lights every candle (fast-forwarded)
-	g = load("res://scenes/game.tscn").instantiate()
-	add_child(g)
-	g.get_node("Player").set_physics_process(false)
-	Engine.time_scale = 30.0
-	Engine.max_physics_steps_per_frame = 64
-	var t0 := Time.get_ticks_msec()
-	var game_t := 0.0
-	while GameState.phase == GameState.Phase.PLAY and Time.get_ticks_msec() - t0 < 60000:
-		await get_tree().physics_frame
-		game_t += get_physics_process_delta_time()
-	Engine.time_scale = 1.0
-	var lit := get_tree().get_nodes_in_group("holy_candle").filter(func(c): return c.lit).size()
-	print("Priest lit %d candles, round lasted ~%d s, priest at %s" % [lit, game_t, g.find_child("Priest", true, false).global_position])
-	assert(GameState.phase == GameState.Phase.END and not GameState.won)
+	assert(not get_tree().paused)
 	print("ALL TESTS OK")
 	get_tree().quit()

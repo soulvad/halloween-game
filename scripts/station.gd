@@ -1,19 +1,24 @@
 @tool
 extends StaticBody3D
 
-## Interactive object; the player calls interact(player) when pressing E next to it.
-## SPIRIT gives charge, ALTAR raises visibility, MEMENTO is carried to LOVED,
-## LOVED takes memories and is the goal, CANDLE is lit by the priest and burns the ghost around it.
+## Interactive object; the player calls interact(player) when pressing E at it.
+## SPIRIT gives charge, ALTAR (your bones) asks the HUD to open the altar modal, HAUNT makes a noise visitors hear,
+## EVIDENCE is revealed to the archaeologists in your room, CIRCLE is where you hold E after the ritual (game.gd).
 
 const Wall = preload("res://scripts/wall.gd")
+const UI = preload("res://scripts/ui.gd")
+const Visitor = preload("res://scripts/visitor.gd")
 
-enum Kind { SPIRIT, ALTAR, MEMENTO, LOVED, CANDLE }
+## MEMENTO, LOVED, CANDLE belonged to the old house level; kept only so the enum values stay stable.
+enum Kind { SPIRIT, ALTAR, MEMENTO, LOVED, CANDLE, HAUNT, EVIDENCE, CIRCLE }
 
 const SPIRIT_CHARGE := 1.0
 const SPIRIT_COOLDOWN := 12.0
-const HOLY_RADIUS := 2.5
-const BLOW_COST := 1.0
-const LAYER_STATION := 8  ## layer 4: only the player's Reach sees it, the ghost floats through
+const HAUNT_COST := 1.0
+const HAUNT_COOLDOWN := 6.0
+const WITNESS_RANGE := 7.0  ## EVIDENCE: an archaeologist this close sees it revealed
+const LAYER_STATION := 8  ## layer 4: only the player's aim sees it, the ghost floats through
+const HAUNT_LINES := ["*дзень-дзень*", "*скрип*", "*брязкіт*", "*стук-стук*", "*шурхіт*"]
 
 @export var kind := Kind.SPIRIT
 @export var title_text := "Дзеркало"
@@ -23,13 +28,12 @@ const LAYER_STATION := 8  ## layer 4: only the player's Reach sees it, the ghost
 		size = v
 		_build()
 @export var color := Color(0.6, 0.3, 1)
-@export var lit := false  ## CANDLE
+@export var power := 1.0  ## HAUNT: how loud (unease per listener)
 
-var cooldown := 0.0  ## SPIRIT
+var cooldown := 0.0  ## SPIRIT, HAUNT
+var shown := false  ## EVIDENCE
 var _mesh: MeshInstance3D
 var _label: Label3D
-var _holy: Node3D
-var _gifts: Node3D  ## LOVED: delivered memories
 
 
 func _ready() -> void:
@@ -38,8 +42,9 @@ func _ready() -> void:
 		return
 	collision_mask = 0
 	collision_layer = LAYER_STATION
-	if kind == Kind.CANDLE:
-		add_to_group("holy_candle")
+	_label.font = UI.font()
+	if kind == Kind.EVIDENCE:
+		add_to_group("evidence")
 
 
 func _process(delta: float) -> void:
@@ -47,35 +52,26 @@ func _process(delta: float) -> void:
 		return
 	cooldown = maxf(cooldown - delta, 0)
 	_label.text = title()
-	_mesh.transparency = 0.6 if GameState.level < min_level or cooldown > 0 else 0.0
-	if kind == Kind.CANDLE:
-		_holy.visible = lit
-		if lit:
-			GameState.burn_near(global_position, HOLY_RADIUS, delta)
-
-
-func light() -> void:
-	lit = true
+	_label.visible = GameState.show_labels
+	var dim := GameState.level < min_level or cooldown > 0
+	if kind == Kind.CIRCLE:
+		dim = GameState.stage != GameState.Stage.RITUAL
+	_mesh.transparency = 0.6 if dim else 0.0
 
 
 func title() -> String:
 	match kind:
-		Kind.CANDLE:
-			if not lit:
-				return "Згасла свічка"
-			if GameState.level < min_level:
-				return title_text + " (обпікає)"
-			return "%s: загасити (%d заряд)" % [title_text, BLOW_COST]
-		Kind.LOVED:
-			if GameState.level < min_level:
-				return title_text + " (не відчуває тебе)"
-			if GameState.player and GameState.player.held != "":
-				return "%s: віддати %s" % [title_text, GameState.player.held]
-			if GameState.memories < GameState.MEMORIES_NEEDED:
-				return "%s: спогади %d/%d" % [title_text, GameState.memories, GameState.MEMORIES_NEEDED]
+		Kind.CIRCLE:
+			if GameState.stage != GameState.Stage.RITUAL:
+				return title_text + " (ще не час)"
+			if GameState.ritual < 1.0:
+				return "%s: священник молиться %d%%" % [title_text, int(GameState.ritual * 100)]
 			if GameState.level < GameState.MAX_LEVEL:
-				return title_text + ": стань видимим (рівень 3)"
-			return title_text + ": відпустити"
+				return title_text + ": стань Присутністю (рівень 3)"
+			return title_text + ": утримуй E — піти"
+		Kind.EVIDENCE:
+			if shown:
+				return title_text + " (побачили)"
 	if GameState.level < min_level:
 		return "%s (рівень %d)" % [title_text, min_level]
 	match kind:
@@ -85,43 +81,62 @@ func title() -> String:
 			if GameState.level >= GameState.MAX_LEVEL:
 				return title_text
 			return "%s: рівень %d (треба %d заряду)" % [title_text, GameState.level + 1, GameState.LEVEL_REQ[GameState.level + 1]]
-		Kind.MEMENTO:
-			return title_text + ": взяти"
+		Kind.HAUNT:
+			return title_text + (" (%d с)" % ceili(cooldown) if cooldown > 0 else ": шуміти")
+		Kind.EVIDENCE:
+			if GameState.stage != GameState.Stage.EVIDENCE:
+				return title_text + " (ніхто не бачить)"
+			return title_text + (": підсвітити" if witness() else " (поруч нікого)")
 	return title_text
 
 
-func interact(p) -> void:
+## An archaeologist close enough to see this evidence revealed.
+func witness() -> bool:
+	for v in get_tree().get_nodes_in_group("visitor"):
+		if v.visible and v.kind == Visitor.Kind.ARCH and v.global_position.distance_to(global_position) < WITNESS_RANGE:
+			return true
+	return false
+
+
+## E would do something right now (the HUD shows ready / locked).
+func can_use() -> bool:
+	match kind:
+		Kind.CIRCLE:
+			return GameState.release_ready()
+		Kind.EVIDENCE:
+			return not shown and GameState.level >= min_level and GameState.stage == GameState.Stage.EVIDENCE and witness()
 	if GameState.level < min_level:
+		return false
+	match kind:
+		Kind.SPIRIT:
+			return cooldown <= 0 and GameState.charge < GameState.MAX_CHARGE
+		Kind.ALTAR:
+			return GameState.level < GameState.MAX_LEVEL
+		Kind.HAUNT:
+			return cooldown <= 0 and GameState.charge >= HAUNT_COST
+	return false
+
+
+func interact(_p) -> void:
+	if not can_use():
 		return
 	match kind:
 		Kind.SPIRIT:
-			if cooldown <= 0 and GameState.charge < GameState.MAX_CHARGE:
-				GameState.add_charge(SPIRIT_CHARGE)
-				cooldown = SPIRIT_COOLDOWN
+			GameState.add_charge(SPIRIT_CHARGE)
+			cooldown = SPIRIT_COOLDOWN
 		Kind.ALTAR:
-			GameState.level_up()
-		Kind.MEMENTO:
-			if p.held == "":
-				p.set_held(title_text, color)
-				queue_free()
-		Kind.LOVED:
-			if p.held != "":
-				_add_gift(p.held_color)
-				GameState.memories += 1
-				p.set_held("")
-			elif GameState.memories >= GameState.MEMORIES_NEEDED and GameState.level >= GameState.MAX_LEVEL:
-				GameState.finish(true)
-		Kind.CANDLE:
-			if lit and GameState.charge >= BLOW_COST:
-				GameState.charge -= BLOW_COST
-				lit = false
-
-
-func _add_gift(c: Color) -> void:
-	var b := Wall.box(Vector3(0.25, 0.25, 0.25), c)
-	var a := _gifts.get_child_count() * TAU / GameState.MEMORIES_NEEDED
-	b.position = Vector3(cos(a), 0, sin(a)) * 0.7
-	_gifts.add_child(b)
+			GameState.altar_requested.emit()
+		Kind.HAUNT:
+			GameState.charge -= HAUNT_COST
+			cooldown = HAUNT_COOLDOWN
+			GameState.say(title_text, HAUNT_LINES.pick_random(), UI.ORANGE)
+			GameState.haunt(global_position, power)
+		Kind.EVIDENCE:
+			shown = true
+			_mesh.transparency = 0.0
+			(_mesh.mesh.material as StandardMaterial3D).albedo_color = UI.GOLD
+			GameState.evidence += 1
+		# CIRCLE: holding E is handled by game.gd
 
 
 func _build() -> void:
@@ -138,19 +153,12 @@ func _build() -> void:
 	add_child(shape)
 	_label = Label3D.new()
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_label.no_depth_test = true
+	_label.visibility_range_end = 10.0  ## first person: only nearby things are labelled
 	_label.font_size = 48
 	_label.outline_size = 12
-	_label.pixel_size = 0.006
+	_label.pixel_size = 0.004
 	_label.position.y = size.y / 2 + 0.4
 	_label.text = title_text
+	_label.layers = 2  ## the minimap camera culls labels
+	_label.modulate = {Kind.SPIRIT: UI.CHARGE, Kind.ALTAR: UI.CHARGE, Kind.HAUNT: UI.ORANGE, Kind.EVIDENCE: UI.GOLD, Kind.CIRCLE: UI.MOM}.get(kind, UI.PAPER)
 	add_child(_label)
-	if kind == Kind.CANDLE:
-		_holy = Wall.holy_glow(HOLY_RADIUS)
-		_holy.position.y = -size.y / 2
-		_holy.visible = lit
-		add_child(_holy)
-	if kind == Kind.LOVED:
-		_gifts = Node3D.new()
-		_gifts.position.y = -size.y / 2 + 0.13
-		add_child(_gifts)

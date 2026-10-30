@@ -1,101 +1,154 @@
 extends Node3D
-## Round: charge at spirit items, raise visibility at the altar, carry 3 memories to the loved one,
-## then let go at level 3. The priest lights the candles; all lit = the house is consecrated, you lose.
+## Story flow of «Підземелля старого міста» (stages in GameState.Stage):
+## HAUNT → (unease full) PRIEST_COMING → (priest walks in) LURE → (archaeologist at the rubble) DIG → (dug through)
+## EVIDENCE → (all evidence shown) RITUAL → (priest prayed in the circle, ghost at level 3, E held in the circle) win.
+## Linear, no way to lose. All UI (HUD, overlays, Esc / M / J) lives in scripts/hud.gd.
 
-const CAMERA_OFFSET := Vector3(0, 14, 9)
+const Station = preload("res://scripts/station.gd")
+const Visitor = preload("res://scripts/visitor.gd")
+const RELEASE_TIME := 2.5  ## seconds to hold E in the circle
+const PRIEST_DELAY := 15.0  ## from the call to the priest walking in
+const DIG_TIME := 12.0
+const DIG_RANGE := 3.0  ## an archaeologist this close to the rubble starts / keeps digging
+const RITUAL_TIME := 20.0
+const LAYER_FLOOR := 32  ## layer 6: only the navmesh baker sees it
+const NAV_MASK := 7 | 64  ## walls, furniture, rubble (people-only)
 
+var hold := 0.0  ## seconds E has been held in the circle
+var priest_in := 0.0  ## PRIEST_COMING: seconds until he arrives
 var _last_level := 1
 var _spawn: Vector3
+var _region: NavigationRegion3D
 
 @onready var player = $Player
-@onready var camera: Camera3D = $Camera3D
-@onready var timer_label: Label = $HUD/TimerLabel
-@onready var info_label: Label = $HUD/InfoLabel
-@onready var prompt_label: Label = $HUD/PromptLabel
-@onready var big_label: Label = $HUD/BigLabel
-@onready var menu_button: Button = $HUD/MenuButton
 
 
 func _ready() -> void:
+	_bake_nav()
 	GameState.reset()
 	_spawn = player.global_position
 	GameState.visibility_changed.connect(_on_visibility_changed)
 	GameState.banished.connect(_on_banished)
 	GameState.finished.connect(_on_finished)
-	menu_button.pressed.connect(_to_menu)
-	menu_button.hide()
-	_flash("Ти привид. Заряджайся біля спіритичних речей [E]\nСвященник запалює свічки: коли згорять усі — тебе вигнано")
+	GameState.think("Знову ці кроки нагорі… Хтось прийшов. Може, хоч вони мене почують.")
+	GameState.hint("start")
+	GameState.hint("haunt")
+
+
+## Navmesh for visitors, baked from wall/furniture/rubble colliders + an invisible floor.
+func _bake_nav() -> void:
+	var floor_body := StaticBody3D.new()
+	floor_body.collision_layer = LAYER_FLOOR
+	floor_body.collision_mask = 0
+	var shape := CollisionShape3D.new()
+	shape.shape = BoxShape3D.new()
+	shape.shape.size = Vector3(40, 0.2, 28)
+	shape.position = Vector3(4.75, -0.1, -0.25)
+	floor_body.add_child(shape)
+	$Level.add_child(floor_body)
+	$Level.add_to_group("nav_source")
+	var nm := NavigationMesh.new()
+	nm.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
+	nm.geometry_collision_mask = NAV_MASK | LAYER_FLOOR
+	nm.geometry_source_geometry_mode = NavigationMesh.SOURCE_GEOMETRY_GROUPS_WITH_CHILDREN
+	nm.geometry_source_group_name = "nav_source"
+	nm.agent_radius = 0.5  # multiples of the 0.25 cell size
+	nm.agent_height = 1.75
+	nm.agent_max_climb = 0.25
+	_region = NavigationRegion3D.new()
+	_region.navigation_mesh = nm
+	add_child(_region)
+	_region.bake_navigation_mesh(false)
 
 
 func _process(delta: float) -> void:
-	camera.global_position = camera.global_position.lerp(player.global_position + CAMERA_OFFSET, 5 * delta)
-	var candles := get_tree().get_nodes_in_group("holy_candle")
-	var lit := candles.filter(func(c): return c.lit).size()
-	if GameState.phase == GameState.Phase.PLAY and lit == candles.size():
-		GameState.finish(false)
-	timer_label.text = "Святі свічки: %d / %d" % [lit, candles.size()]
-	_update_hud()
+	if GameState.phase != GameState.Phase.PLAY:
+		return
+	match GameState.stage:
+		GameState.Stage.HAUNT:
+			if GameState.unease >= GameState.UNEASE_TO_CALL:
+				GameState.say("Олена", "Все, досить. Я дзвоню отцю Василю — тут щось нечисте.", Color("8BEA4E"))
+				priest_in = PRIEST_DELAY
+				GameState.set_stage(GameState.Stage.PRIEST_COMING)
+		GameState.Stage.PRIEST_COMING:
+			priest_in -= delta
+			if priest_in <= 0:
+				priest().arrive($Markers/Entrance.global_position)
+				GameState.say("Отець Василь", "Ну, показуйте, де ваш неспокійний дух.", Color("FFC531"))
+				GameState.set_stage(GameState.Stage.LURE)
+		GameState.Stage.LURE:
+			if _digger():
+				GameState.say("Тарас", "Тут завал… а за ним порожнеча. Розкопаймо!", Color("8BEA4E"))
+				GameState.set_stage(GameState.Stage.DIG)
+		GameState.Stage.DIG:
+			if _digger():
+				GameState.dig = minf(GameState.dig + delta / DIG_TIME, 1.0)
+			if GameState.dig >= 1.0:
+				_open_room()
+		GameState.Stage.EVIDENCE:
+			if GameState.evidence >= GameState.EVIDENCE_NEEDED:
+				GameState.say("Отець Василь", "Тут жила й померла людина. Душа досі тут. Я її відпущу.", Color("FFC531"))
+				GameState.set_stage(GameState.Stage.RITUAL)
+		GameState.Stage.RITUAL:
+			var p := priest()
+			if GameState.ritual < 1.0 and p.global_position.distance_to($Markers/RoomCenter.global_position) < 1.5:
+				GameState.ritual = minf(GameState.ritual + delta / RITUAL_TIME, 1.0)
+				if GameState.ritual >= 1.0:
+					GameState.say("Отець Василь", "Іди з миром, душе. Тебе більше ніщо тут не тримає.", Color("FFC531"))
+	_release(Input.is_action_pressed("interact") and at_release(), delta)
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		_to_menu()
+func priest() -> Node3D:
+	for v in get_tree().get_nodes_in_group("visitor"):
+		if v.kind == Visitor.Kind.PRIEST:
+			return v
+	return null
+
+
+## An archaeologist is at the rubble.
+func _digger() -> bool:
+	var r := get_node_or_null("Level/Rubble") as Node3D
+	return r != null and get_tree().get_nodes_in_group("visitor").any(
+		func(v): return v.kind == Visitor.Kind.ARCH and v.global_position.distance_to(r.global_position) < DIG_RANGE)
+
+
+## Rubble cleared: remove it, let people path into your room.
+func _open_room() -> void:
+	var r := get_node_or_null("Level/Rubble")
+	if r:
+		r.free()
+	_region.bake_navigation_mesh(false)
+	GameState.say("Олена", "Боже… тут хтось жив. Ланцюги, миска… подряпини на стіні.", Color("8BEA4E"))
+	GameState.set_stage(GameState.Stage.EVIDENCE)
+
+
+## The ghost aims at the ritual circle and may leave.
+func at_release() -> bool:
+	var s = player.target_station()
+	return s is Station and s.kind == Station.Kind.CIRCLE and GameState.release_ready()
+
+
+## Hold E in the circle for RELEASE_TIME to leave; releasing starts over.
+func _release(holding: bool, delta: float) -> void:
+	hold = hold + delta if holding and GameState.phase == GameState.Phase.PLAY else 0.0
+	if hold >= RELEASE_TIME:
+		GameState.finish(true)
 
 
 func _on_visibility_changed() -> void:
 	var l: int = GameState.level
 	if l > _last_level:
-		_flash("Рівень %d: %s\n%s" % [l, GameState.LEVEL_NAMES[l], "Тебе помічають. Стіни кімнат більше не пускають" if l == 2 else "Тебе бачать усі. Мама почує"])
+		GameState.think("Тепер вони можуть мене побачити… Стіни більше не пускають." if l == 2 else "Я Присутність. Нехай бачать — нехай знають, що я тут був.")
 	elif l < _last_level:
-		_flash("Ти слабшаєш... Рівень %d" % l)
+		GameState.think("Я слабшаю… Рівень %d." % l)
 	_last_level = l
 
 
 func _on_banished() -> void:
 	player.global_position = _spawn
-	_flash("Святе світло відкинуло тебе назад")
+	GameState.think("Святе світло відкинуло мене назад, до моїх кісток.")
 
 
-func _on_finished(won: bool) -> void:
+func _on_finished(_won: bool) -> void:
 	player.set_physics_process(false)
 	player.set_process_unhandled_input(false)
-	big_label.text = "Мама нарешті відпустила тебе.\nТи вільний." if won else "Священник освятив будинок.\nТебе вигнано у порожнечу."
-	big_label.show()
-	menu_button.show()
-	menu_button.grab_focus()
-
-
-func _update_hud() -> void:
-	var l: int = GameState.level
-	var lines := PackedStringArray([
-		"Видимість: %d — %s" % [l, GameState.LEVEL_NAMES[l]],
-		"Заряд: %.1f / %d%s" % [GameState.charge, GameState.MAX_CHARGE, "  (тане -%.2f/с)" % GameState.UPKEEP[l] if l > 1 else ""],
-		"Спогади для мами: %d / %d" % [GameState.memories, GameState.MEMORIES_NEEDED],
-	])
-	if l < GameState.MAX_LEVEL:
-		lines.append("Вівтар: рівень %d при %d заряду" % [l + 1, GameState.LEVEL_REQ[l + 1]])
-	if GameState.is_fading():
-		lines.append("Невидимий: %.1f с" % GameState.fade_left)
-	else:
-		lines.append("[Q] Сховатися: %d заряду" % GameState.FADE_COST)
-	if player.held != "":
-		lines.append("У руках: " + player.held)
-	info_label.text = "\n".join(lines)
-
-	var s = player.target_station()
-	prompt_label.text = "[E] " + s.title() if s else ""
-
-
-func _flash(text: String) -> void:
-	big_label.text = text
-	big_label.show()
-	get_tree().create_timer(3.5).timeout.connect(_hide_flash.bind(text))
-
-
-func _hide_flash(text: String) -> void:
-	if big_label.text == text and GameState.phase == GameState.Phase.PLAY:
-		big_label.hide()
-
-
-func _to_menu() -> void:
-	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
