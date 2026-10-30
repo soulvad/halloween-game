@@ -1,0 +1,47 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/player.gd" id="1_3vyb7"]
+[ext_resource type="Script" path="res://scripts/walk_rig.gd" id="2_wrig"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_dqkch"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fjrip"]
+albedo_color = Color(0.6, 0.6, 0.65, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_smehm"]
+material = SubResource("StandardMaterial3D_fjrip")
+size = Vector3(0.8, 0.5, 0.7)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_ur7pv"]
+radius = 0.9
+
+[node name="Player" type="CharacterBody3D" unique_id=216048129]
+script = ExtResource("1_3vyb7")
+
+[node name="Rig" type="Node3D" parent="."]
+script = ExtResource("2_wrig")
+
+[node name="Shape" type="CollisionShape3D" parent="." unique_id=2064113280]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_dqkch")
+
+[node name="Hand" type="Node3D" parent="." unique_id=1601161262]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, -0.7)
+
+[node name="Cart" type="Node3D" parent="." unique_id=796238014]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.1)
+
+[node name="Basket" type="MeshInstance3D" parent="Cart" unique_id=1057773820]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+mesh = SubResource("BoxMesh_smehm")
+
+[node name="Items" type="Node3D" parent="Cart" unique_id=299827331]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0)
+
+[node name="Reach" type="Area3D" parent="." unique_id=1216808374]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, -0.9)
+
+[node name="Shape" type="CollisionShape3D" parent="Reach" unique_id=1681321576]
+shape = SubResource("SphereShape3D_ur7pv")

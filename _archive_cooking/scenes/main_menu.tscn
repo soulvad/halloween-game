@@ -1,0 +1,46 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_l6cm7"]
+
+[node name="MainMenu" type="Control" unique_id=364039506]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_l6cm7")
+
+[node name="Background" type="ColorRect" parent="." unique_id=718809571]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.08, 0.05, 0.12, 1)
+
+[node name="Box" type="VBoxContainer" parent="." unique_id=836755809]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Box" unique_id=225322565]
+layout_mode = 2
+theme_override_font_sizes/font_size = 56
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+text = "СУПЕРМАРКЕТ ХАВКИ"
+horizontal_alignment = 1
+
+[node name="Play" type="Button" parent="Box" unique_id=2142890374]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Грати"
+
+[node name="Quit" type="Button" parent="Box" unique_id=1967934167]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Вихід"

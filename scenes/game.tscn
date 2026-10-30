@@ -1,0 +1,351 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
+[ext_resource type="Script" path="res://scripts/wall.gd" id="2_wall"]
+[ext_resource type="Script" path="res://scripts/station.gd" id="3_station"]
+[ext_resource type="Script" path="res://scripts/npc.gd" id="4_npc"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="5_player"]
+
+[sub_resource type="Environment" id="Environment_night"]
+background_mode = 1
+background_color = Color(0.04, 0.03, 0.07, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.35, 0.3, 0.5, 1)
+ambient_light_energy = 0.8
+tonemap_mode = 2
+
+[sub_resource type="StandardMaterial3D" id="Mat_floor"]
+albedo_color = Color(0.22, 0.2, 0.25, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
+material = SubResource("Mat_floor")
+size = Vector2(24, 18)
+
+[node name="Game" type="Node3D"]
+script = ExtResource("1_game")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_night")
+
+[node name="Moon" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8660254, -0.40957603, 0.28678823, 0, 0.57357645, 0.81915206, -0.5, -0.7094065, 0.49673176, 0, 0, 0)
+light_color = Color(0.7, 0.75, 1, 1)
+light_energy = 0.6
+shadow_enabled = true
+
+[node name="Level" type="Node3D" parent="."]
+
+[node name="Floor" type="MeshInstance3D" parent="Level"]
+mesh = SubResource("PlaneMesh_floor")
+
+[node name="WallNorth" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -9)
+script = ExtResource("2_wall")
+size = Vector3(24.4, 2, 0.4)
+solid_from = 1
+color = Color(0.3, 0.28, 0.35, 1)
+
+[node name="WallSouth" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 9)
+script = ExtResource("2_wall")
+size = Vector3(24.4, 2, 0.4)
+solid_from = 1
+color = Color(0.3, 0.28, 0.35, 1)
+
+[node name="WallWest" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 1.0, 0)
+script = ExtResource("2_wall")
+size = Vector3(0.4, 2, 18)
+solid_from = 1
+color = Color(0.3, 0.28, 0.35, 1)
+
+[node name="WallEast" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 1.0, 0)
+script = ExtResource("2_wall")
+size = Vector3(0.4, 2, 18)
+solid_from = 1
+color = Color(0.3, 0.28, 0.35, 1)
+
+[node name="LivingWallN" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.8, -5)
+script = ExtResource("2_wall")
+size = Vector3(0.3, 1.6, 8)
+solid_from = 3
+color = Color(0.5, 0.45, 0.55, 1)
+
+[node name="LivingWallS" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.8, 5)
+script = ExtResource("2_wall")
+size = Vector3(0.3, 1.6, 8)
+solid_from = 3
+color = Color(0.5, 0.45, 0.55, 1)
+
+[node name="BedroomWallW" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.8, -5.5)
+script = ExtResource("2_wall")
+size = Vector3(0.3, 1.6, 7)
+solid_from = 1
+color = Color(0.25, 0.12, 0.3, 1)
+
+[node name="BedroomWallS1" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.8, -2)
+script = ExtResource("2_wall")
+size = Vector3(3, 1.6, 0.3)
+solid_from = 1
+color = Color(0.25, 0.12, 0.3, 1)
+
+[node name="BedroomWallS2" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, 0.8, -2)
+script = ExtResource("2_wall")
+size = Vector3(3, 1.6, 0.3)
+solid_from = 1
+color = Color(0.25, 0.12, 0.3, 1)
+
+[node name="KitchenWallN" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.8, 2)
+script = ExtResource("2_wall")
+size = Vector3(8, 1.6, 0.3)
+solid_from = 2
+color = Color(0.4, 0.5, 0.6, 1)
+
+[node name="KitchenWallW1" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.8, 3.25)
+script = ExtResource("2_wall")
+size = Vector3(0.3, 1.6, 2.5)
+solid_from = 2
+color = Color(0.4, 0.5, 0.6, 1)
+
+[node name="KitchenWallW2" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.8, 7.75)
+script = ExtResource("2_wall")
+size = Vector3(0.3, 1.6, 2.5)
+solid_from = 2
+color = Color(0.4, 0.5, 0.6, 1)
+
+[node name="Sofa" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.4, -6.5)
+script = ExtResource("2_wall")
+size = Vector3(3, 0.8, 1)
+solid_from = 3
+color = Color(0.45, 0.3, 0.2, 1)
+
+[node name="LivingTable" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.4, 3.5)
+script = ExtResource("2_wall")
+size = Vector3(2.5, 0.8, 1.5)
+solid_from = 3
+color = Color(0.45, 0.3, 0.2, 1)
+
+[node name="Bed" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.3, -6)
+script = ExtResource("2_wall")
+size = Vector3(2, 0.6, 3)
+solid_from = 3
+color = Color(0.45, 0.3, 0.2, 1)
+
+[node name="KitchenTable" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.4, 6)
+script = ExtResource("2_wall")
+size = Vector3(2, 0.8, 1.2)
+solid_from = 3
+color = Color(0.45, 0.3, 0.2, 1)
+
+[node name="HallCabinet" type="StaticBody3D" parent="Level"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.6, -7.5)
+script = ExtResource("2_wall")
+size = Vector3(2.5, 1.2, 0.8)
+solid_from = 3
+color = Color(0.45, 0.3, 0.2, 1)
+
+[node name="Stations" type="Node3D" parent="."]
+
+[node name="Altar" type="StaticBody3D" parent="Stations"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+script = ExtResource("3_station")
+kind = 1
+title_text = "Вівтар"
+min_level = 1
+size = Vector3(1.2, 0.8, 1.2)
+color = Color(0.15, 0.1, 0.2, 1)
+
+[node name="Candle" type="StaticBody3D" parent="Stations"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.25, -4)
+script = ExtResource("3_station")
+kind = 0
+title_text = "Свічка"
+min_level = 1
+size = Vector3(0.5, 0.5, 0.5)
+color = Color(0.6, 0.3, 1, 1)
+
+[node name="Clock" type="StaticBody3D" parent="Stations"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.25, 7)
+script = ExtResource("3_station")
+kind = 0
+title_text = "Старий годинник"
+min_level = 1
+size = Vector3(0.5, 0.5, 0.5)
+color = Color(0.6, 0.3, 1, 1)
+
+[node name="Mirror" type="StaticBody3D" parent="Stations"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.25, -2)
+script = ExtResource("3_station")
+kind = 0
+title_text = "Дзеркало"
+min_level = 1
+size = Vector3(0.5, 0.5, 0.5)
+color = Color(0.6, 0.3, 1, 1)
+
+[node name="Ouija" type="StaticBody3D" parent="Stations"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.25, 4)
+script = ExtResource("3_station")
+kind = 0
+title_text = "Дошка Віджа"
+min_level = 1
+size = Vector3(0.5, 0.5, 0.5)
+color = Color(0.6, 0.3, 1, 1)
+
+[node name="Portrait" type="StaticBody3D" parent="Stations"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.25, 7)
+script = ExtResource("3_station")
+kind = 0
+title_text = "Портрет"
+min_level = 2
+size = Vector3(0.5, 0.5, 0.5)
+color = Color(0.6, 0.3, 1, 1)
+
+[node name="MusicBox" type="StaticBody3D" parent="Stations"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.25, -8)
+script = ExtResource("3_station")
+kind = 0
+title_text = "Музична скринька"
+min_level = 2
+size = Vector3(0.5, 0.5, 0.5)
+color = Color(0.6, 0.3, 1, 1)
+
+[node name="Photo" type="StaticBody3D" parent="Stations"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0.2, -7.5)
+script = ExtResource("3_station")
+kind = 2
+title_text = "Фото"
+min_level = 2
+size = Vector3(0.4, 0.4, 0.4)
+color = Color(1, 0.85, 0.3, 1)
+
+[node name="BedroomDoor" type="StaticBody3D" parent="Stations"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.8, -2)
+script = ExtResource("3_station")
+kind = 3
+title_text = "Двері"
+min_level = 2
+size = Vector3(2, 1.6, 0.3)
+color = Color(0.5, 0.3, 0.15, 1)
+
+[node name="Mom" type="StaticBody3D" parent="Stations"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.85, 0)
+script = ExtResource("3_station")
+kind = 4
+title_text = "Мама"
+min_level = 3
+size = Vector3(0.6, 1.7, 0.6)
+color = Color(0.95, 0.6, 0.7, 1)
+
+[node name="People" type="Node3D" parent="."]
+
+[node name="Neighbor" type="CharacterBody3D" parent="People"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 4)
+script = ExtResource("4_npc")
+kind = 0
+title_text = "Сусідка"
+sees_from = 2
+active_from = 1
+color = Color(0.9, 0.75, 0.55, 1)
+
+[node name="Kid" type="CharacterBody3D" parent="People"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0, -3)
+script = ExtResource("4_npc")
+kind = 0
+title_text = "Дитина"
+sees_from = 2
+active_from = 1
+color = Color(0.6, 0.85, 0.5, 1)
+
+[node name="Hunter1" type="CharacterBody3D" parent="People"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -6)
+script = ExtResource("4_npc")
+kind = 1
+title_text = "Мисливець"
+sees_from = 2
+active_from = 2
+color = Color(0.8, 0.15, 0.1, 1)
+
+[node name="Hunter2" type="CharacterBody3D" parent="People"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 5)
+script = ExtResource("4_npc")
+kind = 1
+title_text = "Мисливець"
+sees_from = 2
+active_from = 3
+color = Color(0.8, 0.15, 0.1, 1)
+
+[node name="Player" parent="." instance=ExtResource("5_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.54463905, 0.83867055, 0, -0.83867055, 0.54463905, 0, 14, 12)
+fov = 55.0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="TimerLabel" type="Label" parent="HUD"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 10.0
+offset_bottom = 23.0
+theme_override_font_sizes/font_size = 40
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+horizontal_alignment = 1
+
+[node name="InfoLabel" type="Label" parent="HUD"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 20.0
+offset_bottom = 20.0
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+
+[node name="PromptLabel" type="Label" parent="HUD"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -70.0
+offset_bottom = -20.0
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+horizontal_alignment = 1
+
+[node name="BigLabel" type="Label" parent="HUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_font_sizes/font_size = 40
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MenuButton" type="Button" parent="HUD"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = 100.0
+offset_right = 120.0
+offset_bottom = 160.0
+theme_override_font_sizes/font_size = 28
+text = "В меню"

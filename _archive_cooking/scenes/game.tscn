@@ -1,0 +1,780 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/game.gd" id="1_lbhrr"]
+[ext_resource type="Script" path="res://scripts/station.gd" id="2_iywne"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_p57ef"]
+[ext_resource type="Script" path="res://scripts/player.gd" id="4_u5sy4"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_gee14"]
+
+[sub_resource type="Sky" id="Sky_0tnpc"]
+sky_material = SubResource("ProceduralSkyMaterial_gee14")
+
+[sub_resource type="Environment" id="Environment_vtaks"]
+background_mode = 2
+sky = SubResource("Sky_0tnpc")
+ambient_light_source = 3
+tonemap_mode = 2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kvpfn"]
+albedo_color = Color(0.8, 0.8, 0.75, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_dinhu"]
+material = SubResource("StandardMaterial3D_kvpfn")
+size = Vector3(30, 0.2, 34)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_kvuet"]
+size = Vector3(30, 0.2, 34)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trtic"]
+albedo_color = Color(0.5, 0.45, 0.4, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ir15t"]
+material = SubResource("StandardMaterial3D_trtic")
+size = Vector3(30, 0.02, 11)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ca42v"]
+size = Vector3(30, 0.02, 11)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rysoc"]
+albedo_color = Color(0.55, 0.6, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ssvqc"]
+material = SubResource("StandardMaterial3D_rysoc")
+size = Vector3(30, 2, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_264po"]
+size = Vector3(30, 2, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1kice"]
+albedo_color = Color(0.55, 0.6, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5newe"]
+material = SubResource("StandardMaterial3D_1kice")
+size = Vector3(30, 0.6, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_37s47"]
+size = Vector3(30, 0.6, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bt5mj"]
+albedo_color = Color(0.55, 0.6, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_e1j6l"]
+material = SubResource("StandardMaterial3D_bt5mj")
+size = Vector3(0.4, 2, 34)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pl11u"]
+size = Vector3(0.4, 2, 34)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bhx41"]
+albedo_color = Color(0.55, 0.6, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qnb83"]
+material = SubResource("StandardMaterial3D_bhx41")
+size = Vector3(0.4, 2, 34)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sww3w"]
+size = Vector3(0.4, 2, 34)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_suyxu"]
+albedo_color = Color(0.55, 0.6, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sgl2t"]
+material = SubResource("StandardMaterial3D_suyxu")
+size = Vector3(13, 1.2, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_qouja"]
+size = Vector3(13, 1.2, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wljb1"]
+albedo_color = Color(0.55, 0.6, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_v2yb1"]
+material = SubResource("StandardMaterial3D_wljb1")
+size = Vector3(13, 1.2, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_js0lu"]
+size = Vector3(13, 1.2, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gxtfn"]
+albedo_color = Color(0.8, 0.15, 0.1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_twgab"]
+material = SubResource("StandardMaterial3D_gxtfn")
+size = Vector3(4, 1.2, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_02fa5"]
+size = Vector3(4, 1.2, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nepv3"]
+albedo_color = Color(0.35, 0.5, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7025r"]
+material = SubResource("StandardMaterial3D_nepv3")
+size = Vector3(6, 1.4, 1.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_m4url"]
+size = Vector3(6, 1.4, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8ool0"]
+albedo_color = Color(0.35, 0.5, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_pr1ej"]
+material = SubResource("StandardMaterial3D_8ool0")
+size = Vector3(6, 1.4, 1.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_05nbr"]
+size = Vector3(6, 1.4, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0sl42"]
+albedo_color = Color(0.35, 0.5, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_oaba0"]
+material = SubResource("StandardMaterial3D_0sl42")
+size = Vector3(6, 1.4, 1.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_458eo"]
+size = Vector3(6, 1.4, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h3rex"]
+albedo_color = Color(0.35, 0.5, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fedci"]
+material = SubResource("StandardMaterial3D_h3rex")
+size = Vector3(6, 1.4, 1.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8qswn"]
+size = Vector3(6, 1.4, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rm0al"]
+albedo_color = Color(0.35, 0.5, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_i4re6"]
+material = SubResource("StandardMaterial3D_rm0al")
+size = Vector3(6, 1.4, 1.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pf7vy"]
+size = Vector3(6, 1.4, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_o8ni1"]
+albedo_color = Color(0.35, 0.5, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3hbvx"]
+material = SubResource("StandardMaterial3D_o8ni1")
+size = Vector3(6, 1.4, 1.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_q8j3a"]
+size = Vector3(6, 1.4, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ms3bu"]
+albedo_color = Color(0.75, 0.55, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7ixpq"]
+material = SubResource("StandardMaterial3D_ms3bu")
+size = Vector3(2, 0.9, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bk1p3"]
+size = Vector3(2, 0.9, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n8ral"]
+albedo_color = Color(0.75, 0.55, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_yd4ix"]
+material = SubResource("StandardMaterial3D_n8ral")
+size = Vector3(2, 0.9, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_66xif"]
+size = Vector3(2, 0.9, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bnuda"]
+albedo_color = Color(0.85, 0.7, 0.45, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0rmfi"]
+material = SubResource("StandardMaterial3D_bnuda")
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xbak0"]
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3x28f"]
+albedo_color = Color(0.85, 0.7, 0.45, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_l6q63"]
+material = SubResource("StandardMaterial3D_3x28f")
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_mmvbu"]
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_weeiq"]
+albedo_color = Color(0.25, 0.25, 0.28, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_uxocx"]
+material = SubResource("StandardMaterial3D_weeiq")
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7nv0b"]
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_o8oq8"]
+albedo_color = Color(0.25, 0.25, 0.28, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sxt1d"]
+material = SubResource("StandardMaterial3D_o8oq8")
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2iuns"]
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7gkqi"]
+albedo_color = Color(0.7, 0.7, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_753oq"]
+material = SubResource("StandardMaterial3D_7gkqi")
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3x338"]
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1yg85"]
+albedo_color = Color(0.7, 0.7, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_s0g06"]
+material = SubResource("StandardMaterial3D_1yg85")
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2gnni"]
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vgxg3"]
+albedo_color = Color(0.7, 0.7, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4nbsr"]
+material = SubResource("StandardMaterial3D_vgxg3")
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fkywm"]
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dku7i"]
+albedo_color = Color(0.9, 0.9, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_veaf0"]
+material = SubResource("StandardMaterial3D_dku7i")
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_flw08"]
+size = Vector3(1.4, 1, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_84hbc"]
+albedo_color = Color(0.2, 0.7, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_15b3c"]
+material = SubResource("StandardMaterial3D_84hbc")
+size = Vector3(1.4, 1, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_veukt"]
+size = Vector3(1.4, 1, 3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nbjts"]
+albedo_color = Color(0.15, 0.15, 0.15, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_i1hsc"]
+material = SubResource("StandardMaterial3D_nbjts")
+size = Vector3(1.2, 1, 1.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ounyb"]
+size = Vector3(1.2, 1, 1.2)
+
+[node name="Game" type="Node3D" unique_id=1889277671]
+script = ExtResource("1_lbhrr")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1040928650]
+environment = SubResource("Environment_vtaks")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1931426363]
+transform = Transform3D(0.8660254, -0.40957603, 0.28678823, 0, 0.57357645, 0.81915206, -0.5, -0.7094065, 0.49673176, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Level" type="Node3D" parent="." unique_id=105461667]
+
+[node name="Floor" type="StaticBody3D" parent="Level" unique_id=1984646105]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, -6)
+
+[node name="Mesh" type="MeshInstance3D" parent="Level/Floor" unique_id=432650684]
+mesh = SubResource("BoxMesh_dinhu")
+
+[node name="Shape" type="CollisionShape3D" parent="Level/Floor" unique_id=1548073268]
+shape = SubResource("BoxShape3D_kvuet")
+
+[node name="KitchenFloor" type="StaticBody3D" parent="Level" unique_id=2116097732]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 5.5)
+
+[node name="Mesh" type="MeshInstance3D" parent="Level/KitchenFloor" unique_id=1264494265]
+mesh = SubResource("BoxMesh_ir15t")
+
+[node name="Shape" type="CollisionShape3D" parent="Level/KitchenFloor" unique_id=1003672525]
+shape = SubResource("BoxShape3D_ca42v")
+
+[node name="WallNorth" type="StaticBody3D" parent="Level" unique_id=739995237]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -23)
+
+[node name="Mesh" type="MeshInstance3D" parent="Level/WallNorth" unique_id=515315023]
+mesh = SubResource("BoxMesh_ssvqc")
+
+[node name="Shape" type="CollisionShape3D" parent="Level/WallNorth" unique_id=336059925]
+shape = SubResource("BoxShape3D_264po")
+
+[node name="WallSouth" type="StaticBody3D" parent="Level" unique_id=1484343967]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 11)
+
+[node name="Mesh" type="MeshInstance3D" parent="Level/WallSouth" unique_id=1342734948]
+mesh = SubResource("BoxMesh_5newe")
+
+[node name="Shape" type="CollisionShape3D" parent="Level/WallSouth" unique_id=91933015]
+shape = SubResource("BoxShape3D_37s47")
+
+[node name="WallWest" type="StaticBody3D" parent="Level" unique_id=2084738870]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 1, -6)
+
+[node name="Mesh" type="MeshInstance3D" parent="Level/WallWest" unique_id=161195566]
+mesh = SubResource("BoxMesh_e1j6l")
+
+[node name="Shape" type="CollisionShape3D" parent="Level/WallWest" unique_id=1497809961]
+shape = SubResource("BoxShape3D_pl11u")
+
+[node name="WallEast" type="StaticBody3D" parent="Level" unique_id=1820154494]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 1, -6)
+
+[node name="Mesh" type="MeshInstance3D" parent="Level/WallEast" unique_id=580334710]
+mesh = SubResource("BoxMesh_qnb83")
+
+[node name="Shape" type="CollisionShape3D" parent="Level/WallEast" unique_id=149727970]
+shape = SubResource("BoxShape3D_sww3w")
+
+[node name="DividerLeft" type="StaticBody3D" parent="Level" unique_id=2122066580]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 0.6, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Level/DividerLeft" unique_id=600016963]
+mesh = SubResource("BoxMesh_sgl2t")
+
+[node name="Shape" type="CollisionShape3D" parent="Level/DividerLeft" unique_id=869085697]
+shape = SubResource("BoxShape3D_qouja")
+
+[node name="DividerRight" type="StaticBody3D" parent="Level" unique_id=1269954438]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0.6, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Level/DividerRight" unique_id=752094233]
+mesh = SubResource("BoxMesh_v2yb1")
+
+[node name="Shape" type="CollisionShape3D" parent="Level/DividerRight" unique_id=1534818481]
+shape = SubResource("BoxShape3D_js0lu")
+
+[node name="KitchenDoor" type="StaticBody3D" parent="." unique_id=1287204948]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="KitchenDoor" unique_id=1191653471]
+mesh = SubResource("BoxMesh_twgab")
+
+[node name="Shape" type="CollisionShape3D" parent="KitchenDoor" unique_id=1706498434]
+shape = SubResource("BoxShape3D_02fa5")
+
+[node name="Store" type="Node3D" parent="." unique_id=375172226]
+
+[node name="ShelfTomato" type="StaticBody3D" parent="Store" unique_id=710102493]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.7, -6)
+script = ExtResource("2_iywne")
+kind = 0
+size = Vector3(6, 1.4, 1.2)
+
+[node name="Mesh" type="MeshInstance3D" parent="Store/ShelfTomato" unique_id=1197533029]
+mesh = SubResource("BoxMesh_7025r")
+
+[node name="Shape" type="CollisionShape3D" parent="Store/ShelfTomato" unique_id=1290613617]
+shape = SubResource("BoxShape3D_m4url")
+
+[node name="Label" type="Label3D" parent="Store/ShelfTomato" unique_id=1387975589]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="ShelfLettuce" type="StaticBody3D" parent="Store" unique_id=1218560916]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.7, -6)
+script = ExtResource("2_iywne")
+kind = 0
+item_type = "lettuce"
+size = Vector3(6, 1.4, 1.2)
+
+[node name="Mesh" type="MeshInstance3D" parent="Store/ShelfLettuce" unique_id=974182476]
+mesh = SubResource("BoxMesh_pr1ej")
+
+[node name="Shape" type="CollisionShape3D" parent="Store/ShelfLettuce" unique_id=1517639286]
+shape = SubResource("BoxShape3D_05nbr")
+
+[node name="Label" type="Label3D" parent="Store/ShelfLettuce" unique_id=1365629278]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="ShelfMeat" type="StaticBody3D" parent="Store" unique_id=2024291826]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.7, -12)
+script = ExtResource("2_iywne")
+kind = 0
+item_type = "meat"
+size = Vector3(6, 1.4, 1.2)
+
+[node name="Mesh" type="MeshInstance3D" parent="Store/ShelfMeat" unique_id=1280286123]
+mesh = SubResource("BoxMesh_oaba0")
+
+[node name="Shape" type="CollisionShape3D" parent="Store/ShelfMeat" unique_id=793236818]
+shape = SubResource("BoxShape3D_458eo")
+
+[node name="Label" type="Label3D" parent="Store/ShelfMeat" unique_id=1910139556]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="ShelfBread" type="StaticBody3D" parent="Store" unique_id=709247435]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.7, -12)
+script = ExtResource("2_iywne")
+kind = 0
+item_type = "bread"
+size = Vector3(6, 1.4, 1.2)
+
+[node name="Mesh" type="MeshInstance3D" parent="Store/ShelfBread" unique_id=1378140575]
+mesh = SubResource("BoxMesh_fedci")
+
+[node name="Shape" type="CollisionShape3D" parent="Store/ShelfBread" unique_id=1703390336]
+shape = SubResource("BoxShape3D_8qswn")
+
+[node name="Label" type="Label3D" parent="Store/ShelfBread" unique_id=1282175412]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="ShelfTomato2" type="StaticBody3D" parent="Store" unique_id=1640091327]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.7, -18)
+script = ExtResource("2_iywne")
+kind = 0
+size = Vector3(6, 1.4, 1.2)
+
+[node name="Mesh" type="MeshInstance3D" parent="Store/ShelfTomato2" unique_id=1113079030]
+mesh = SubResource("BoxMesh_i4re6")
+
+[node name="Shape" type="CollisionShape3D" parent="Store/ShelfTomato2" unique_id=1425164203]
+shape = SubResource("BoxShape3D_pf7vy")
+
+[node name="Label" type="Label3D" parent="Store/ShelfTomato2" unique_id=1805114749]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="ShelfMeat2" type="StaticBody3D" parent="Store" unique_id=910752665]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.7, -18)
+script = ExtResource("2_iywne")
+kind = 0
+item_type = "meat"
+size = Vector3(6, 1.4, 1.2)
+
+[node name="Mesh" type="MeshInstance3D" parent="Store/ShelfMeat2" unique_id=708616567]
+mesh = SubResource("BoxMesh_3hbvx")
+
+[node name="Shape" type="CollisionShape3D" parent="Store/ShelfMeat2" unique_id=1811856014]
+shape = SubResource("BoxShape3D_q8j3a")
+
+[node name="Label" type="Label3D" parent="Store/ShelfMeat2" unique_id=882975851]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="StandBread" type="StaticBody3D" parent="Store" unique_id=650360971]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, -9)
+script = ExtResource("2_iywne")
+kind = 0
+item_type = "bread"
+size = Vector3(2, 0.9, 2)
+
+[node name="Mesh" type="MeshInstance3D" parent="Store/StandBread" unique_id=1337175025]
+mesh = SubResource("BoxMesh_7ixpq")
+
+[node name="Shape" type="CollisionShape3D" parent="Store/StandBread" unique_id=2063836816]
+shape = SubResource("BoxShape3D_bk1p3")
+
+[node name="Label" type="Label3D" parent="Store/StandBread" unique_id=726831938]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="StandLettuce" type="StaticBody3D" parent="Store" unique_id=2000815220]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, -15)
+script = ExtResource("2_iywne")
+kind = 0
+item_type = "lettuce"
+size = Vector3(2, 0.9, 2)
+
+[node name="Mesh" type="MeshInstance3D" parent="Store/StandLettuce" unique_id=1256754063]
+mesh = SubResource("BoxMesh_yd4ix")
+
+[node name="Shape" type="CollisionShape3D" parent="Store/StandLettuce" unique_id=427544264]
+shape = SubResource("BoxShape3D_66xif")
+
+[node name="Label" type="Label3D" parent="Store/StandLettuce" unique_id=64225600]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="Kitchen" type="Node3D" parent="." unique_id=1934131951]
+
+[node name="Board1" type="StaticBody3D" parent="Kitchen" unique_id=603109127]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.5, 1.2)
+script = ExtResource("2_iywne")
+kind = 2
+
+[node name="Mesh" type="MeshInstance3D" parent="Kitchen/Board1" unique_id=193344411]
+mesh = SubResource("BoxMesh_0rmfi")
+
+[node name="Shape" type="CollisionShape3D" parent="Kitchen/Board1" unique_id=640704449]
+shape = SubResource("BoxShape3D_xbak0")
+
+[node name="Label" type="Label3D" parent="Kitchen/Board1" unique_id=271082738]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="Board2" type="StaticBody3D" parent="Kitchen" unique_id=443985905]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.5, 1.2)
+script = ExtResource("2_iywne")
+kind = 2
+
+[node name="Mesh" type="MeshInstance3D" parent="Kitchen/Board2" unique_id=612435232]
+mesh = SubResource("BoxMesh_l6q63")
+
+[node name="Shape" type="CollisionShape3D" parent="Kitchen/Board2" unique_id=807156507]
+shape = SubResource("BoxShape3D_mmvbu")
+
+[node name="Label" type="Label3D" parent="Kitchen/Board2" unique_id=269554915]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="Stove1" type="StaticBody3D" parent="Kitchen" unique_id=1928983752]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.5, 1.2)
+script = ExtResource("2_iywne")
+kind = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Kitchen/Stove1" unique_id=687553467]
+mesh = SubResource("BoxMesh_uxocx")
+
+[node name="Shape" type="CollisionShape3D" parent="Kitchen/Stove1" unique_id=506425584]
+shape = SubResource("BoxShape3D_7nv0b")
+
+[node name="Label" type="Label3D" parent="Kitchen/Stove1" unique_id=1877336768]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="Stove2" type="StaticBody3D" parent="Kitchen" unique_id=1144799186]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0.5, 1.2)
+script = ExtResource("2_iywne")
+kind = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Kitchen/Stove2" unique_id=559697990]
+mesh = SubResource("BoxMesh_sxt1d")
+
+[node name="Shape" type="CollisionShape3D" parent="Kitchen/Stove2" unique_id=639779993]
+shape = SubResource("BoxShape3D_2iuns")
+
+[node name="Label" type="Label3D" parent="Kitchen/Stove2" unique_id=2008450738]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="Counter1" type="StaticBody3D" parent="Kitchen" unique_id=38723352]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.5, 6)
+script = ExtResource("2_iywne")
+
+[node name="Mesh" type="MeshInstance3D" parent="Kitchen/Counter1" unique_id=799751657]
+mesh = SubResource("BoxMesh_753oq")
+
+[node name="Shape" type="CollisionShape3D" parent="Kitchen/Counter1" unique_id=2085496886]
+shape = SubResource("BoxShape3D_3x338")
+
+[node name="Label" type="Label3D" parent="Kitchen/Counter1" unique_id=159151199]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="Counter2" type="StaticBody3D" parent="Kitchen" unique_id=2063475814]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 6)
+script = ExtResource("2_iywne")
+
+[node name="Mesh" type="MeshInstance3D" parent="Kitchen/Counter2" unique_id=699105230]
+mesh = SubResource("BoxMesh_s0g06")
+
+[node name="Shape" type="CollisionShape3D" parent="Kitchen/Counter2" unique_id=1689046732]
+shape = SubResource("BoxShape3D_2gnni")
+
+[node name="Label" type="Label3D" parent="Kitchen/Counter2" unique_id=1494024717]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="Counter3" type="StaticBody3D" parent="Kitchen" unique_id=55120611]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.5, 6)
+script = ExtResource("2_iywne")
+
+[node name="Mesh" type="MeshInstance3D" parent="Kitchen/Counter3" unique_id=1297105215]
+mesh = SubResource("BoxMesh_4nbsr")
+
+[node name="Shape" type="CollisionShape3D" parent="Kitchen/Counter3" unique_id=355353376]
+shape = SubResource("BoxShape3D_fkywm")
+
+[node name="Label" type="Label3D" parent="Kitchen/Counter3" unique_id=96036960]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="Plates" type="StaticBody3D" parent="Kitchen" unique_id=975032208]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.5, 6)
+script = ExtResource("2_iywne")
+kind = 4
+
+[node name="Mesh" type="MeshInstance3D" parent="Kitchen/Plates" unique_id=338462536]
+mesh = SubResource("BoxMesh_veaf0")
+
+[node name="Shape" type="CollisionShape3D" parent="Kitchen/Plates" unique_id=1432675955]
+shape = SubResource("BoxShape3D_flw08")
+
+[node name="Label" type="Label3D" parent="Kitchen/Plates" unique_id=1420883222]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="Serve" type="StaticBody3D" parent="Kitchen" unique_id=1056348760]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0.5, 6)
+script = ExtResource("2_iywne")
+kind = 5
+size = Vector3(1.4, 1, 3)
+
+[node name="Mesh" type="MeshInstance3D" parent="Kitchen/Serve" unique_id=1247813]
+mesh = SubResource("BoxMesh_15b3c")
+
+[node name="Shape" type="CollisionShape3D" parent="Kitchen/Serve" unique_id=753039428]
+shape = SubResource("BoxShape3D_veukt")
+
+[node name="Label" type="Label3D" parent="Kitchen/Serve" unique_id=986590726]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="Trash" type="StaticBody3D" parent="Kitchen" unique_id=2012980456]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0.5, 6)
+script = ExtResource("2_iywne")
+kind = 6
+size = Vector3(1.2, 1, 1.2)
+
+[node name="Mesh" type="MeshInstance3D" parent="Kitchen/Trash" unique_id=1860228237]
+mesh = SubResource("BoxMesh_i1hsc")
+
+[node name="Shape" type="CollisionShape3D" parent="Kitchen/Trash" unique_id=1392058449]
+shape = SubResource("BoxShape3D_ounyb")
+
+[node name="Label" type="Label3D" parent="Kitchen/Trash" unique_id=1829938131]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+pixel_size = 0.012
+billboard = 1
+font_size = 48
+
+[node name="Player" type="CharacterBody3D" parent="." unique_id=216048129 instance=ExtResource("3_p57ef")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3)
+script = ExtResource("4_u5sy4")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1059082994]
+transform = Transform3D(1, 0, 0, 0, 0.54463905, 0.83867055, 0, -0.83867055, 0.54463905, 0, 14, 6)
+fov = 55.0
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1239173454]
+
+[node name="TimerLabel" type="Label" parent="HUD" unique_id=1568028645]
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 10.0
+offset_bottom = 23.0
+theme_override_font_sizes/font_size = 48
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+horizontal_alignment = 1
+
+[node name="InfoLabel" type="Label" parent="HUD" unique_id=1969158483]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 20.0
+offset_bottom = 20.0
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+
+[node name="OrdersLabel" type="Label" parent="HUD" unique_id=848491282]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -560.0
+offset_top = 20.0
+offset_right = -20.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+horizontal_alignment = 2
+
+[node name="PromptLabel" type="Label" parent="HUD" unique_id=1049703221]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -70.0
+offset_bottom = -20.0
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+horizontal_alignment = 1
+
+[node name="BigLabel" type="Label" parent="HUD" unique_id=1080058428]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_font_sizes/font_size = 48
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MenuButton" type="Button" parent="HUD" unique_id=2008547775]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = 100.0
+offset_right = 120.0
+offset_bottom = 160.0
+theme_override_font_sizes/font_size = 28
+text = "В меню"
