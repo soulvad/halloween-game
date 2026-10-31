@@ -280,7 +280,7 @@ func _pointer_text(s: Dictionary) -> String:
 		"Stations/Memory1": return "Спогад"
 		"Stations/CandleBedroom": return "Свічка"
 		"Visitors/Olena": return "Олена і Тарас"
-		"Level/Rubble": return "Цегляна стіна"
+		"Level/Rubble": return "Завал"
 	return ""
 
 
