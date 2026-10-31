@@ -5,8 +5,10 @@ extends CharacterBody3D
 ## Passing through: the screen fades into a cyan-rimmed dark veil as the eye nears a wall's surface, the view widens a
 ## little, and a ghost left inside a wall with no input drifts out by the nearest face (never stuck in the dark).
 ## Pushing into an outer wall frosts the screen edges instead.
+## Aim: the station under the crosshair glows at the rim (cyan = E does something now, dim = not yet); E sends a cyan wisp to it.
 
 const Wall = preload("res://scripts/wall.gd")
+const Fx = preload("res://scripts/fx.gd")
 
 const WALK := 3.5
 const SPRINT := 6.0
@@ -36,6 +38,9 @@ const PHASE_NEAR := 0.45  ## the veil starts this far (m) from a wall's surface
 const PHASE_DRIFT := 3.0  ## m/s out of a wall when no key is held
 const FOV := 75.0
 const PHASE_FOV := 9.0  ## extra degrees deep inside a wall
+const AIM_ON := Color(0.66, 0.86, 0.85, 1.0)  ## rim on a station E can use (UI.CYAN)
+const AIM_OFF := Color(0.55, 0.48, 0.4, 0.45)  ## ...and on one it can't yet
+const WISP_TIME := 0.2  ## s, the E wisp out to the target and gone
 
 var held := ""  ## memento name or ""
 var held_color := Color.WHITE
@@ -53,6 +58,8 @@ var _edge := 0.0
 var _edge_told := false
 var _probe := SphereShape3D.new()
 var _veil: ShaderMaterial
+var _aim_mat := ShaderMaterial.new()
+var _aimed: Node3D  ## the station wearing the rim
 
 @onready var body: MeshInstance3D = $Body
 @onready var head: Node3D = $Head
@@ -72,6 +79,7 @@ func _ready() -> void:
 	show_body(false)
 	camera.near = 0.05  # less wall slicing at the surface
 	_probe.radius = PHASE_NEAR
+	_aim_mat.shader = load("res://scripts/aim.gdshader")
 	var layer := CanvasLayer.new()
 	layer.layer = -1  # over the 3D view, under the HUD
 	var rect := ColorRect.new()
@@ -146,6 +154,25 @@ func _process(delta: float) -> void:
 	_veil.set_shader_parameter("amount", phase)
 	_veil.set_shader_parameter("edge", _edge)
 	camera.fov = FOV + PHASE_FOV * phase
+	_aim()
+
+
+## Rim the station under the aim: an overlay on every mesh it has (placeholder box or imported model).
+func _aim() -> void:
+	var t = target_station() if camera.current else null
+	if t != _aimed:
+		if is_instance_valid(_aimed):
+			_overlay(_aimed, null)
+		_aimed = t
+		if t:
+			_overlay(t, _aim_mat)
+	if t:
+		_aim_mat.set_shader_parameter("color", AIM_ON if t.can_use() else AIM_OFF)
+
+
+func _overlay(n: Node, mat: Material) -> void:
+	for m in n.find_children("*", "MeshInstance3D", true, false):
+		m.material_overlay = mat
 
 
 ## Mouse look before the GUI: with the mouse captured the cursor sits mid-screen, and a HUD control under it
@@ -162,7 +189,38 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("interact"):
 		var s = target_station()
 		if s:
+			if s.can_use():
+				_wisp(s.global_position)
 			s.interact(self)
+
+
+## A thin cyan streak from just under the eye out to `to`, gone in WISP_TIME, with a whoosh.
+func _wisp(to: Vector3) -> void:
+	var from := camera.global_position - camera.global_basis.y * 0.25 + -camera.global_basis.z * 0.3
+	var d := to - from
+	if d.length() < 0.2:
+		return
+	var root := Node3D.new()
+	var streak := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(0.025, 0.025, 1)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.albedo_color = AIM_ON
+	box.material = mat
+	streak.mesh = box
+	streak.position.z = -0.5  # the box grows forward from the root
+	streak.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(streak)
+	get_parent().add_child(root)
+	root.look_at_from_position(from, to, Vector3.FORWARD if absf(d.normalized().y) > 0.99 else Vector3.UP)
+	root.scale = Vector3(1, 1, 0.01)
+	var tw := root.create_tween()
+	tw.tween_property(root, "scale:z", d.length(), WISP_TIME * 0.5).set_ease(Tween.EASE_OUT)
+	tw.tween_property(mat, "albedo_color", Color.BLACK, WISP_TIME * 0.5)  # additive: black = gone
+	tw.tween_callback(root.queue_free)
+	Fx.sound_ui(get_tree(), "whoosh", -6.0)
 
 
 ## The ghost as others would see it, shown only in the guide: in play nothing shows you, not even a mirror.

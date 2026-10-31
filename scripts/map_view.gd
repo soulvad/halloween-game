@@ -2,6 +2,7 @@ extends Control
 ## Flat drawn map of the dungeon (HUD minimap and the M map): carved floor from the generator's `rooms` / `doors`
 ## metadata on the game root, furniture, the collapsed wall, lit candles, the next memory, people and you.
 ## `follow` set = minimap (centred on it at `px_per_m`), else the whole dungeon fits the control.
+## A haunt (GameState.haunted) spreads a ring out to how far it carries; archaeologists inside it blink a while.
 
 const Station = preload("res://scripts/station.gd")
 const Visitor = preload("res://scripts/visitor.gd")
@@ -20,6 +21,8 @@ const FLOOR := Color("4A3F5C")
 const FLOOR_EDGE := Color("A99BC4")
 const FURNITURE := Color("6E5440")
 const HIDDEN := Color("2A2236")  ## your room before the wall is down
+const RING_TIME := 1.2  ## s, a haunt's ring spreading out and fading
+const BLINK_TIME := 2.0  ## s the dots of those who heard it blink
 
 var game: Node3D
 var follow: Node3D
@@ -31,6 +34,8 @@ var _furniture: Array[Rect2] = []
 var _stations: Array = []
 var _bounds := Rect2()
 var _t := 0.0
+var _rings: Array = []  ## [world pos, radius m, seconds, colour]
+var _blink := {}  ## visitor -> seconds left
 
 
 func setup(g: Node3D) -> void:
@@ -45,6 +50,17 @@ func setup(g: Node3D) -> void:
 	_stations = g.get_node("Stations").get_children()
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	GameState.haunted.connect(_on_haunted)
+
+
+func _on_haunted(pos: Vector3, power: float, by: String) -> void:
+	var r := Visitor.HEAR * power
+	_rings.append([pos, r, 0.0, UI.GOLD if by == "breath" else UI.ORANGE])
+	if GameState.stage != GameState.Stage.HAUNT:  # visitor.gd: only then do they come to look
+		return
+	for v in get_tree().get_nodes_in_group("visitor"):
+		if v.visible and v.kind == Visitor.Kind.ARCH and Vector2(v.global_position.x - pos.x, v.global_position.z - pos.z).length() <= r:
+			_blink[v] = BLINK_TIME
 
 
 ## Room name at a world position, "" outside every room (door gaps, inside walls).
@@ -75,6 +91,13 @@ func _rect(r: Rect2) -> Rect2:
 
 func _process(delta: float) -> void:
 	_t += delta
+	for g in _rings:
+		g[2] += delta
+	_rings = _rings.filter(func(g): return g[2] < RING_TIME)
+	for v in _blink.keys():
+		_blink[v] -= delta
+		if _blink[v] <= 0 or not is_instance_valid(v):
+			_blink.erase(v)
 	if is_visible_in_tree():
 		queue_redraw()
 
@@ -123,10 +146,16 @@ func _draw() -> void:
 			Station.Kind.CIRCLE:
 				if not sealed:
 					draw_arc(p, s * 1.2, 0, TAU, 32, UI.MOM, maxf(1.5, s * 0.1))
+	for g in _rings:
+		var k: float = g[2] / RING_TIME
+		draw_arc(to_map(g[0]), g[1] * s * ease(k, 0.4), 0, TAU, 48, Color(g[3], 0.8 * (1.0 - k)), maxf(2.0, s * 0.15))
 	for v in get_tree().get_nodes_in_group("visitor"):
 		if v.visible:
 			var col: Color = UI.GOLD if v.kind == Visitor.Kind.PRIEST else UI.GREEN
 			var p := to_map(v.global_position)
+			if _blink.has(v) and fmod(_t, 0.3) < 0.15:  # heard it: blinks
+				col = UI.PAPER
+				draw_arc(p, maxf(7.0, s * 0.6), 0, TAU, 20, UI.ORANGE, 2.0)
 			draw_circle(p, maxf(4.0, s * 0.32), UI.INK)
 			draw_circle(p, maxf(3.0, s * 0.25), col)
 	var pl: Node3D = game.get_node("Player")

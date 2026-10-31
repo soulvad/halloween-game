@@ -91,6 +91,10 @@ func _ready() -> void:
 	Fx.kick(p.camera)
 	Fx.sound(candle, "no_such_sound")
 	Fx.sound_ui(get_tree(), "no_such_sound")
+	p._wisp(candle.global_position)  # the E streak
+	p._overlay(candle, p._aim_mat)  # the aim rim reaches every mesh of a station
+	assert(candle.find_children("*", "MeshInstance3D", true, false).all(func(m): return m.material_overlay == p._aim_mat))
+	p._overlay(candle, null)
 
 	# the E card over a station never takes the mouse (it would freeze the view), and sits over the thing, not the ceiling
 	assert(hud._prompt.mouse_filter == Control.MOUSE_FILTER_IGNORE)
@@ -130,6 +134,7 @@ func _ready() -> void:
 	olena.global_position = near.call(c2)
 	c2.interact(p)
 	assert(olena._investigate > 0 and olena.lured_by() == "breath" and GameState.haunts == 1)
+	assert(hud._mini._rings.size() == 1 and hud._mini._blink.has(olena))  # the map: a ring spreads, she blinks
 	var t := await _until(func(): return 2 in GameState.memories, 30)
 	print("Memory 2 found after %.1f s" % t)
 	assert(t >= mem.call(2).EXAMINE_TIME)  # she walks up and looks a while, not found on arrival
@@ -184,6 +189,7 @@ func _ready() -> void:
 	g.priest_in = 0.01
 	await _frames(3)
 	assert(priest.visible and GameState.stage == GameState.Stage.EVIDENCE and g.get_node_or_null("Level/Rubble") == null)
+	assert(hud._stage_title.text == hud.STAGE_NAMES[GameState.Stage.EVIDENCE])  # the stage title card
 
 	# your room: they look over your things, then read your name (memory 5); knocking only works after that
 	var wall = st.call("Wall")
@@ -205,6 +211,7 @@ func _ready() -> void:
 	assert(GameState.wall_knocked)
 	await _frames(2)
 	assert(GameState.stage == GameState.Stage.RITUAL)
+	assert(hud._knocked)  # the beat dots went cyan
 
 	# ritual, then hold E in the circle; releasing starts over
 	t = await _until(func(): return GameState.ritual >= 1.0, 60)

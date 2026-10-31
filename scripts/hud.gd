@@ -4,6 +4,7 @@ const UI = preload("res://scripts/ui.gd")
 const Station = preload("res://scripts/station.gd")
 const ComicPage = preload("res://scripts/comic_page.gd")
 const MapView = preload("res://scripts/map_view.gd")
+const Fx = preload("res://scripts/fx.gd")
 const SCREENS := "res://scripts/screens.gd"  ## settings, written by the menu side
 
 const PROMPT_OVER := 0.4  ## m over the target's top where the E card sits (= a station's label height)
@@ -21,6 +22,9 @@ const POWER_ICON := {
 const STAGE_NAMES := ["Помітьте мене", "Священник", "Пошуки", "Твоя кімната", "Ритуал"]  ## by GameState.Stage
 const ROOM := Rect2(17.5, -12.5, 6, 4.7)  ## your sealed room (x, z), from the level layout
 const ROOM_BANNER_TIME := 1.8  ## seconds the room name shows after you float into a room
+const STAGE_CARD_TIME := 2.6  ## seconds the stage title card stays (counts only while the game runs)
+const FLY_TIME := 0.7  ## a new power's icon flying from the screen centre into its slot
+const KNOCK_DOT := 46.0  ## px, the beat dots ●●● ● while aiming at the knock wall
 const RUBBLE_POS := Vector3(17.5, 0, -10)  ## shortcut: map marker spot if the level has no "Rubble" node; use the node once it exists
 
 var game
@@ -45,6 +49,14 @@ var _toast: VBoxContainer
 var _toast_title: Label
 var _toast_text: Label
 var _toast_t := 0.0
+var _stage_card: VBoxContainer
+var _stage_title: Label
+var _stage_sub: Label
+var _knock_row: HBoxContainer
+var _knock_dots: Array[PanelContainer] = []
+var _knock_n := 0
+var _knocked := false
+var _prompt_for: Node3D  ## the target the E card was built for: a new one pops in
 var _letgo: Control
 var _hold_fill: Panel
 var _hold_label: Label
@@ -60,6 +72,8 @@ var _sub_frame := -1
 var _end: Control
 var _book: PanelContainer
 var _book_badge: PanelContainer
+var _book_btn: PanelContainer
+var _goal_pulse := false  ## a new goal: pulse the book once the game runs again (not under a comic)
 var _book_stage: Label
 var _goal_rows: Array[Dictionary] = []
 var _goal_now := 0
@@ -93,6 +107,8 @@ func _ready() -> void:
 	_hud.add_child(dot)
 	dot.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
 	_build_toast()
+	_build_stage_card()
+	_build_knock()
 	_build_letgo()
 	_build_map()
 	_build_book()
@@ -100,6 +116,7 @@ func _ready() -> void:
 	GameState.hint_unlocked.connect(func(_id): _rebuild_hints())
 	GameState.memory_found.connect(func(_id): _rebuild_hints(); _update_comic())
 	GameState.power_gained.connect(_on_power)
+	GameState.stage_changed.connect(_on_stage)
 	GameState.finished.connect(_on_finished)
 
 
@@ -145,7 +162,13 @@ func _process(delta: float) -> void:
 	_update_powers()
 	if _active_goal() != _goal_now:
 		_goal_now = _active_goal()
+		_goal_pulse = true
 		_rebuild_hints()
+	if _goal_pulse and not get_tree().paused:
+		_goal_pulse = false
+		_book_btn.pivot_offset = _book_btn.size / 2
+		Fx.pop(_book_btn, 1.18, 0.45)
+		Fx.sound_ui(get_tree(), "chime", -12.0, 1.3)
 	_update_right()
 	_update_bottom(t)
 	var letting: bool = game.at_release()
@@ -156,6 +179,7 @@ func _process(delta: float) -> void:
 		_hold_fill.size = Vector2((_hold_fill.get_parent().size.x - 8) * f, 26)
 		_hold_label.text = "%.1f с" % maxf(game.RELEASE_TIME - game.hold, 0)
 	_update_prompt(null if letting else t)
+	_update_knock(t)
 	if _map.visible:
 		_update_map()
 	if _book.visible:
@@ -309,7 +333,7 @@ func _build_powers() -> void:
 		tv.add_child(n)
 		tv.add_child(h)
 		row.add_child(tv)
-		_powers[p] = {sb = _sb(tile), icon = icon, name = n, help = h}
+		_powers[p] = {sb = _sb(tile), tile = tile, icon = icon, name = n, help = h}
 
 
 func _update_powers() -> void:
@@ -501,12 +525,21 @@ func _update_prompt(t) -> void:
 	var top: Vector3 = t.global_position + Vector3.UP * (t.size.y / 2 + PROMPT_OVER) if t else Vector3.ZERO
 	_prompt.visible = t != null and cam and not cam.is_position_behind(top)
 	if not _prompt.visible:
+		_prompt_for = null
 		return
 	_prompt_title.text = t.title().replace(": ", " · ")
 	_prompt_sub.text = _prompt_hint(t)
 	_prompt_key.bg_color = UI.PUMPKIN if t.can_use() else UI.GREY
 	_prompt.size = Vector2.ZERO  # shrink to the new text
 	_prompt.position = cam.unproject_position(top) - Vector2(_prompt.size.x / 2, _prompt.size.y + PROMPT_GAP)
+	_prompt.pivot_offset = Vector2(_prompt.size.x / 2, _prompt.size.y)
+	if t != _prompt_for:  # a new target: the card swells up out of it instead of snapping in
+		_prompt_for = t
+		_prompt.modulate.a = 0.0
+		_prompt.scale = Vector2(0.8, 0.8)
+		var tw := _prompt.create_tween().set_parallel()
+		tw.tween_property(_prompt, "modulate:a", 1.0, 0.15)
+		tw.tween_property(_prompt, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _build_toast() -> void:
@@ -528,6 +561,105 @@ func _on_power(p: String) -> void:
 	_toast_title.text = "Нова сила: %s" % GameState.POWER_NAMES.get(p, p)
 	_toast_text.text = GameState.POWER_HELP.get(p, "")
 	_toast_t = TOAST_TIME
+	_fly_power(p)
+
+
+## The new power's icon swells mid-screen, then flies into its slot in the powers card; a chime when it lands.
+## The tween stops while the tree is paused, so under a memory comic it waits mid-screen for the comic to end.
+func _fly_power(p: String) -> void:
+	var d: Dictionary = _powers[p]
+	var icon := _power_icon(p, 72)
+	icon.modulate = UI.GOLD
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hud.add_child(icon)
+	icon.size = Vector2(72, 72)
+	icon.pivot_offset = icon.size / 2
+	icon.position = get_viewport().get_visible_rect().size / 2 - icon.size / 2
+	icon.scale = Vector2(0.3, 0.3)
+	var tile: Control = d.tile
+	var to: Vector2 = tile.global_position + tile.size / 2 - icon.size / 2
+	var tw := icon.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_STOP)
+	tw.tween_property(icon, "scale", Vector2(1.3, 1.3), 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(0.5)
+	tw.tween_property(icon, "position", to, FLY_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	tw.parallel().tween_property(icon, "scale", Vector2(0.45, 0.45), FLY_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_callback(func():
+		icon.queue_free()
+		tile.pivot_offset = tile.size / 2
+		Fx.pop(tile, 1.35, 0.4)
+		Fx.sound_ui(get_tree(), "chime"))
+
+
+## Big stage title mid-screen, «Етап 3 · Твоя кімната», fading in and out.
+func _build_stage_card() -> void:
+	_stage_card = UI.vbox(2)
+	_stage_card.alignment = BoxContainer.ALIGNMENT_CENTER
+	_pin(_stage_card, Control.PRESET_CENTER_TOP, 0, 300)
+	_stage_sub = UI.label("", 22, UI.PAPER, "body", 900, true)
+	_stage_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_stage_card.add_child(_stage_sub)
+	_stage_title = UI.title("", 104, UI.GOLD)
+	_stage_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_stage_card.add_child(_stage_title)
+	_stage_card.modulate.a = 0.0
+
+
+func _on_stage(s: int) -> void:
+	var i := clampi(s, 0, STAGE_NAMES.size() - 1)
+	_stage_sub.text = "Етап %d" % (i + 1)
+	_stage_title.text = STAGE_NAMES[i]
+	var tw := _stage_card.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_STOP)  # under the time-lapse it waits
+	tw.tween_property(_stage_card, "modulate:a", 1.0, 0.4)
+	tw.tween_interval(STAGE_CARD_TIME)
+	tw.tween_property(_stage_card, "modulate:a", 0.0, 0.8)
+
+
+## The knock code as four big dots, ●●● ●, below the crosshair while you aim at the knock wall.
+func _build_knock() -> void:
+	_knock_row = UI.hbox(14)
+	_knock_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_pin(_knock_row, Control.PRESET_CENTER)
+	_knock_row.offset_top = 110  # under the crosshair (_pin centres with no offset)
+	_knock_row.offset_bottom = 110
+	for i in 4:
+		if i == 3:
+			var gap := Control.new()
+			gap.custom_minimum_size.x = KNOCK_DOT
+			_knock_row.add_child(gap)
+		var d := _ring(UI.PAPER, int(KNOCK_DOT))
+		_sb(d).bg_color = Color(UI.INK, 0.6)
+		_knock_row.add_child(d)
+		_knock_dots.append(d)
+	_knock_row.hide()
+
+
+## Fill a dot per knock (station.gd keeps the attempt in `_knocks`); the code done = all cyan + a flash.
+func _update_knock(t) -> void:
+	if GameState.wall_knocked and not _knocked:
+		_knocked = true
+		Fx.flash(get_tree(), Color(UI.CYAN, 0.4), 0.7)
+		for d in _knock_dots:
+			_sb(d).bg_color = UI.CYAN
+			_sb(d).border_color = UI.CYAN
+		var tw := _knock_row.create_tween()
+		tw.tween_interval(1.0)
+		tw.tween_property(_knock_row, "modulate:a", 0.0, 0.6)
+		tw.tween_callback(_knock_row.hide)
+		return
+	if _knocked:
+		return
+	var on: bool = t != null and _kind(t) == "KNOCK" and GameState.stage == GameState.Stage.EVIDENCE and GameState.name_known()
+	_knock_row.visible = on
+	if not on:
+		return
+	var n: int = t._knocks.size()
+	for i in 4:
+		_sb(_knock_dots[i]).bg_color = UI.PAPER if i < n else Color(UI.INK, 0.6)
+	if n > _knock_n:
+		var d := _knock_dots[n - 1]
+		d.pivot_offset = d.size / 2
+		Fx.pop(d, 1.3, 0.2)
+	_knock_n = n
 
 
 func _build_letgo() -> void:
@@ -683,6 +815,7 @@ func _set_memory_row(l: Label, id: int) -> void:
 
 func _book_tile() -> PanelContainer:
 	var p := UI.panel(UI.PUMPKIN, 18, 5, 10, 0)
+	_book_btn = p
 	var row := UI.hbox(10)
 	p.add_child(row)
 	var book_icon := _svg_icon(BOOK_SVG, 30)

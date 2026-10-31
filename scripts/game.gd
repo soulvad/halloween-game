@@ -12,6 +12,8 @@ const Ambient = preload("res://scripts/ambient.gd")
 const Lanterns = preload("res://scripts/lanterns.gd")
 const Decor = preload("res://scripts/decor.gd")
 const Look = preload("res://scripts/look.gd")
+const Fx = preload("res://scripts/fx.gd")
+const UI = preload("res://scripts/ui.gd")
 const COMIC_SCENE := "res://scenes/comic.tscn"
 const Tour = preload("res://scripts/tour.gd")
 const RELEASE_TIME := 2.5  ## seconds to hold E in the circle
@@ -40,6 +42,8 @@ const ARCH_COLOR := Color("8BEA4E")
 const PRIEST_COLOR := Color("FFC531")
 const LAYER_FLOOR := 32  ## layer 6: only the navmesh baker sees it
 const NAV_MASK := 7 | 64  ## walls, furniture, the collapsed wall (people-only)
+const MEMORY_SLOW := 0.3  ## time scale for the beat before a memory comic...
+const MEMORY_SLOW_TIME := 0.5  ## ...this many real seconds
 
 var comics_enabled := true  ## the smoke test turns comics off
 var hold := 0.0  ## seconds E has been held in the circle
@@ -245,8 +249,20 @@ func _release(holding: bool, delta: float) -> void:
 		GameState.finish(true)
 
 
+## A memory comes back: a cyan flash, the world slows for a breath, then its comic.
+## Slow motion only with comics on: the smoke test drives Engine.time_scale itself.
 func _on_memory_found(id: int) -> void:
+	Fx.flash(get_tree(), Color(UI.CYAN, 0.55), 0.6)
+	Fx.sound_ui(get_tree(), "memory")
+	if comics_enabled:
+		Engine.time_scale = MEMORY_SLOW
+		await get_tree().create_timer(MEMORY_SLOW_TIME, true, false, true).timeout
+		Engine.time_scale = 1.0
 	comic("memory_%d" % id)
+
+
+func _exit_tree() -> void:
+	Engine.time_scale = 1.0  # left mid slow motion (back to the menu)
 
 
 func _on_power_gained(p: String) -> void:
