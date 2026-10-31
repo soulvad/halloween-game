@@ -13,10 +13,11 @@ const EYE := 1.55
 const BOB := 0.04  ## gentle float of the view
 ## Flying: the view swells up and down and rocks a little, stronger with speed, and leans into a strafe.
 const FLY_BOB := 0.075  ## m at walking speed
-const FLY_SIDE := 0.025  ## m
-const FLY_ROLL := 0.022  ## rad
+const FLY_SPRINT_BOB := 0.07  ## m added on top of the bob at full sprint
+const FLY_SIDE := 0.01  ## m, no stronger on a sprint
+const FLY_ROLL := 0.009  ## rad, no stronger on a sprint
 const FLY_PITCH := 0.009  ## rad
-const FLY_LEAN := 0.028  ## rad at walking speed, sideways
+const FLY_LEAN := 0.012  ## rad at walking speed, sideways
 const FLY_RATE := 3.4  ## rad/s of the swell at walking speed
 const FLY_EASE := 2.5  ## how quickly it fades in and out, per second
 const LAYER_SELF := 4  ## visual layer 3: the own body, hidden from the first-person camera
@@ -60,7 +61,8 @@ func _physics_process(delta: float) -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	_sway(delta)
-	head.position.y = EYE + sin(_t * 1.6) * BOB + sin(_fly_t) * FLY_BOB * flight
+	var sprint_part := clampf((flight - 1.0) / (SPRINT / WALK - 1.0), 0, 1)
+	head.position.y = EYE + sin(_t * 1.6) * BOB + sin(_fly_t) * (FLY_BOB * flight + FLY_SPRINT_BOB * sprint_part)
 	body.position.y = 1.1 + sin(_t * 1.6) * 0.08
 
 
@@ -83,8 +85,9 @@ func _sway(delta: float) -> void:
 	_fly_t += delta * FLY_RATE * (0.6 + 0.4 * flight)  # by its own clock: changing speed never jumps the phase
 	var side := velocity.dot(global_basis.x) / WALK
 	_lean = lerpf(_lean, side, minf(FLY_EASE * delta, 1))
-	head.position.x = cos(_fly_t * 0.5) * FLY_SIDE * flight
-	camera.rotation.z = sin(_fly_t * 0.5) * FLY_ROLL * flight - _lean * FLY_LEAN
+	var rock := minf(flight, 1.0)
+	head.position.x = cos(_fly_t * 0.5) * FLY_SIDE * rock
+	camera.rotation.z = sin(_fly_t * 0.5) * FLY_ROLL * rock - _lean * FLY_LEAN
 	camera.rotation.x = cos(_fly_t) * FLY_PITCH * flight
 
 
