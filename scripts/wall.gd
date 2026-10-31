@@ -77,6 +77,44 @@ static func textured(mat: StandardMaterial3D, tex: String, tiles := 0.5) -> void
 	mat.albedo_color = Color.WHITE
 	mat.uv1_triplanar = true
 	mat.uv1_scale = Vector3.ONE * tiles
+	var normal := path.get_basename() + "_normal.png"  # optional relief
+	mat.normal_enabled = ResourceLoader.exists(normal)
+	if mat.normal_enabled:
+		mat.normal_texture = load(normal)
+		mat.normal_scale = 1.5
+
+
+## The floor plane remade as a grid that dips and swells (worn, settled cellar floor), at most `depth` m off level.
+## Visual only: people walk the navmesh on the flat invisible floor (game.gd), so it stays shallow.
+static func uneven(floor: MeshInstance3D, depth := 0.05) -> void:
+	var plane := floor.mesh as PlaneMesh
+	if plane == null:
+		return
+	var grid := plane.duplicate() as PlaneMesh
+	grid.subdivide_width = int(plane.size.x * 4)
+	grid.subdivide_depth = int(plane.size.y * 4)
+	var noise := FastNoiseLite.new()
+	noise.frequency = 0.35
+	noise.fractal_octaves = 3
+	var st := SurfaceTool.new()
+	st.create_from(grid, 0)
+	var arrays := st.commit_to_arrays()
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	for i in verts.size():
+		var p := floor.transform * verts[i]
+		verts[i].y = (noise.get_noise_2d(p.x, p.z) * 0.75 - 0.25) * depth  # mostly sags: -depth .. +depth / 2
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = null
+	arrays[Mesh.ARRAY_TANGENT] = null
+	var m := ArrayMesh.new()
+	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	st.clear()
+	st.create_from(m, 0)
+	st.generate_normals()
+	st.generate_tangents()
+	var out := st.commit()
+	out.surface_set_material(0, plane.material)
+	floor.mesh = out
 
 
 static func box(s: Vector3, c: Color) -> MeshInstance3D:

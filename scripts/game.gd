@@ -32,6 +32,7 @@ var _region: NavigationRegion3D
 func _ready() -> void:
 	_bake_nav()
 	Wall.textured($Level/Floor.mesh.material, "floor", 0.25)
+	Wall.uneven($Level/Floor)
 	Wall.textured($Level/Ceiling.mesh.material, "ceiling", 0.25)
 	GameState.reset()
 	var ambient := Ambient.new()

@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://art/models/src/kaykit/table_long.glb" id="1"]
+
+[node name="Table" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1")]
+transform = Transform3D(3.3678e-17, 0, 0.55, 0, 0.8, 0, -0.5, 0, 3.0616e-17, -1.3113e-07, -6.5565e-08, -8.9407e-08)

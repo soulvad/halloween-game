@@ -229,8 +229,10 @@ func _refresh() -> void:
 				_mat().emission_enabled = lit
 		Kind.DOOR:
 			_block.disabled = open
-			_mesh.rotation.y = -1.4 if open else 0.0
-			_mesh.position.x = -size.x / 2 if open else 0.0
+			var a := 1.5 if open else 0.0  # swings into the passage (-Z), hinged on its -X edge
+			_mesh.rotation.y = a
+			_mesh.position.x = size.x / 2 * (cos(a) - 1)
+			_mesh.position.z = -size.x / 2 * sin(a)
 		Kind.MIRROR:
 			if GameState.mirror_written and _mat():
 				_mat().albedo_color = Color(0.55, 0.1, 0.1)
