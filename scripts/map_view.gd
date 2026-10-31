@@ -8,7 +8,6 @@ const Station = preload("res://scripts/station.gd")
 const Visitor = preload("res://scripts/visitor.gd")
 const UI = preload("res://scripts/ui.gd")
 
-## Story names of the rooms (tools/gen_dungeon.py), shown on the big map and when you float into a room.
 const ROOM_NAMES := {
 	"CorridorV": "Вхідний коридор", "CorridorH": "Коридор кайданів", "FarLeft": "Комірчина управителя",
 	"R1L": "Спальня слуг", "R1R": "Комора", "R2L": "Нари", "R2R": "Кімната з дзеркалом",
@@ -16,18 +15,26 @@ const ROOM_NAMES := {
 	"RightTall": "Склеп", "PassageUp": "Прохід за дверима", "PassageTop": "Прохід за дверима",
 	"YourRoom": "Твоя кімната",
 }
-const ROCK := Color("0E0A14")
-const FLOOR := Color("4A3F5C")
-const FLOOR_EDGE := Color("A99BC4")
-const FURNITURE := Color("6E5440")
-const HIDDEN := Color("2A2236")  ## your room before the wall is down
+const ROCK := Color(0.78, 0.71, 0.6)
+const FLOOR := Color("EBDDBF")
+const FLOOR_EDGE := Color("3B2A1E")
+const FURNITURE := Color("B49B76")
+const HIDDEN := Color("C9B593")
+const DOOR := Color("8E5A2E")
+const RITUAL := Color("B07A2A")
+const PAPER_TEX := preload("res://art/ui/textures/map_paper.png")
+const YOU := preload("res://art/ui/icons/marker_you.png")
+const CANDLE := preload("res://art/ui/icons/marker_candle_lit.png")
+const MEMORY := preload("res://art/ui/icons/marker_memory.png")
+const ARCHAEOLOGIST := preload("res://art/ui/icons/marker_archaeologist.png")
+const PRIEST := preload("res://art/ui/icons/marker_priest.png")
 const RING_TIME := 1.2  ## s, a haunt's ring spreading out and fading
 const BLINK_TIME := 2.0  ## s the dots of those who heard it blink
 
 var game: Node3D
 var follow: Node3D
 var px_per_m := 9.0
-var names := false  ## room names (big map)
+var names := false
 var _rooms := {}
 var _doors: Array = []
 var _furniture: Array[Rect2] = []
@@ -55,7 +62,7 @@ func setup(g: Node3D) -> void:
 
 func _on_haunted(pos: Vector3, power: float, by: String) -> void:
 	var r := Visitor.HEAR * power
-	_rings.append([pos, r, 0.0, UI.GOLD if by == "breath" else UI.ORANGE])
+	_rings.append([pos, r, 0.0, RITUAL if by == "breath" else UI.ORANGE])
 	if GameState.stage != GameState.Stage.HAUNT:  # visitor.gd: only then do they come to look
 		return
 	for v in get_tree().get_nodes_in_group("visitor"):
@@ -63,7 +70,6 @@ func _on_haunted(pos: Vector3, power: float, by: String) -> void:
 			_blink[v] = BLINK_TIME
 
 
-## Room name at a world position, "" outside every room (door gaps, inside walls).
 func room_at(p: Vector3) -> String:
 	for k in _rooms:
 		if _rooms[k].has_point(Vector2(p.x, p.z)):
@@ -77,7 +83,6 @@ func _scale() -> float:
 	return minf(size.x / _bounds.size.x, size.y / _bounds.size.y) * 0.96
 
 
-## World position → control pixels (north up: −z is up, like the old top-down camera).
 func to_map(p: Vector3) -> Vector2:
 	var s := _scale()
 	var c := Vector2(follow.global_position.x, follow.global_position.z) if follow else _bounds.get_center()
@@ -106,9 +111,9 @@ func _draw() -> void:
 	if game == null:
 		return
 	var s := _scale()
-	draw_rect(Rect2(Vector2.ZERO, size), ROCK)
+	draw_texture_rect(PAPER_TEX, Rect2(Vector2.ZERO, size), true, ROCK)
 	var sealed: bool = game.get_node_or_null("Level/Rubble") != null
-	for k in _rooms:  # outline pass, then floors over it: one clean edge around joined rooms
+	for k in _rooms:
 		draw_rect(_rect(_rooms[k]).grow(maxf(1.5, s * 0.12)), FLOOR_EDGE)
 	for d in _doors:
 		draw_rect(_rect(d).grow(maxf(1.5, s * 0.12)), FLOOR_EDGE)
@@ -122,47 +127,46 @@ func _draw() -> void:
 	if rubble:
 		var c := to_map(rubble.global_position)
 		var half: Vector2 = Vector2(rubble.size.x, rubble.size.z) * s / 2
-		draw_rect(Rect2(c - half, half * 2).grow(1), UI.ORANGE)
-	var font := UI.font("body", 800)
+		draw_rect(Rect2(c - half, half * 2).grow(1), UI.RED)
+	var font := UI.font("hand")
 	if names:
 		for k in _rooms:
 			var n: String = ROOM_NAMES.get(k, "")
 			if n == "" or (k == "PassageTop") or (sealed and k == "YourRoom"):
 				continue
 			var r := _rect(_rooms[k])
-			var fs := 18 if r.size.x > 110 else 13
-			draw_string(font, r.get_center() + Vector2(-r.size.x / 2, fs * 0.35), n, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, fs, Color(UI.PAPER, 0.75))
+			var fs := 22 if r.size.x > 110 else 16
+			draw_string(font, r.get_center() + Vector2(-r.size.x / 2, fs * 0.35), n, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, fs, Color(UI.INK, 0.72))
 	var pulse := 0.5 + 0.5 * sin(_t * 4.0)
 	for st in _stations:
 		var p := to_map(st.global_position)
 		match st.kind:
 			Station.Kind.CANDLE:
 				if st.lit:
-					draw_circle(p, maxf(2.0, s * 0.18), UI.GOLD)
+					_marker(CANDLE, p, maxf(16.0, s * 0.9))
 			Station.Kind.MEMORY:
-				if st.visible:  # only the next memory in order is shown in the world
-					draw_circle(p, maxf(5.0, s * 0.45) * (1.0 + 0.35 * pulse), Color(UI.CYAN, 0.35))
-					draw_circle(p, maxf(3.0, s * 0.25), UI.CYAN)
+				if st.visible:
+					_marker(MEMORY, p, maxf(20.0, s * 1.1) * (1.0 + 0.25 * pulse))
 			Station.Kind.CIRCLE:
 				if not sealed:
-					draw_arc(p, s * 1.2, 0, TAU, 32, UI.MOM, maxf(1.5, s * 0.1))
+					draw_arc(p, s * 1.2, 0, TAU, 32, RITUAL, maxf(1.5, s * 0.1))
 	for g in _rings:
 		var k: float = g[2] / RING_TIME
-		draw_arc(to_map(g[0]), g[1] * s * ease(k, 0.4), 0, TAU, 48, Color(g[3], 0.8 * (1.0 - k)), maxf(2.0, s * 0.15))
+		draw_arc(to_map(g[0]), g[1] * s * ease(k, 0.4), 0, TAU, 48, Color(g[3], 0.85 * (1.0 - k)), maxf(2.5, s * 0.15))
 	for v in get_tree().get_nodes_in_group("visitor"):
 		if v.visible:
-			var col: Color = UI.GOLD if v.kind == Visitor.Kind.PRIEST else UI.GREEN
 			var p := to_map(v.global_position)
+			var side := maxf(16.0, s * 0.8)
 			if _blink.has(v) and fmod(_t, 0.3) < 0.15:  # heard it: blinks
-				col = UI.PAPER
-				draw_arc(p, maxf(7.0, s * 0.6), 0, TAU, 20, UI.ORANGE, 2.0)
-			draw_circle(p, maxf(4.0, s * 0.32), UI.INK)
-			draw_circle(p, maxf(3.0, s * 0.25), col)
+				draw_arc(p, side * 0.75, 0, TAU, 24, UI.RED, 3.0)
+				side *= 1.3
+			_marker(PRIEST if v.kind == Visitor.Kind.PRIEST else ARCHAEOLOGIST, p, side)
 	var pl: Node3D = game.get_node("Player")
-	var at := to_map(pl.global_position)
-	var fwd := Vector2(-sin(pl.rotation.y), -cos(pl.rotation.y))  # −z forward, north up
-	var side := Vector2(-fwd.y, fwd.x)
-	var r := maxf(7.0, s * 0.55)
-	var tri := PackedVector2Array([at + fwd * r * 1.3, at - fwd * r * 0.7 + side * r * 0.8, at - fwd * r * 0.35, at - fwd * r * 0.7 - side * r * 0.8])
-	draw_colored_polygon(tri, UI.CYAN)
-	draw_polyline(tri + PackedVector2Array([tri[0]]), UI.INK, 2.0)
+	var fwd := Vector2(-sin(pl.rotation.y), -cos(pl.rotation.y))
+	draw_set_transform(to_map(pl.global_position), atan2(fwd.x, -fwd.y))
+	_marker(YOU, Vector2.ZERO, maxf(22.0, s * 1.2))
+	draw_set_transform(Vector2.ZERO)
+
+
+func _marker(tex: Texture2D, at: Vector2, side: float) -> void:
+	draw_texture_rect(tex, Rect2(at - Vector2(side, side) / 2, Vector2(side, side)), false)
