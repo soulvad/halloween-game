@@ -82,6 +82,16 @@ func _ready() -> void:
 	await _frames(1)
 	assert(not st.call("Circle").visible)  # the ritual circle appears with the ritual
 
+	# feedback kit: every effect runs on a real station (sounds stay silent when a file is missing)
+	var Fx = load("res://scripts/fx.gd")
+	Fx.shake(candle)
+	Fx.pop(candle)
+	assert(Fx.puff(g, candle.global_position) is CPUParticles3D)
+	Fx.flash(get_tree())
+	Fx.kick(p.camera)
+	Fx.sound(candle, "no_such_sound")
+	Fx.sound_ui(get_tree(), "no_such_sound")
+
 	# the E card over a station never takes the mouse (it would freeze the view), and sits over the thing, not the ceiling
 	assert(hud._prompt.mouse_filter == Control.MOUSE_FILTER_IGNORE)
 	var m1 = mem.call(1)
