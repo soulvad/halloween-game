@@ -76,6 +76,7 @@ static func textured(mat: StandardMaterial3D, tex: String, tiles := 0.5) -> void
 	mat.albedo_texture = load(path)
 	mat.albedo_color = Color.WHITE
 	mat.uv1_triplanar = true
+	mat.uv1_world_triplanar = true  # one pattern across pieces: joints line up, coplanar overlaps can't flicker
 	mat.uv1_scale = Vector3.ONE * tiles
 	var normal := path.get_basename() + "_normal.png"  # optional relief
 	mat.normal_enabled = ResourceLoader.exists(normal)
