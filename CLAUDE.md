@@ -55,4 +55,5 @@ Story: `docs/comic_script.md` (comic script) + the team's story doc. Тиміш,
 - Art is placeholder boxes; swap meshes without touching logic.
 
 ## TODO (agreed, not built yet)
+- Gameplay rework: `docs/gameplay_plan.md` (people find memories 2–5, time-lapse cutscene replaces door/plan/dig, collapsed wall, memory sounds). The game loop above is the current build until it lands.
 - Comic voice-over: record lines + per-panel timings (`time` / `voice` in the comic data), then drop the temporary on-screen texts.
