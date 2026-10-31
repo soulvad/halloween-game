@@ -3,3 +3,6 @@
 engine/
 *.tmp
 .remember/
+
+# local Claude Code tooling (session-sync hooks)
+.claude/
