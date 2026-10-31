@@ -1,7 +1,7 @@
 extends CanvasLayer
 ## «Минають години…»: non-interactive cutscene after the priest arrives. The guide's cut-away top view (as tour.gd)
 ## follows the visitors, sped up along navmesh paths: two rooms searched, the room with the old plan, then the
-## bricked wall `Level/Rubble`, which they clear. Paused tree, Space / Esc skips to the same end state:
+## collapsed wall `Level/Rubble`, which they clear. Paused tree, Space / Esc skips to the same end state:
 ## wall gone + navmesh rebaked, visitors standing at the opening, player camera current, tree running.
 
 signal finished
