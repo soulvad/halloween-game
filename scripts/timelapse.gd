@@ -3,6 +3,7 @@ extends CanvasLayer
 ## follows the visitors, sped up along navmesh paths: two rooms searched, the room with the old plan, then the
 ## collapsed wall `Level/Rubble`, which they clear. Paused tree, Space / Esc skips to the same end state:
 ## wall gone + navmesh rebaked, visitors standing at the opening, player camera current, tree running.
+## The ghost (its cloud body, player.show_body) trails the group the whole way and stays where it ends up.
 
 signal finished
 
@@ -18,8 +19,11 @@ const CLOCK_FROM := 21.0  ## the clock pill runs 21:00 → 05:00
 const CLOCK_HOURS := 8.0
 const ARCH_COLOR := Color("8BEA4E")
 const PRIEST_COLOR := Color("FFC531")
+const GHOST_GAP := 1.6  ## m the ghost keeps behind the group's centre
+const GHOST_FOLLOW := 2.5  ## how fast it catches up (1/s)
 
 var game: Node3D
+var _ghost: Node3D  ## the player, drifting after the searchers
 var _visitors: Array = []
 var _legs: Array = []  ## per leg: Array of PackedVector3Array, one path per visitor
 var _tween: Tween
@@ -48,7 +52,9 @@ func play(g: Node3D) -> void:
 	_cam.far = 120
 	_cam.cull_mask = 0xFFFFF & ~LAYER_CEILING & ~LAYER_LABELS
 	g.add_child(_cam)
-	_cam.global_transform = g.get_node("Player").camera.global_transform
+	_ghost = g.get_node("Player")
+	_ghost.show_body(true)
+	_cam.global_transform = _ghost.camera.global_transform
 	_cam.current = true
 	_light = DirectionalLight3D.new()  # soft top light so the cut-away reads from above
 	_light.light_energy = 0.55
@@ -254,8 +260,20 @@ func _process(delta: float) -> void:
 	var to := Transform3D(Basis(), c + Vector3(0, CAM_H, CAM_D)).looking_at(c, Vector3.UP)
 	var k := 1.0 - exp(-2.0 * delta)
 	_cam.global_transform = Transform3D(_cam.global_transform.basis.slerp(to.basis, k), _cam.global_position.lerp(to.origin, k))
+	_trail(c, 1.0 - exp(-GHOST_FOLLOW * delta))
 	_line_t -= delta
 	_line.visible = _line_t > 0
+
+
+## The ghost drifts after the group's centre `c`, GHOST_GAP behind, facing it; `k` = how far it closes in (1 = all).
+func _trail(c: Vector3, k: float) -> void:
+	var to := c - _ghost.global_position
+	to.y = 0
+	if to.length() < 0.01:
+		return
+	_ghost.rotation.y = atan2(-to.x, -to.z)
+	if to.length() > GHOST_GAP:
+		_ghost.global_position += to.normalized() * (to.length() - GHOST_GAP) * k
 
 
 func _on_said(who: String, text: String, color: Color) -> void:
@@ -277,6 +295,7 @@ func skip() -> void:
 		_tween.kill()
 	for leg in _legs.slice(-1):
 		_walk(INF, leg)
+	_trail(_centre(), 1.0)
 	_clear_rubble()
 	_end()
 
@@ -286,7 +305,8 @@ func _end() -> void:
 		return
 	_done = true
 	GameState.said.disconnect(_on_said)
-	game.get_node("Player").camera.current = true
+	_ghost.show_body(false)
+	_ghost.camera.current = true
 	_cam.queue_free()
 	_light.queue_free()
 	game.get_node("WorldEnvironment").environment.fog_density = _fog

@@ -25,6 +25,9 @@ func _check(g: Node3D) -> void:
 	assert(g.get_node("Player").camera.current)
 	assert(not get_tree().paused)
 	assert(g.get_node("HUD").visible)
+	var p := g.get_node("Player")
+	assert(not p.body.visible)  # the ghost's cloud shows only during the cutscene
+	assert(Vector2(p.global_position.x - 14.75, p.global_position.z + 10.875).length() < 5.0)  # it followed them to the wall
 	for v in get_tree().get_nodes_in_group("visitor"):
 		assert(v.visible and v.global_position.distance_to(Vector3(14.75, v.global_position.y, -10.875)) < 4.0)
 
@@ -40,6 +43,7 @@ func _ready() -> void:
 	t.play(g)
 	await _frames(2)
 	assert(get_tree().paused and not g.get_node("Player").camera.current)
+	assert(g.get_node("Player").body.visible)
 	assert(t._legs.size() == 4)  # two rooms, the plan, the wall
 	var done := [false]
 	t.finished.connect(func(): done[0] = true)
