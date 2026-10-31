@@ -49,7 +49,10 @@ func _ready() -> void:
 	pedestal.interact(p)
 	await _frames(1)
 	assert(eggs._cat_body.visible and not eggs._cat_sound.playing and eggs.cat_spin <= 0)
-	assert(pedestal.collision_layer == 0 and pedestal.shown)
+	assert(pedestal.shown)
+	pedestal.cooldown = 0
+	pedestal.interact(p)  # E while it rises: no second start
+	assert(eggs.cat_wait > 0 and eggs.cat_wait <= Eggs.CAT_DELAY)
 	await _until(func(): return eggs.cat_spin > 0, Eggs.CAT_DELAY + 1)
 	assert("cat" in eggs.found and eggs._cat_sound.playing)
 	var spun: float = eggs._cat_body.rotation.y
@@ -60,6 +63,13 @@ func _ready() -> void:
 	await _frames(3)
 	assert(eggs._cat_body.rotation.y == spun and eggs._cat_body.visible)
 	assert(is_equal_approx(eggs._cat_body.position.y, Eggs.CAT_TOP))
+	# E again: it spins again, right away, and the egg is not counted twice
+	pedestal.cooldown = 0
+	assert(pedestal.can_use())
+	pedestal.interact(p)
+	await _until(func(): return eggs.cat_spin > 0, 1)
+	assert(eggs._cat_sound.playing and eggs.found.count("cat") == 1)
+	await _until(func(): return eggs.cat_spin <= 0, 12)
 
 	# skeleton: E on the bones, it dances with music, then lies down and can do it again
 	assert(bones.can_use() and bones.title() == "Купа кісток: вселитися")

@@ -1,7 +1,7 @@
 extends Node3D
 ## Easter eggs, none of them touch the story. Hidden in the rock between rooms, where only a ghost can go; a coloured
 ## light leaking through the wall is the clue. Cat: E on the pedestal (no text on purpose), the cat rises, spins until
-## its track ends, freezes. Skeleton: E on the bones, it dances. Rat: runs from you along ROUTE, through a hole in a
+## its track ends, freezes; E again, it spins again. Skeleton: E on the bones, it dances. Rat: runs from you along ROUTE, through a hole in a
 ## wall; the turtles' pizza room behind it exists only if you pass through that wall. Phone: an air-raid alert on
 ## Тарас's phone once. Stations of Kind.EGG call touched(). Everything is on visual layer 2, so the minimap and the
 ## guide tour don't give the eggs away.
@@ -20,6 +20,7 @@ const CAT_SPIN := 7.0
 const CAT_DELAY := 2.0  ## seconds from E until the cat starts spinning
 const CAT_TOP := 0.8  ## the pedestal's height
 const DANCE_TIME := 5.0  ## the length of audio/eggs/skeleton.ogg
+const BONES_LABEL := 0.15  ## label height over the top of the pile (stations use 0.4)
 const ROUTE: Array[Vector3] = [Vector3(0, 0, -2), Vector3(0, 0, 1.1), Vector3(-4, 0, 0.9), Vector3(-8.2, 0, 0.9), Vector3(-10, 0, 0.9)]
 const RAT_SPEED := 5.5
 const RAT_SCARE := 3.0
@@ -67,6 +68,7 @@ func _ready() -> void:
 	_hide_from_map(self)
 	if Wall.model("Bones") == null:
 		_build_pile()
+	_bones._label.position.y = _bones.size.y / 2 + BONES_LABEL  # the pile is flat: keep its label close to it
 	_hide_from_map(_bones)
 	_hide_from_map(_pedestal)
 
@@ -142,10 +144,13 @@ func _build_cat() -> void:
 	_cat_sound = _sound(_cat, "cat", 11.0)
 
 
-## One time only: the rags slide off, the cat rises, CAT_DELAY later it spins to its track.
+## First E: the rags slide off, the cat rises, CAT_DELAY later it spins to its track. Every next E spins it again.
 func _open_pedestal() -> void:
+	if _cat_body.visible:
+		if cat_wait < 0 and cat_spin <= 0:  # not while it is still spinning
+			cat_wait = 0.0
+		return
 	_pedestal.shown = true  # stays solid, no "can't use" fade
-	_pedestal.collision_layer = 0  # no more E
 	cat_wait = CAT_DELAY
 	_cat_body.visible = true
 	var tw := create_tween().set_parallel().set_trans(Tween.TRANS_SINE)
@@ -164,6 +169,8 @@ func _run_cat(delta: float) -> void:
 	elif cat_spin > 0:
 		cat_spin -= delta
 		_cat_body.rotation.y += CAT_SPIN * delta  # when it ends the cat just stays as it is
+		if cat_spin <= 0:
+			_cat_sound.stop()  # track and spin end together, ready for the next E
 
 
 # --- skeleton ---
