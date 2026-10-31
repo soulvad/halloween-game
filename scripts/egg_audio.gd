@@ -3,7 +3,7 @@ extends RefCounted
 
 const RATE := 22050
 const DIR := "res://audio/eggs/"
-const LOOPED := ["skeleton"]  ## the cat's track plays once: it spins for exactly as long
+const LOOPED := []  ## every track plays once: the cat spins and the skeleton dances for its length
 const REST := 0.0
 ## Original tune, not any existing song: [Hz, beats]. A minor march for the dancing skeleton.
 const TUNE := [[440.0, 1], [523.25, 1], [659.25, 1], [523.25, 1], [587.33, 1], [698.46, 1], [659.25, 2],
