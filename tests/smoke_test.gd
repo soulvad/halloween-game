@@ -85,9 +85,12 @@ func _ready() -> void:
 	var m1 = mem.call(1)
 	assert(m1.global_position.y + m1.size.y / 2 + hud.PROMPT_OVER < 1.8)
 
-	# world labels: full size up close, smaller further off
+	# world labels: full size up close, smaller further off, gone past the shared range (still seen from aim reach)
 	var cam: Camera3D = p.camera
 	var lbl: Label3D = m1._label
+	assert(lbl.visibility_range_end == UI.LABEL_RANGE and UI.LABEL_RANGE > p.ray.target_position.length())
+	for v in get_tree().get_nodes_in_group("visitor"):
+		assert(v._label.visibility_range_end == UI.LABEL_RANGE)
 	var near_pos := lbl.global_position + Vector3(0, 0, 1.0)
 	var far_pos := lbl.global_position + Vector3(0, 0, 5.0)
 	var cam_from := cam.global_transform

@@ -22,6 +22,7 @@ const DIM := Color("C9C2E8")  ## secondary text on dark
 const SHADE := Color(0.09, 0.067, 0.11, 0.9)  ## dark translucent panels
 const LEVEL_COLORS := [Color.WHITE, CYAN, GOLD, MOM]
 const LABEL_NEAR := 2.0  ## m: world labels keep their full size up to here, then shrink with distance (world_label)
+const LABEL_RANGE := 4.0  ## m: world labels vanish past this; the farthest label from where the aim ray still reaches its station is 3.97 m (the ritual circle)
 
 ## Inline stroke icons (24x24 viewBox), drawn in `color` by icon().
 const ICONS := {

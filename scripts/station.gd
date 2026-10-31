@@ -294,7 +294,7 @@ func _build() -> void:
 			add_child(_flame)
 	_label = Label3D.new()
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_label.visibility_range_end = 6.0  ## first person: only nearby things are labelled
+	_label.visibility_range_end = UI.LABEL_RANGE  ## first person: only nearby things are labelled
 	_label.font_size = 48
 	_label.outline_size = 12
 	_label.pixel_size = LABEL_PX
