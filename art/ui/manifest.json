@@ -1,0 +1,1463 @@
+{
+ "nine_slice": {
+  "card_paper": {
+   "file": "nine/card_paper.png",
+   "size": [
+    240,
+    246
+   ],
+   "insets": {
+    "top": 56,
+    "bottom": 62,
+    "left": 56,
+    "right": 56
+   },
+   "margins": {
+    "top": 14,
+    "bottom": 20,
+    "left": 14,
+    "right": 14
+   },
+   "stretch": "tile_fit"
+  },
+  "card_paper_small": {
+   "file": "nine/card_paper_small.png",
+   "size": [
+    124,
+    112
+   ],
+   "insets": {
+    "top": 30,
+    "bottom": 34,
+    "left": 30,
+    "right": 30
+   },
+   "margins": {
+    "top": 10,
+    "bottom": 14,
+    "left": 10,
+    "right": 10
+   },
+   "stretch": "tile_fit"
+  },
+  "card_stone": {
+   "file": "nine/card_stone.png",
+   "size": [
+    216,
+    220
+   ],
+   "insets": {
+    "top": 44,
+    "bottom": 48,
+    "left": 44,
+    "right": 44
+   },
+   "margins": {
+    "top": 12,
+    "bottom": 16,
+    "left": 12,
+    "right": 12
+   },
+   "stretch": "tile_fit"
+  },
+  "card_holy": {
+   "file": "nine/card_holy.png",
+   "size": [
+    248,
+    254
+   ],
+   "insets": {
+    "top": 60,
+    "bottom": 66,
+    "left": 60,
+    "right": 60
+   },
+   "margins": {
+    "top": 18,
+    "bottom": 24,
+    "left": 18,
+    "right": 18
+   },
+   "stretch": "tile_fit"
+  },
+  "comic_frame": {
+   "file": "nine/comic_frame.png",
+   "size": [
+    248,
+    254
+   ],
+   "insets": {
+    "top": 60,
+    "bottom": 66,
+    "left": 60,
+    "right": 60
+   },
+   "margins": {
+    "top": 16,
+    "bottom": 22,
+    "left": 16,
+    "right": 16
+   },
+   "stretch": "tile_fit"
+  },
+  "map_sheet": {
+   "file": "nine/map_sheet.png",
+   "size": [
+    256,
+    262
+   ],
+   "insets": {
+    "top": 64,
+    "bottom": 70,
+    "left": 64,
+    "right": 64
+   },
+   "margins": {
+    "top": 14,
+    "bottom": 20,
+    "left": 14,
+    "right": 14
+   },
+   "stretch": "tile_fit"
+  },
+  "map_inset": {
+   "file": "nine/map_inset.png",
+   "size": [
+    96,
+    98
+   ],
+   "insets": {
+    "top": 16,
+    "bottom": 18,
+    "left": 16,
+    "right": 16
+   },
+   "margins": {
+    "top": 4,
+    "bottom": 6,
+    "left": 4,
+    "right": 4
+   },
+   "stretch": "tile_fit"
+  },
+  "book_cover": {
+   "file": "nine/book_cover.png",
+   "size": [
+    256,
+    264
+   ],
+   "insets": {
+    "top": 64,
+    "bottom": 72,
+    "left": 64,
+    "right": 64
+   },
+   "margins": {
+    "top": 16,
+    "bottom": 24,
+    "left": 16,
+    "right": 16
+   },
+   "stretch": "tile_fit"
+  },
+  "book_page_left": {
+   "file": "nine/book_page_left.png",
+   "size": [
+    240,
+    214
+   ],
+   "insets": {
+    "top": 40,
+    "bottom": 46,
+    "left": 40,
+    "right": 72
+   },
+   "margins": {
+    "top": 6,
+    "bottom": 10,
+    "left": 6,
+    "right": 0
+   },
+   "stretch": "tile_fit"
+  },
+  "book_page_right": {
+   "file": "nine/book_page_right.png",
+   "size": [
+    240,
+    214
+   ],
+   "insets": {
+    "top": 40,
+    "bottom": 46,
+    "left": 72,
+    "right": 40
+   },
+   "margins": {
+    "top": 6,
+    "bottom": 10,
+    "left": 0,
+    "right": 6
+   },
+   "stretch": "tile_fit"
+  },
+  "wash_ink": {
+   "file": "nine/wash_ink.png",
+   "size": [
+    320,
+    92
+   ],
+   "insets": {
+    "top": 30,
+    "bottom": 30,
+    "left": 96,
+    "right": 96
+   },
+   "margins": {
+    "top": 8,
+    "bottom": 8,
+    "left": 8,
+    "right": 8
+   },
+   "stretch": "tile_fit"
+  },
+  "banner_power": {
+   "file": "nine/banner_power.png",
+   "size": [
+    288,
+    156
+   ],
+   "insets": {
+    "top": 52,
+    "bottom": 56,
+    "left": 80,
+    "right": 80
+   },
+   "margins": {
+    "top": 28,
+    "bottom": 32,
+    "left": 28,
+    "right": 28
+   },
+   "stretch": "tile_fit"
+  },
+  "tag_goal": {
+   "file": "nine/tag_goal.png",
+   "size": [
+    68,
+    55
+   ],
+   "insets": {
+    "top": 18,
+    "bottom": 21,
+    "left": 18,
+    "right": 18
+   },
+   "margins": {
+    "top": 6,
+    "bottom": 9,
+    "left": 6,
+    "right": 6
+   },
+   "stretch": "tile_fit"
+  },
+  "tag_new": {
+   "file": "nine/tag_new.png",
+   "size": [
+    52,
+    43
+   ],
+   "insets": {
+    "top": 14,
+    "bottom": 17,
+    "left": 14,
+    "right": 14
+   },
+   "margins": {
+    "top": 5,
+    "bottom": 8,
+    "left": 5,
+    "right": 5
+   },
+   "stretch": "tile_fit"
+  },
+  "tag_warn": {
+   "file": "nine/tag_warn.png",
+   "size": [
+    52,
+    43
+   ],
+   "insets": {
+    "top": 14,
+    "bottom": 17,
+    "left": 14,
+    "right": 14
+   },
+   "margins": {
+    "top": 5,
+    "bottom": 8,
+    "left": 5,
+    "right": 5
+   },
+   "stretch": "tile_fit"
+  },
+  "pill_paper": {
+   "file": "nine/pill_paper.png",
+   "size": [
+    64,
+    51
+   ],
+   "insets": {
+    "top": 16,
+    "bottom": 19,
+    "left": 16,
+    "right": 16
+   },
+   "margins": {
+    "top": 6,
+    "bottom": 9,
+    "left": 6,
+    "right": 6
+   },
+   "stretch": "tile_fit"
+  },
+  "pill_ghost": {
+   "file": "nine/pill_ghost.png",
+   "size": [
+    64,
+    51
+   ],
+   "insets": {
+    "top": 16,
+    "bottom": 19,
+    "left": 16,
+    "right": 16
+   },
+   "margins": {
+    "top": 6,
+    "bottom": 9,
+    "left": 6,
+    "right": 6
+   },
+   "stretch": "tile_fit"
+  },
+  "plate_stone": {
+   "file": "nine/plate_stone.png",
+   "size": [
+    64,
+    51
+   ],
+   "insets": {
+    "top": 16,
+    "bottom": 19,
+    "left": 16,
+    "right": 16
+   },
+   "margins": {
+    "top": 5,
+    "bottom": 8,
+    "left": 5,
+    "right": 5
+   },
+   "stretch": "tile_fit"
+  },
+  "button_paper_normal": {
+   "file": "nine/button_paper_normal.png",
+   "size": [
+    164,
+    98
+   ],
+   "insets": {
+    "top": 30,
+    "bottom": 36,
+    "left": 34,
+    "right": 34
+   },
+   "margins": {
+    "top": 14,
+    "bottom": 18,
+    "left": 16,
+    "right": 16
+   },
+   "stretch": "tile_fit"
+  },
+  "button_primary_normal": {
+   "file": "nine/button_primary_normal.png",
+   "size": [
+    164,
+    98
+   ],
+   "insets": {
+    "top": 30,
+    "bottom": 36,
+    "left": 34,
+    "right": 34
+   },
+   "margins": {
+    "top": 14,
+    "bottom": 18,
+    "left": 16,
+    "right": 16
+   },
+   "stretch": "tile_fit"
+  },
+  "button_paper_hover": {
+   "file": "nine/button_paper_hover.png",
+   "size": [
+    164,
+    98
+   ],
+   "insets": {
+    "top": 30,
+    "bottom": 36,
+    "left": 34,
+    "right": 34
+   },
+   "margins": {
+    "top": 14,
+    "bottom": 18,
+    "left": 16,
+    "right": 16
+   },
+   "stretch": "tile_fit"
+  },
+  "button_primary_hover": {
+   "file": "nine/button_primary_hover.png",
+   "size": [
+    164,
+    98
+   ],
+   "insets": {
+    "top": 30,
+    "bottom": 36,
+    "left": 34,
+    "right": 34
+   },
+   "margins": {
+    "top": 14,
+    "bottom": 18,
+    "left": 16,
+    "right": 16
+   },
+   "stretch": "tile_fit"
+  },
+  "button_paper_pressed": {
+   "file": "nine/button_paper_pressed.png",
+   "size": [
+    164,
+    98
+   ],
+   "insets": {
+    "top": 30,
+    "bottom": 36,
+    "left": 34,
+    "right": 34
+   },
+   "margins": {
+    "top": 14,
+    "bottom": 18,
+    "left": 16,
+    "right": 16
+   },
+   "stretch": "tile_fit"
+  },
+  "button_primary_pressed": {
+   "file": "nine/button_primary_pressed.png",
+   "size": [
+    164,
+    98
+   ],
+   "insets": {
+    "top": 30,
+    "bottom": 36,
+    "left": 34,
+    "right": 34
+   },
+   "margins": {
+    "top": 14,
+    "bottom": 18,
+    "left": 16,
+    "right": 16
+   },
+   "stretch": "tile_fit"
+  },
+  "button_paper_disabled": {
+   "file": "nine/button_paper_disabled.png",
+   "size": [
+    164,
+    98
+   ],
+   "insets": {
+    "top": 30,
+    "bottom": 36,
+    "left": 34,
+    "right": 34
+   },
+   "margins": {
+    "top": 14,
+    "bottom": 18,
+    "left": 16,
+    "right": 16
+   },
+   "stretch": "tile_fit"
+  },
+  "button_primary_disabled": {
+   "file": "nine/button_primary_disabled.png",
+   "size": [
+    164,
+    98
+   ],
+   "insets": {
+    "top": 30,
+    "bottom": 36,
+    "left": 34,
+    "right": 34
+   },
+   "margins": {
+    "top": 14,
+    "bottom": 18,
+    "left": 16,
+    "right": 16
+   },
+   "stretch": "tile_fit"
+  },
+  "key_normal": {
+   "file": "nine/key_normal.png",
+   "size": [
+    68,
+    66
+   ],
+   "insets": {
+    "top": 18,
+    "bottom": 24,
+    "left": 18,
+    "right": 18
+   },
+   "margins": {
+    "top": 8,
+    "bottom": 10,
+    "left": 8,
+    "right": 8
+   },
+   "stretch": "tile_fit"
+  },
+  "key_hover": {
+   "file": "nine/key_hover.png",
+   "size": [
+    68,
+    66
+   ],
+   "insets": {
+    "top": 18,
+    "bottom": 24,
+    "left": 18,
+    "right": 18
+   },
+   "margins": {
+    "top": 8,
+    "bottom": 10,
+    "left": 8,
+    "right": 8
+   },
+   "stretch": "tile_fit"
+  },
+  "key_pressed": {
+   "file": "nine/key_pressed.png",
+   "size": [
+    68,
+    66
+   ],
+   "insets": {
+    "top": 18,
+    "bottom": 24,
+    "left": 18,
+    "right": 18
+   },
+   "margins": {
+    "top": 8,
+    "bottom": 10,
+    "left": 8,
+    "right": 8
+   },
+   "stretch": "tile_fit"
+  },
+  "key_disabled": {
+   "file": "nine/key_disabled.png",
+   "size": [
+    68,
+    66
+   ],
+   "insets": {
+    "top": 18,
+    "bottom": 24,
+    "left": 18,
+    "right": 18
+   },
+   "margins": {
+    "top": 8,
+    "bottom": 10,
+    "left": 8,
+    "right": 8
+   },
+   "stretch": "tile_fit"
+  },
+  "tile_action_ready": {
+   "file": "nine/tile_action_ready.png",
+   "size": [
+    92,
+    96
+   ],
+   "insets": {
+    "top": 26,
+    "bottom": 30,
+    "left": 26,
+    "right": 26
+   },
+   "margins": {
+    "top": 10,
+    "bottom": 12,
+    "left": 10,
+    "right": 10
+   },
+   "stretch": "tile_fit"
+  },
+  "tile_action_idle": {
+   "file": "nine/tile_action_idle.png",
+   "size": [
+    92,
+    96
+   ],
+   "insets": {
+    "top": 26,
+    "bottom": 30,
+    "left": 26,
+    "right": 26
+   },
+   "margins": {
+    "top": 10,
+    "bottom": 12,
+    "left": 10,
+    "right": 10
+   },
+   "stretch": "tile_fit"
+  },
+  "tile_action_ritual": {
+   "file": "nine/tile_action_ritual.png",
+   "size": [
+    92,
+    96
+   ],
+   "insets": {
+    "top": 26,
+    "bottom": 30,
+    "left": 26,
+    "right": 26
+   },
+   "margins": {
+    "top": 10,
+    "bottom": 12,
+    "left": 10,
+    "right": 10
+   },
+   "stretch": "tile_fit"
+  },
+  "tile_power_locked": {
+   "file": "nine/tile_power_locked.png",
+   "size": [
+    68,
+    70
+   ],
+   "insets": {
+    "top": 22,
+    "bottom": 24,
+    "left": 22,
+    "right": 22
+   },
+   "margins": {
+    "top": 12,
+    "bottom": 14,
+    "left": 12,
+    "right": 12
+   },
+   "stretch": "tile_fit"
+  },
+  "tile_power_on": {
+   "file": "nine/tile_power_on.png",
+   "size": [
+    68,
+    70
+   ],
+   "insets": {
+    "top": 22,
+    "bottom": 24,
+    "left": 22,
+    "right": 22
+   },
+   "margins": {
+    "top": 12,
+    "bottom": 14,
+    "left": 12,
+    "right": 12
+   },
+   "stretch": "tile_fit"
+  },
+  "tile_power_new": {
+   "file": "nine/tile_power_new.png",
+   "size": [
+    68,
+    70
+   ],
+   "insets": {
+    "top": 22,
+    "bottom": 24,
+    "left": 22,
+    "right": 22
+   },
+   "margins": {
+    "top": 12,
+    "bottom": 14,
+    "left": 12,
+    "right": 12
+   },
+   "stretch": "tile_fit"
+  },
+  "bar_track": {
+   "file": "nine/bar_track.png",
+   "size": [
+    96,
+    42
+   ],
+   "insets": {
+    "top": 16,
+    "bottom": 18,
+    "left": 16,
+    "right": 16
+   },
+   "margins": {
+    "top": 6,
+    "bottom": 8,
+    "left": 6,
+    "right": 6
+   },
+   "stretch": "tile_fit"
+  },
+  "bar_fill_holy": {
+   "file": "nine/bar_fill_holy.png",
+   "size": [
+    92,
+    32
+   ],
+   "insets": {
+    "top": 12,
+    "bottom": 12,
+    "left": 14,
+    "right": 14
+   },
+   "margins": {
+    "top": 6,
+    "bottom": 6,
+    "left": 6,
+    "right": 6
+   },
+   "stretch": "tile_fit"
+  },
+  "bar_fill_flame": {
+   "file": "nine/bar_fill_flame.png",
+   "size": [
+    92,
+    32
+   ],
+   "insets": {
+    "top": 12,
+    "bottom": 12,
+    "left": 14,
+    "right": 14
+   },
+   "margins": {
+    "top": 6,
+    "bottom": 6,
+    "left": 6,
+    "right": 6
+   },
+   "stretch": "tile_fit"
+  },
+  "rule_ink": {
+   "file": "nine/rule_ink.png",
+   "size": [
+    184,
+    12
+   ],
+   "insets": {
+    "top": 5,
+    "bottom": 5,
+    "left": 28,
+    "right": 28
+   },
+   "margins": {
+    "top": 2,
+    "bottom": 2,
+    "left": 4,
+    "right": 4
+   },
+   "stretch": "tile_fit"
+  },
+  "rule_paper": {
+   "file": "nine/rule_paper.png",
+   "size": [
+    184,
+    12
+   ],
+   "insets": {
+    "top": 5,
+    "bottom": 5,
+    "left": 28,
+    "right": 28
+   },
+   "margins": {
+    "top": 2,
+    "bottom": 2,
+    "left": 4,
+    "right": 4
+   },
+   "stretch": "tile_fit"
+  }
+ },
+ "icons": {
+  "power_breath_locked": {
+   "file": "icons/power_breath_locked.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_breath_on": {
+   "file": "icons/power_breath_on.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_breath_new": {
+   "file": "icons/power_breath_new.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_breath_ink": {
+   "file": "icons/power_breath_ink.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_push_sound_locked": {
+   "file": "icons/power_push_sound_locked.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_push_sound_on": {
+   "file": "icons/power_push_sound_on.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_push_sound_new": {
+   "file": "icons/power_push_sound_new.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_push_sound_ink": {
+   "file": "icons/power_push_sound_ink.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_writing_locked": {
+   "file": "icons/power_writing_locked.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_writing_on": {
+   "file": "icons/power_writing_on.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_writing_new": {
+   "file": "icons/power_writing_new.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_writing_ink": {
+   "file": "icons/power_writing_ink.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_ghost_locked": {
+   "file": "icons/power_ghost_locked.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_ghost_on": {
+   "file": "icons/power_ghost_on.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_ghost_new": {
+   "file": "icons/power_ghost_new.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_ghost_ink": {
+   "file": "icons/power_ghost_ink.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_hands_locked": {
+   "file": "icons/power_hands_locked.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_hands_on": {
+   "file": "icons/power_hands_on.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_hands_new": {
+   "file": "icons/power_hands_new.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "power_hands_ink": {
+   "file": "icons/power_hands_ink.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "power"
+  },
+  "marker_you": {
+   "file": "icons/marker_you.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "marker"
+  },
+  "marker_your_room": {
+   "file": "icons/marker_your_room.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "marker"
+  },
+  "marker_rubble": {
+   "file": "icons/marker_rubble.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "marker"
+  },
+  "marker_archaeologist": {
+   "file": "icons/marker_archaeologist.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "marker"
+  },
+  "marker_priest": {
+   "file": "icons/marker_priest.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "marker"
+  },
+  "marker_memory": {
+   "file": "icons/marker_memory.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "marker"
+  },
+  "marker_candle_lit": {
+   "file": "icons/marker_candle_lit.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "marker"
+  },
+  "marker_candle_out": {
+   "file": "icons/marker_candle_out.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "marker"
+  },
+  "marker_noise": {
+   "file": "icons/marker_noise.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "marker"
+  },
+  "pointer_arrow": {
+   "file": "icons/pointer_arrow.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "marker"
+  },
+  "lock": {
+   "file": "icons/lock.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "ui"
+  },
+  "book": {
+   "file": "icons/book.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "ui"
+  },
+  "hand_ink": {
+   "file": "icons/hand_ink.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "ui"
+  },
+  "step_done": {
+   "file": "icons/step_done.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "ui"
+  },
+  "step_done_light": {
+   "file": "icons/step_done_light.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "ui"
+  },
+  "step_current": {
+   "file": "icons/step_current.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "ui"
+  },
+  "step_later": {
+   "file": "icons/step_later.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "ui"
+  },
+  "step_later_light": {
+   "file": "icons/step_later_light.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "ui"
+  },
+  "check_off": {
+   "file": "icons/check_off.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "ui"
+  },
+  "check_on": {
+   "file": "icons/check_on.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "ui"
+  },
+  "slider_knob": {
+   "file": "icons/slider_knob.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "ui"
+  },
+  "glyph_arrow_left": {
+   "file": "icons/glyph_arrow_left.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "glyph"
+  },
+  "glyph_arrow_right": {
+   "file": "icons/glyph_arrow_right.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "glyph"
+  },
+  "glyph_arrow_up": {
+   "file": "icons/glyph_arrow_up.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "glyph"
+  },
+  "glyph_arrow_down": {
+   "file": "icons/glyph_arrow_down.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "glyph"
+  },
+  "key_e": {
+   "file": "icons/key_e.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_w": {
+   "file": "icons/key_w.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_a": {
+   "file": "icons/key_a.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_s": {
+   "file": "icons/key_s.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_d": {
+   "file": "icons/key_d.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_j": {
+   "file": "icons/key_j.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_m": {
+   "file": "icons/key_m.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_q": {
+   "file": "icons/key_q.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_shift": {
+   "file": "icons/key_shift.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_esc": {
+   "file": "icons/key_esc.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_tab": {
+   "file": "icons/key_tab.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_enter": {
+   "file": "icons/key_enter.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_space": {
+   "file": "icons/key_space.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_left": {
+   "file": "icons/key_left.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_right": {
+   "file": "icons/key_right.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_up": {
+   "file": "icons/key_up.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  },
+  "key_down": {
+   "file": "icons/key_down.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "key"
+  }
+ },
+ "titles": {
+  "title_vidpusty_light": {
+   "file": "titles/title_vidpusty_light.png",
+   "size": [
+    987,
+    297
+   ],
+   "text": "ВІДПУСТИ"
+  },
+  "title_vidpusty_ink": {
+   "file": "titles/title_vidpusty_ink.png",
+   "size": [
+    885,
+    244
+   ],
+   "text": "ВІДПУСТИ"
+  },
+  "title_pauza_light": {
+   "file": "titles/title_pauza_light.png",
+   "size": [
+    341,
+    136
+   ],
+   "text": "Пауза"
+  },
+  "title_pauza_ink": {
+   "file": "titles/title_pauza_ink.png",
+   "size": [
+    330,
+    122
+   ],
+   "text": "Пауза"
+  },
+  "title_karta_light": {
+   "file": "titles/title_karta_light.png",
+   "size": [
+    300,
+    139
+   ],
+   "text": "Карта"
+  },
+  "title_karta_ink": {
+   "file": "titles/title_karta_ink.png",
+   "size": [
+    289,
+    165
+   ],
+   "text": "Карта"
+  },
+  "title_knyha_light": {
+   "file": "titles/title_knyha_light.png",
+   "size": [
+    303,
+    101
+   ],
+   "text": "Книга"
+  },
+  "title_knyha_ink": {
+   "file": "titles/title_knyha_ink.png",
+   "size": [
+    287,
+    91
+   ],
+   "text": "Книга"
+  },
+  "title_nalashtuvannia_light": {
+   "file": "titles/title_nalashtuvannia_light.png",
+   "size": [
+    706,
+    117
+   ],
+   "text": "Налаштування"
+  },
+  "title_nalashtuvannia_ink": {
+   "file": "titles/title_nalashtuvannia_ink.png",
+   "size": [
+    699,
+    114
+   ],
+   "text": "Налаштування"
+  },
+  "title_ty_vilnyi_light": {
+   "file": "titles/title_ty_vilnyi_light.png",
+   "size": [
+    700,
+    169
+   ],
+   "text": "Ти вільний"
+  },
+  "title_ty_vilnyi_ink": {
+   "file": "titles/title_ty_vilnyi_ink.png",
+   "size": [
+    695,
+    219
+   ],
+   "text": "Ти вільний"
+  }
+ },
+ "textures": {
+  "paper": {
+   "file": "textures/paper.png",
+   "size": [
+    1024,
+    1024
+   ],
+   "seamless": true
+  },
+  "paper_aged": {
+   "file": "textures/paper_aged.png",
+   "size": [
+    1024,
+    1024
+   ],
+   "seamless": true
+  },
+  "stone": {
+   "file": "textures/stone.png",
+   "size": [
+    1024,
+    1024
+   ],
+   "seamless": true
+  },
+  "leather": {
+   "file": "textures/leather.png",
+   "size": [
+    1024,
+    1024
+   ],
+   "seamless": true
+  },
+  "map_paper": {
+   "file": "textures/map_paper.png",
+   "size": [
+    1024,
+    1024
+   ],
+   "seamless": true
+  }
+ },
+ "images": {}
+}

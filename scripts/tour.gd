@@ -1,18 +1,13 @@
 extends CanvasLayer
-## 3D guide: a camera flies over the cut-away dungeon (no ceiling) and stops at each key mechanic, which glows with
-## a ring + light beam and a pointer pill; a card at the bottom explains it. Short, paused, skippable, replayable
-## from the pause. Plays once after the prologue comic (game.gd), then the camera dives back into the ghost's eyes.
-## Space / Enter / → / click — next, ← / Backspace — back, Esc — skip.
 
 signal finished
 
 const UI = preload("res://scripts/ui.gd")
-const FLY_TIME := 1.4  ## seconds between two shots
-const ORBIT := 0.07  ## rad/s slow drift while a shot holds
-const LAYER_CEILING := 8  ## visual layer 4: the ceiling, cut away
-const LAYER_LABELS := 2  ## visual layer 2: world labels (the pointer pill names the target instead)
+const FLY_TIME := 1.4
+const ORBIT := 0.07
+const LAYER_CEILING := 8
+const LAYER_LABELS := 2
 
-## target: node path in the game scene (or "" = dungeon centre); h / d = camera height and distance; keys = chips.
 const STEPS := [
 	{"target": "", "h": 26.0, "d": 9.0, "icon": "moon", "title": "Підземелля старого міста",
 		"text": "Ти — привид. Ти забув, хто ти. Тут немає ворогів і не можна програти: досліджуй спокійно.", "keys": []},
@@ -35,8 +30,8 @@ const STEPS := [
 var game: Node3D
 var step := -1
 var _cam: Camera3D
-var _from := Transform3D()  ## camera when the current flight started
-var _fly := 1.0  ## 0..1 progress of the flight to the current shot
+var _from := Transform3D()
+var _fly := 1.0
 var _orbit := 0.0
 var _mark: Node3D
 var _light: DirectionalLight3D
@@ -46,7 +41,7 @@ var _card_title: Label
 var _card_text: Label
 var _card_keys: HBoxContainer
 var _count: Label
-var _dots: Array[Panel] = []
+var _dots: Array[TextureRect] = []
 var _back: Button
 var _next: Button
 var _pointer: PanelContainer
@@ -74,7 +69,7 @@ func play(g: Node3D) -> void:
 	_from = pc.global_transform
 	_cam.global_transform = _from
 	_cam.current = true
-	_light = DirectionalLight3D.new()  # soft top light so the cut-away reads from above
+	_light = DirectionalLight3D.new()
 	_light.light_energy = 0.55
 	_light.light_color = Color(0.75, 0.75, 1.0)
 	_light.rotation_degrees = Vector3(-70, 30, 0)
@@ -130,12 +125,10 @@ func _build_ui() -> void:
 
 	var foot := UI.hbox(12)
 	col.add_child(foot)
-	var dots := UI.hbox(8)
+	var dots := UI.hbox(2)
 	dots.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	for i in STEPS.size():
-		var d := Panel.new()
-		d.custom_minimum_size = Vector2(14, 14)
-		d.add_theme_stylebox_override("panel", UI.style(UI.GREY, 999, 0))
+		var d := UI.icon("later", 28, UI.INK)
 		dots.add_child(d)
 		_dots.append(d)
 	foot.add_child(dots)
@@ -149,11 +142,10 @@ func _build_ui() -> void:
 	_next = UI.button("Далі", "primary", "Пробіл", "play", 20)
 	_next.pressed.connect(func(): go(step + 1))
 	for b in [skip, _back, _next]:
-		b.focus_mode = Control.FOCUS_NONE  # Space must not press a focused button twice
+		b.focus_mode = Control.FOCUS_NONE
 		foot.add_child(b)
 
 
-## Fly to step `i`; past the last step the camera dives back into the ghost.
 func go(i: int) -> void:
 	if _diving or i < 0:
 		return
@@ -172,10 +164,10 @@ func go(i: int) -> void:
 	for c in _card_keys.get_children():
 		c.queue_free()
 	for k in s["keys"]:
-		_card_keys.add_child(UI.chip(k, UI.LILAC, UI.INK, 18, 3))
+		_card_keys.add_child(UI.chip(k, UI.PAPER, UI.INK, 18, 3))
 	_card_keys.visible = not s["keys"].is_empty()
 	for d in _dots.size():
-		(_dots[d].get_theme_stylebox("panel") as StyleBoxFlat).bg_color = UI.GOLD if d == i else (UI.MUTED if d < i else UI.GREY)
+		_dots[d].texture = UI.icon_texture("current" if d == i else ("done" if d < i else "later"), 28, UI.INK)
 	_back.disabled = i == 0
 	_next.text = ("Далі" if i < STEPS.size() - 1 else "Грати").to_upper()
 	if _mark:
@@ -191,17 +183,16 @@ func go(i: int) -> void:
 
 func _target(s: Dictionary) -> Vector3:
 	if s.target == "":
-		return Vector3(4.75, 0, -0.25)  # dungeon centre (tools/gen_dungeon.py)
+		return Vector3(4.75, 0, -0.25)
 	var n := game.get_node_or_null(NodePath(s.target)) as Node3D
 	return n.global_position if n else Vector3(4.75, 0, -0.25)
 
 
-## Where the camera holds for step `s`, slowly orbiting.
 func _shot(s: Dictionary) -> Transform3D:
 	var t := _target(s)
 	var a := 0.35 + _orbit
 	var eye := t + Vector3(sin(a) * s.d, s.h, cos(a) * s.d)
-	var toward: Vector3 = Vector3(sin(a), 0, cos(a)) * s.d * 0.4  # look a bit short of the target: it sits above the card
+	var toward: Vector3 = Vector3(sin(a), 0, cos(a)) * s.d * 0.4
 	return Transform3D(Basis(), eye).looking_at(t + toward, Vector3.UP)
 
 
@@ -260,7 +251,7 @@ func _process(delta: float) -> void:
 	var to := _shot(s)
 	var k: float = ease.call(_fly)
 	var pos := _from.origin.lerp(to.origin, k)
-	pos.y += sin(PI * k) * 3.0 * (1.0 if _from.origin.distance_to(to.origin) > 6.0 else 0.0)  # arc over the walls
+	pos.y += sin(PI * k) * 3.0 * (1.0 if _from.origin.distance_to(to.origin) > 6.0 else 0.0)
 	_cam.global_transform = Transform3D(_from.basis.slerp(to.basis, k), pos)
 	if _mark:
 		var p := 1.0 + 0.12 * sin(Time.get_ticks_msec() / 220.0)
@@ -303,7 +294,6 @@ func _over_button() -> bool:
 	return h is Button
 
 
-## Skip / last step: dive back into the ghost's eyes, then hand control back.
 func close() -> void:
 	if _diving or _cam == null:
 		return

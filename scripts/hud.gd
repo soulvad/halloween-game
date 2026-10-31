@@ -1,46 +1,35 @@
 extends CanvasLayer
-## In-game UI from the "ВІДПУСТИ — UI" design (boards 04–14), built in code with the UI kit:
-## HUD (memories + powers card, goal, stage panel, minimap, E tile, E prompt, subtitles, «Нова сила» toast),
-## map (M), quest + hints book (J), pause (Esc), hold-to-release card and the end screen.
-## Runs while the tree is paused (pause / end screen here, memory comics from game.gd).
 
 const UI = preload("res://scripts/ui.gd")
 const Station = preload("res://scripts/station.gd")
 const ComicPage = preload("res://scripts/comic_page.gd")
 const MapView = preload("res://scripts/map_view.gd")
-const SCREENS := "res://scripts/screens.gd"  ## settings, written by the menu side
+const SCREENS := "res://scripts/screens.gd"
 
-const PROMPT_OVER := 0.4  ## m over the target's top where the E card sits (= a station's label height)
-const PROMPT_GAP := 34.0  ## px between that point and the card's bottom: clears the label
-const LINE_TIME := 4.5  ## seconds a subtitle stays
-const TOAST_TIME := 3.5  ## seconds the «Нова сила» banner stays (counts only while the game runs)
-const DARK_GREEN := Color("3E8E1E")
-const BOOK_SVG := '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5Z"/><path d="M4 20.5V5.5M8.5 8h7M8.5 11.5h5"/>'
-## Power icon: a UI kit icon name or an svg path in the kit's 24×24 stroke style.
-const POWER_ICON := {
-	"breath": '<path d="M3 8h10a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h6"/>',
-	"sound": "speaker",
-	"write": '<path d="M4 20l1.2-4.8L16 4.4l3.6 3.6L8.8 18.8Z"/><path d="M14 6.5l3.5 3.5"/>',
-	"hands": "hand",
-}
-const STAGE_NAMES := ["Помітьте мене", "Священник", "Знайдіть мою кімнату", "Розкопки", "Твоя кімната", "Ритуал"]  ## by GameState.Stage
-const ROOM := Rect2(17.5, -12.5, 6, 4.7)  ## your sealed room (x, z), from the level layout
-const ROOM_BANNER_TIME := 1.8  ## seconds the room name shows after you float into a room
-const RUBBLE_POS := Vector3(17.5, 0, -10)  ## shortcut: map marker spot if the level has no "Rubble" node; use the node once it exists
+const PROMPT_OVER := 0.4
+const PROMPT_GAP := 34.0
+const LINE_TIME := 4.5
+const TOAST_TIME := 3.5
+const DONE := Color("5A4636")
+const SPEECH := Color("3B2C22")
+const STAGE_NAMES := ["Помітьте мене", "Священник", "Знайдіть мою кімнату", "Розкопки", "Твоя кімната", "Ритуал"]
+const ROOM := Rect2(17.5, -12.5, 6, 4.7)
+const ROOM_BANNER_TIME := 1.8
+const RUBBLE_POS := Vector3(17.5, 0, -10)
 
-var game  ## game.gd (untyped: its methods are not known statically)
-var end_title: Label  ## set when the end screen is up (tests read it)
-var _hud: Control  ## everything shown while playing
+var game
+var end_title: Control
+var _hud: Control
 var _pow_count: Label
-var _powers := {}  ## power -> {sb, icon, name, help}
-var _mini: Control  ## map_view.gd following the player
+var _powers := {}
+var _mini: Control
 var _room: Label
-var _room_banner: Label  ## room name, big and faint, when you float into another room (orientation through walls)
+var _room_banner: Label
 var _room_now := ""
 var _room_t := 0.0
-var _tiles := {}  ## "E" -> {col, sb, icon, cap, badge}
+var _tiles := {}
 var _prompt: PanelContainer
-var _prompt_key: StyleBoxFlat
+var _prompt_key
 var _prompt_title: Label
 var _prompt_sub: Label
 var _line: PanelContainer
@@ -49,32 +38,34 @@ var _line_t := 0.0
 var _toast: VBoxContainer
 var _toast_title: Label
 var _toast_text: Label
+var _toast_icon: TextureRect
 var _toast_t := 0.0
+var _fresh_power := ""
 var _letgo: Control
 var _hold_fill: Panel
 var _hold_label: Label
 var _map: Control
-var _map_view: Control  ## map_view.gd, whole dungeon
-var _markers: Array = []  ## [node or Vector3, pill, hide once dug]
-var _haunt_rows: Array = []  ## [station, status label]
-var _map_mem: Array[Label] = []  ## memories 1..5 in the map legend
+var _map_view: Control
+var _markers: Array = []
+var _haunt_rows: Array = []
+var _map_mem: Array[Label] = []
 var _pause: Control
 var _resume_btn: Button
-var _sub: Control  ## how-to / settings screen opened from the pause
+var _sub: Control
 var _sub_frame := -1
 var _end: Control
 var _book: PanelContainer
 var _book_badge: PanelContainer
-var _book_stage: Label  ## «Етап n/6 · …» on the «Цілі» page
-var _goal_rows: Array[Dictionary] = []  ## one per GameState.goal_steps()
-var _goal_now := 0  ## active goal index; a change lights the badge
-var _goal_seen := 0  ## active goal when the book was last closed
+var _book_stage: Label
+var _goal_rows: Array[Dictionary] = []
+var _goal_now := 0
+var _goal_seen := 0
 var _quest_priest: Label
-var _comic_view: Control  ## «Комікс» page (comic_page.gd)
-var _mem_seen := 0  ## memories already seen in the open book (unread badge)
+var _comic_view: Control
+var _mem_seen := 0
 var _hint_list: VBoxContainer
-var _read := {}  ## hint ids seen in the open book
-var _mouse_before := Input.MOUSE_MODE_VISIBLE  ## restored after the pause (captured in first person)
+var _read := {}
+var _mouse_before := Input.MOUSE_MODE_VISIBLE
 var _priest: Node3D
 var _visitors: Array = []
 
@@ -92,7 +83,8 @@ func _ready() -> void:
 	_build_right()
 	_build_bottom()
 	_build_prompt()
-	var dot := UI.panel(UI.PAPER, 999, 0, 0, 3)  # first-person crosshair
+	var dot := Panel.new()
+	dot.add_theme_stylebox_override("panel", UI.style(UI.PAPER, 999, 3, 0, UI.INK))
 	dot.custom_minimum_size = Vector2(12, 12)
 	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hud.add_child(dot)
@@ -115,11 +107,11 @@ func _exit_tree() -> void:
 
 func _unhandled_input(e: InputEvent) -> void:
 	if _end or (get_tree().paused and not _pause):
-		return  # end screen, or a memory comic paused the tree
+		return
 	var frame := Engine.get_process_frames()
 	if e.is_action_pressed("ui_cancel"):
 		if is_instance_valid(_sub) or frame == _sub_frame:
-			return  # the how-to / settings screen handles its own Esc
+			return
 		if _book.visible:
 			toggle_book()
 		elif _map.visible:
@@ -146,9 +138,9 @@ func _process(delta: float) -> void:
 		return
 	var t = game.player.target_station()
 	if not t is Station:
-		t = null  # visitors are not aim targets
+		t = null
 	_update_powers()
-	if _active_goal() != _goal_now:  # a new goal lights the book badge
+	if _active_goal() != _goal_now:
 		_goal_now = _active_goal()
 		_rebuild_hints()
 	_update_right()
@@ -158,7 +150,8 @@ func _process(delta: float) -> void:
 	_toast.visible = _toast_t > 0 and not letting
 	if letting:
 		var f: float = game.hold / game.RELEASE_TIME
-		_hold_fill.size = Vector2((_hold_fill.get_parent().size.x - 8) * f, 26)
+		_hold_fill.visible = f > 0.03
+		_hold_fill.size = Vector2((_hold_fill.get_parent().size.x - 12) * f, 30)
 		_hold_label.text = "%.1f с" % maxf(game.RELEASE_TIME - game.hold, 0)
 	_update_prompt(null if letting else t)
 	if _map.visible:
@@ -167,8 +160,6 @@ func _process(delta: float) -> void:
 		_update_book()
 
 
-# --- layout helpers ---
-
 func _full() -> Control:
 	var c := Control.new()
 	c.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -176,7 +167,6 @@ func _full() -> Control:
 	return c
 
 
-## Pin `c` to an edge / corner of `parent` (preset) with a margin; it grows away from that edge.
 func _pin(c: Control, preset: int, mx := 40.0, my := 36.0, parent: Control = null) -> Control:
 	(parent if parent else _hud).add_child(c)
 	c.set_anchors_preset(preset)
@@ -192,8 +182,8 @@ func _pin(c: Control, preset: int, mx := 40.0, my := 36.0, parent: Control = nul
 	return c
 
 
-func _sb(p: Control) -> StyleBoxFlat:
-	return p.get_theme_stylebox("panel") as StyleBoxFlat
+func _sb(p: Control):
+	return p.get_theme_stylebox("panel")
 
 
 func _expand(c: Control, align := HORIZONTAL_ALIGNMENT_RIGHT) -> Control:
@@ -217,45 +207,39 @@ func _set_color(l: Label, c: Color) -> void:
 	l.label_settings.font_color = c
 
 
-func _ring(color: Color, size := 16) -> PanelContainer:
-	var r := UI.panel(Color(0, 0, 0, 0), 999, 0, 0, 3, color)
-	r.custom_minimum_size = Vector2(size, size)
+func _ring(color: Color, size := 16) -> TextureRect:
+	var r := UI.icon("current", size + 8, color)
 	r.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	return r
 
 
-## Goal step: ring (todo / current) or check (done) + text.
 func _step(parent: Control, size := 17) -> Dictionary:
-	var row := UI.hbox(6)
-	var d := {ring = _ring(UI.DIM), check = UI.icon("check", size + 2, UI.GREEN), label = UI.label("", size, UI.DIM, "body", 600)}
-	for k in ["ring", "check", "label"]:
-		row.add_child(d[k])
+	var row := UI.hbox(8)
+	var d := {mark = UI.icon("later", size + 9, UI.PAPER), label = UI.label("", size, UI.DIM, "body", 600)}
+	d.mark.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(d.mark)
+	row.add_child(d.label)
 	parent.add_child(row)
 	return d
 
 
-func _set_step(d: Dictionary, text: String, state: int) -> void:  ## 0 later, 1 current, 2 done
+func _set_step(d: Dictionary, text: String, state: int) -> void:
 	d.label.text = text
-	d.ring.visible = state < 2
-	d.check.visible = state == 2
-	_sb(d.ring).border_color = UI.GOLD if state == 1 else UI.DIM
-	_set_color(d.label, [UI.DIM, UI.PAPER, UI.GREEN][state])
+	d.mark.texture = UI.icon_texture(["later", "current", "done"][state], 0, UI.PAPER)
+	_set_color(d.label, [UI.DIM, UI.CHARGE, UI.PAPER][state])
 
 
-## Stage step state: 0 later, 1 current, 2 done (the last stage is done once you are free).
 func _stage_state(i: int) -> int:
 	if i < GameState.stage or GameState.won:
 		return 2
 	return 1 if i == GameState.stage else 0
 
 
-## Enum key of a station / visitor kind ("HAUNT", "PRIEST"...), so new kinds need no preload here.
 func _kind(n) -> String:
 	var k = n.get_script().get_script_constant_map().get("Kind", {})
 	return str(k.find_key(n.kind)) if n.get("kind") != null else ""
 
 
-## Current stage progress: [0..1 or -1 for none, text].
 func _stage_progress() -> Array:
 	match GameState.stage:
 		GameState.Stage.DIG:
@@ -278,7 +262,6 @@ func _room_at(p: Vector3) -> String:
 	return n if n != "" else _room_now
 
 
-## The pause needs the cursor; play may have it captured (first person).
 func _free_mouse() -> void:
 	_mouse_before = Input.mouse_mode
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -296,9 +279,6 @@ func _clock(sec: float) -> String:
 	return "%d:%02d" % [int(sec) / 60, int(sec) % 60]
 
 
-# --- HUD ---
-
-## Top-left: memories found + the four powers, locked until their memory comes back.
 func _build_powers() -> void:
 	var card := UI.panel(UI.PAPER, 26, 7, 20)
 	card.custom_minimum_size.x = 460
@@ -307,26 +287,26 @@ func _build_powers() -> void:
 	card.add_child(col)
 	var head := UI.hbox(12)
 	col.add_child(head)
-	head.add_child(UI.icon("bolt", 28))
+	head.add_child(UI.icon("bolt", 34))
 	head.add_child(UI.label("Сили", 22, UI.INK, "body", 900, true))
-	_pow_count = UI.label("", 28, UI.INK, "body", 900)
+	_pow_count = UI.label("", 26, UI.INK, "body", 900)
 	head.add_child(_expand(_pow_count))
 	col.add_child(UI.rule())
 	for p in GameState.POWERS:
-		var row := UI.hbox(12)
+		var row := UI.hbox(14)
 		col.add_child(row)
-		var tile := UI.panel(UI.GREY, 12, 0, 6, 3)
-		var icon := _power_icon(p, 30)
+		var tile := UI.panel(UI.GREY, 12, 0, 2, 3, UI.INK, "power")
+		var icon := _power_icon(p, 50)
 		tile.add_child(icon)
 		row.add_child(tile)
 		var tv := UI.vbox(0)
 		tv.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		var n := UI.label("", 19, UI.INK, "body", 900)
-		var h := UI.label("", 15, UI.MUTED, "body", 600)
+		var n := UI.label("", 20, UI.INK, "body", 900)
+		var h := UI.label("", 17, UI.MUTED, "body", 600)
 		tv.add_child(n)
 		tv.add_child(h)
 		row.add_child(tv)
-		_powers[p] = {sb = _sb(tile), icon = icon, name = n, help = h}
+		_powers[p] = {sb = _sb(tile), icon = icon, name = n, help = h, state = ""}
 
 
 func _update_powers() -> void:
@@ -334,24 +314,22 @@ func _update_powers() -> void:
 	for p in _powers:
 		var d: Dictionary = _powers[p]
 		var has := GameState.has_power(p)
-		d.sb.bg_color = UI.GOLD if has else UI.GREY
-		d.icon.modulate.a = 1.0 if has else 0.35
+		var state := "locked"
+		if has:
+			state = "new" if p == _fresh_power and _toast_t > 0 else "on"
+		if d.state != state:
+			d.state = state
+			d.sb.use("tile_power_" + state)
+			d.icon.texture = UI.power_icon(p, state)
 		d.name.text = GameState.POWER_NAMES[p] if has else "???"
 		d.help.text = GameState.POWER_HELP[p] if has else "ще не згадав"
 		_set_color(d.name, UI.INK if has else UI.LABEL)
 
 
-func _svg_icon(svg: String, size: int) -> TextureRect:
-	var img := Image.new()
-	img.load_svg_from_string('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#17111C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">%s</svg>' % svg, size / 24.0)
-	var t := UI.icon("ghost", size)
-	t.texture = ImageTexture.create_from_image(img)
-	return t
-
-
 func _power_icon(p: String, size: int) -> TextureRect:
-	var ic: String = POWER_ICON[p]
-	return _svg_icon(ic, size) if ic.begins_with("<") else UI.icon(ic, size)
+	var t := UI.icon("ghost", size)
+	t.texture = UI.power_icon(p, "locked")
+	return t
 
 
 func _build_right() -> void:
@@ -362,19 +340,22 @@ func _build_right() -> void:
 	mm.add_child(mv)
 	_mini = MapView.new()
 	_mini.setup(game)
-	_mini.follow = game.get_node("Player")  # game.player is @onready, not set yet
+	_mini.follow = game.get_node("Player")
 	_mini.px_per_m = 11.0
 	_mini.custom_minimum_size = Vector2(260, 190)
 	mv.add_child(_mini)
 	var foot := UI.hbox(8)
 	mv.add_child(foot)
-	_room = UI.label("", 15, UI.PAPER, "body", 700)
+	_room = UI.label("", 17, UI.PAPER, "body", 700)
 	foot.add_child(_expand(_room, HORIZONTAL_ALIGNMENT_LEFT))
-	foot.add_child(UI.chip("M", UI.PAPER, UI.INK, 14, 2))
+	foot.add_child(UI.chip("M", UI.PAPER, UI.INK, 15, 2))
 	for p in [_book_tile(), mm]:
 		p.size_flags_horizontal = Control.SIZE_SHRINK_END
 		col.add_child(p)
-	_room_banner = UI.title("", 44, UI.PAPER)
+	_room_banner = UI.label("", 72, Color(UI.PAPER, 0.8), "italic", 400)
+	_room_banner.label_settings.shadow_size = 6
+	_room_banner.label_settings.shadow_color = Color(UI.INK, 0.7)
+	_room_banner.label_settings.shadow_offset = Vector2(0, 3)
 	_room_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_room_banner.modulate.a = 0
 	_pin(_room_banner, Control.PRESET_CENTER_TOP, 0, 120)
@@ -398,18 +379,25 @@ func _build_bottom() -> void:
 	var er := UI.hbox(10)
 	esc.add_child(er)
 	er.add_child(UI.chip("Esc"))
-	er.add_child(UI.label("Пауза", 17, UI.PAPER, "body", 700))
+	er.add_child(UI.label("Пауза", 18, UI.PAPER, "body", 700))
 	_pin(esc, Control.PRESET_BOTTOM_LEFT, 40, 40)
 
-	_line = UI.panel(Color(UI.INK, 0.82), 14, 0, 10, 0)
+	_line = UI.panel(Color(UI.INK, 0.82), 14, 0, 10, 0, UI.INK, "wash_ink")
+	var ls = _sb(_line)
+	ls.content_margin_left = 74
+	ls.content_margin_right = 74
+	ls.content_margin_top = 14
+	ls.content_margin_bottom = 14
 	_line_text = RichTextLabel.new()
 	_line_text.bbcode_enabled = true
 	_line_text.fit_content = true
-	_line_text.custom_minimum_size.x = 600
+	_line_text.custom_minimum_size.x = 640
 	_line_text.add_theme_font_override("normal_font", UI.font("body", 500))
-	_line_text.add_theme_font_override("bold_font", UI.font("body", 800))
-	_line_text.add_theme_font_size_override("normal_font_size", 21)
-	_line_text.add_theme_font_size_override("bold_font_size", 21)
+	_line_text.add_theme_font_override("bold_font", UI.font("body", 900))
+	_line_text.add_theme_font_override("italics_font", UI.font("hand"))
+	_line_text.add_theme_font_size_override("normal_font_size", 22)
+	_line_text.add_theme_font_size_override("bold_font_size", 22)
+	_line_text.add_theme_font_size_override("italics_font_size", 30)
 	_line_text.add_theme_color_override("default_color", UI.PAPER)
 	_line.add_child(_line_text)
 	_pin(_line, Control.PRESET_CENTER_BOTTOM, 0, 40)
@@ -434,7 +422,7 @@ func _build_bottom() -> void:
 func _set_tile(k: String, bg: Color, icon_name: String, caption: String, badge := "", badge_bg := UI.CHARGE) -> void:
 	var t: Dictionary = _tiles[k]
 	t.sb.bg_color = bg
-	t.icon.texture = UI.icon_texture(icon_name, 44, Color("5A4A6E") if bg == UI.GREY else UI.INK)
+	t.icon.texture = UI.icon_texture(icon_name, 56, UI.PAPER if t.sb.is_dark() else UI.INK)
 	t.cap.text = caption
 	t.badge.visible = badge != ""
 	t.badge.get_child(0).text = badge
@@ -446,7 +434,6 @@ func _verb(t) -> String:
 		"KNOCK": "Стукати", "EVIDENCE": "Показати", "CIRCLE": "Утримуй"}.get(_kind(t), "Взаємодія")
 
 
-## Power a station needs that the ghost hasn't got yet ("" = none missing).
 func _missing(t) -> String:
 	var need = t.get("need")
 	return need if need is String and need != "" and not GameState.has_power(need) else ""
@@ -465,12 +452,10 @@ func _build_prompt() -> void:
 	_prompt = UI.panel(UI.PAPER, 20, 6, 12)
 	var row := UI.hbox(14)
 	_prompt.add_child(row)
-	var key := UI.panel(UI.GOLD, 12, 0, 0, 4)
+	var key := UI.panel(UI.GOLD, 12, 0, 0, 4, UI.INK, "key")
 	_prompt_key = _sb(key)
-	_prompt_key.shadow_color = UI.INK
-	_prompt_key.shadow_size = 1
-	_prompt_key.shadow_offset = Vector2(0, 4)
-	key.custom_minimum_size = Vector2(50, 50)
+	_prompt_key.content_margin_bottom = 6
+	key.custom_minimum_size = Vector2(56, 58)
 	var kl := UI.label("E", 26, UI.INK, "body", 900)
 	kl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	kl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -479,12 +464,12 @@ func _build_prompt() -> void:
 	row.add_child(key)
 	var col := UI.vbox(0)
 	row.add_child(col)
-	_prompt_title = UI.label("", 24, UI.INK, "body", 900, true)
-	_prompt_sub = UI.label("", 17, UI.MUTED, "body", 600)
+	_prompt_title = UI.label("", 23, UI.INK, "body", 800)
+	_prompt_sub = UI.label("", 18, UI.MUTED, "body", 600)
 	col.add_child(_prompt_title)
 	col.add_child(_prompt_sub)
 	_hud.add_child(_prompt)
-	_prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE  # only shows: never catches the captured mouse mid-screen
+	_prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_prompt.hide()
 
 
@@ -513,8 +498,6 @@ func _prompt_hint(t) -> String:
 	return ""
 
 
-## E card floating above the target in the world: over its own label (station.gd), not a fixed height over its
-## centre, so a thing up on a shelf or a memory near the ceiling doesn't push the card into the ceiling.
 func _update_prompt(t) -> void:
 	var cam := get_viewport().get_camera_3d()
 	var top: Vector3 = t.global_position + Vector3.UP * (t.size.y / 2 + PROMPT_OVER) if t else Vector3.ZERO
@@ -524,34 +507,43 @@ func _update_prompt(t) -> void:
 	_prompt_title.text = t.title().replace(": ", " · ")
 	_prompt_sub.text = _prompt_hint(t)
 	_prompt_key.bg_color = UI.GOLD if t.can_use() else UI.GREY
-	_prompt.size = Vector2.ZERO  # shrink to the new text
+	_prompt.size = Vector2.ZERO
 	_prompt.position = cam.unproject_position(top) - Vector2(_prompt.size.x / 2, _prompt.size.y + PROMPT_GAP)
 
-
-# --- «Нова сила» toast ---
 
 func _build_toast() -> void:
 	_toast = UI.vbox(8)
 	_toast.alignment = BoxContainer.ALIGNMENT_CENTER
-	_pin(_toast, Control.PRESET_CENTER_TOP, 0, 200)
-	_toast_title = UI.title("", 84, UI.GOLD)
-	_toast_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_toast.add_child(_toast_title)
-	var pill := UI.panel(UI.GOLD, 999, 4, 6, 4)
-	pill.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_toast_text = UI.label("", 18, UI.INK, "body", 900, true)
-	pill.add_child(_toast_text)
-	_toast.add_child(pill)
+	_pin(_toast, Control.PRESET_CENTER_TOP, 0, 220)
+	var banner := UI.panel(UI.PAPER, 26, 0, 0, 0, UI.INK, "banner_power")
+	var bs = _sb(banner)
+	bs.content_margin_left = 36
+	bs.content_margin_right = 44
+	bs.content_margin_top = 14
+	bs.content_margin_bottom = 18
+	banner.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var row := UI.hbox(18)
+	banner.add_child(row)
+	_toast_icon = UI.icon("ghost", 92)
+	row.add_child(_toast_icon)
+	var tv := UI.vbox(2)
+	tv.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_toast_title = UI.label("", 36, UI.INK, "display", 900)
+	_toast_text = UI.label("", 21, SPEECH, "body", 600)
+	tv.add_child(_toast_title)
+	tv.add_child(_toast_text)
+	row.add_child(tv)
+	_toast.add_child(banner)
 	_toast.hide()
 
 
 func _on_power(p: String) -> void:
+	_fresh_power = p
+	_toast_icon.texture = UI.power_icon(p, "new")
 	_toast_title.text = "Нова сила: %s" % GameState.POWER_NAMES.get(p, p)
 	_toast_text.text = GameState.POWER_HELP.get(p, "")
 	_toast_t = TOAST_TIME
 
-
-# --- hold to release (board 12) ---
 
 func _build_letgo() -> void:
 	_letgo = _full()
@@ -563,20 +555,20 @@ func _build_letgo() -> void:
 	mv.add_child(UI.label(_priest.title_text if _priest else "Священник", 16, UI.MUTED, "body", 900, true))
 	mv.add_child(_wrap(UI.label("Душе, що страждала тут, — тебе знайшли й пам'ятають. Іди з миром.", 24, UI.INK, "body", 600), 380))
 	_letgo.add_child(priest)
-	var me := UI.panel(Color("E6FCFF"), 26, 6, 18)
+	var me := UI.panel(UI.INK, 26, 6, 22)
 	me.position = Vector2(1060, 300)
 	me.rotation_degrees = 2
-	me.add_child(_hand("Двісті років у цій темряві…\nТепер я можу піти.", 38, UI.INK))
+	me.add_child(_hand("Двісті років у цій темряві…\nТепер я можу піти.", 40, UI.CYAN))
 	_letgo.add_child(me)
-	var card := UI.panel(UI.PAPER, 28, 9, 22)
-	card.custom_minimum_size.x = 760
+	var card := UI.panel(UI.PAPER, 28, 9, 30, 5, UI.INK, "card_holy")
+	card.custom_minimum_size.x = 800
 	_pin(card, Control.PRESET_CENTER_BOTTOM, 0, 150, _letgo)
 	var col := UI.vbox(14)
 	card.add_child(col)
 	var row := UI.hbox(16)
 	col.add_child(row)
-	var key := UI.panel(UI.MOM, 12, 0, 0, 4)
-	key.custom_minimum_size = Vector2(56, 56)
+	var key := UI.panel(UI.MOM, 12, 0, 0, 4, UI.INK, "tile")
+	key.custom_minimum_size = Vector2(66, 66)
 	var kl := UI.label("E", 28, UI.INK, "body", 900)
 	kl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	kl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -589,28 +581,26 @@ func _build_letgo() -> void:
 	_hold_label = UI.label("", 40, UI.INK, "body", 900)
 	row.add_child(_expand(_hold_label))
 	var bar := Panel.new()
-	bar.custom_minimum_size.y = 34
-	bar.add_theme_stylebox_override("panel", UI.style(UI.LILAC, 999, 4))
+	bar.custom_minimum_size.y = 42
+	bar.add_theme_stylebox_override("panel", UI.box("bar", UI.LILAC))
 	_hold_fill = Panel.new()
-	_hold_fill.position = Vector2(4, 4)
-	_hold_fill.add_theme_stylebox_override("panel", UI.style(UI.MOM, 999, 0))
+	_hold_fill.position = Vector2(6, 6)
+	_hold_fill.add_theme_stylebox_override("panel", UI.box("bar", UI.MOM))
 	bar.add_child(_hold_fill)
 	col.add_child(bar)
 	col.add_child(_hand("відпустиш кнопку — почнеш спочатку", 26))
 	_letgo.hide()
 
 
-# --- map (board 10) ---
-
 func _build_map() -> void:
 	_map = _full()
 	_map.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_map)
 	_map.add_child(UI.backdrop(Color(UI.INK, 0.86)))
-	var t := UI.title("Карта", 80)
-	t.position = Vector2(60, 24)
+	var t := UI.painted_title("karta", 110)
+	t.position = Vector2(54, 18)
 	_map.add_child(t)
-	var frame := UI.panel(UI.NIGHT2, 26, 8, 10, 5, UI.PAPER)
+	var frame := UI.panel(UI.NIGHT2, 26, 8, 22, 5, UI.PAPER, "map_sheet")
 	frame.position = Vector2(60, 150)
 	_map.add_child(frame)
 	var view := MapView.new()
@@ -624,31 +614,31 @@ func _build_map() -> void:
 		var pill := UI.pill(text, color, 15)
 		view.add_child(pill)
 		_markers.append([target, pill, until_dug])
-	mark.call(Vector3(ROOM.get_center().x, 0, ROOM.get_center().y), "Твоя кімната", UI.CHARGE)
+	mark.call(Vector3(ROOM.get_center().x, 0, ROOM.get_center().y), "Твоя кімната", UI.CYAN)
 	var rubble = game.find_child("Rubble", true, false)
-	mark.call(rubble if rubble is Node3D else RUBBLE_POS, "Завал", UI.ORANGE, true)
+	mark.call(rubble if rubble is Node3D else RUBBLE_POS, "Завал", UI.RED, true)
 	for s in stations:
 		if _kind(s) == "MEMORY":
-			mark.call(s, "спогад", UI.GOLD)
+			mark.call(s, "спогад", UI.CYAN)
 	for n in _visitors:
-		mark.call(n, n.title_text, UI.PAPER if _kind(n) == "PRIEST" else UI.LILAC)
-	mark.call(game.get_node("Player"), "Ти", UI.CYAN)  # last = on top; game.player is @onready, not set yet
+		mark.call(n, n.title_text, UI.PAPER)
+	mark.call(game.get_node("Player"), "Ти", UI.CYAN)
 
-	var leg := UI.panel(UI.PAPER, 26, 8, 24)
+	var leg := UI.panel(UI.PAPER, 26, 8, 22)
 	leg.custom_minimum_size.x = 620
 	_pin(leg, Control.PRESET_TOP_RIGHT, 60, 150, _map)
-	var col := UI.vbox(8)
+	var col := UI.vbox(2)
 	leg.add_child(col)
 	var head := func(text: String):
-		col.add_child(UI.label(text, 22, UI.INK, "body", 900, true))
+		col.add_child(UI.label(text, 20, UI.INK, "body", 900, true))
 	head.call("Як вести людей")
 	for line in ["Люди йдуть на звук і на світло, що змінилося", "Священник ходить за археологами", "Твоя кімната — вгорі праворуч, за стіною"]:
-		col.add_child(UI.label("· " + line, 19, UI.MUTED, "body", 600))
+		col.add_child(UI.label("· " + line, 17, UI.MUTED, "body", 600))
 	col.add_child(UI.rule())
 	var row_of := func(text: String) -> Label:
 		var r := UI.hbox(8)
-		r.add_child(UI.label(text, 19, UI.INK, "body", 700))
-		var st := UI.label("", 19, UI.INK, "body", 900)
+		r.add_child(UI.label(text, 17, UI.INK, "body", 700))
+		var st := UI.label("", 17, UI.INK, "body", 900)
 		r.add_child(_expand(st))
 		col.add_child(r)
 		return st
@@ -693,55 +683,56 @@ func _update_map() -> void:
 			_set_color(st, UI.LABEL)
 		elif cd is float and cd > 0:
 			st.text = "%d с" % ceili(cd)
-			_set_color(st, UI.ORANGE)
+			_set_color(st, UI.RED)
 		else:
 			st.text = "готово"
-			_set_color(st, DARK_GREEN)
+			_set_color(st, DONE)
 
 
-# --- quest + hints book (J) ---
-
-## "3. Лист від матері" once found, "??? ще не згадав" before.
 func _set_memory_row(l: Label, id: int) -> void:
 	var found := id in GameState.memories
 	l.text = "%d. %s" % [id, GameState.MEMORY_TITLES.get(id, "")] if found else "%d. ???" % id
-	_set_color(l, DARK_GREEN if found else UI.LABEL)
+	_set_color(l, UI.GHOST_INK if found else UI.LABEL)
 
 
-## Closed book: tile in the top-right column with the unread-hints badge.
 func _book_tile() -> PanelContainer:
-	var p := UI.panel(UI.GOLD, 18, 5, 10, 4)
+	var p := UI.panel(UI.INK, 18, 5, 12, 4)
 	var row := UI.hbox(10)
 	p.add_child(row)
-	row.add_child(_svg_icon(BOOK_SVG, 30))
-	row.add_child(UI.label("Книга", 18, UI.INK, "body", 900, true))
+	row.add_child(UI.icon("book", 40))
+	row.add_child(UI.label("Книга", 18, UI.PAPER, "body", 900, true))
 	row.add_child(UI.chip("J"))
-	_book_badge = UI.chip("0", UI.RED, UI.INK, 15, 3)
+	_book_badge = UI.chip("0", UI.ORANGE, UI.INK, 15, 3)
 	row.add_child(_book_badge)
 	_book_badge.hide()
 	return p
 
 
-const COMIC_LETTERS := ["A", "B", "C", "D", "E", "F"]  ## memories 1..5, F = finale
+const COMIC_LETTERS := ["A", "B", "C", "D", "E", "F"]
 
 
 func _build_book() -> void:
-	_book = UI.panel(UI.INK, 30, 10, 14, 5)
+	_book = UI.panel(UI.INK, 30, 10, 26, 5, UI.INK, "book_cover")
 	_pin(_book, Control.PRESET_TOP_RIGHT)
-	var pages := UI.hbox(10)
+	var pages := UI.hbox(0)
 	_book.add_child(pages)
-	var page := func(title: String, color: Color, bg: Color) -> VBoxContainer:
-		var pp := UI.panel(bg, 20, 0, 22, 0)
-		pp.custom_minimum_size = Vector2(500, 760)
+	var page := func(title: String, side: String) -> VBoxContainer:
+		var pp := UI.panel(UI.PAPER, 20, 0, 0, 0, UI.INK, "book_page_" + side)
+		var ps = _sb(pp)
+		ps.content_margin_top = 28
+		ps.content_margin_bottom = 30
+		ps.content_margin_left = 30 if side == "left" else 52
+		ps.content_margin_right = 52 if side == "left" else 30
+		pp.custom_minimum_size = Vector2(520, 780)
 		var v := UI.vbox(8)
 		pp.add_child(v)
 		var head := UI.hbox(10)
-		head.add_child(UI.title(title, 54, color))
+		head.add_child(UI.label(title, 26, UI.INK, "body", 900, true))
 		v.add_child(head)
 		pages.add_child(pp)
 		return v
-	var left: VBoxContainer = page.call("Цілі", UI.GOLD, UI.PAPER)
-	left.get_child(0).add_child(_expand(_hand("J / Esc — закрити", 22)))
+	var left: VBoxContainer = page.call("Цілі", "left")
+	left.get_child(0).add_child(_expand(UI.label("J / Esc — закрити", 17, UI.MUTED, "body", 600)))
 	_book_stage = UI.label("", 20, UI.INK, "body", 900)
 	left.add_child(_book_stage)
 	_quest_priest = UI.label("", 16, UI.MUTED, "body", 700)
@@ -754,11 +745,11 @@ func _build_book() -> void:
 		_sb(row).content_margin_bottom = 2
 		var rh := UI.hbox(8)
 		row.add_child(rh)
-		var d := {panel = row, check = UI.icon("check", 16, UI.GREEN), lock = UI.icon("lock", 16, UI.LABEL), ring = _ring(UI.INK, 14)}
+		var d := {panel = row, check = UI.icon("done", 24, UI.INK), lock = UI.icon("lock", 24, UI.LABEL), ring = _ring(UI.INK, 16)}
 		for k in ["check", "lock", "ring"]:
 			d[k].size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 			rh.add_child(d[k])
-		d.label = _expand(_wrap(UI.label("", 15, UI.INK, "body", 700), 380), HORIZONTAL_ALIGNMENT_LEFT)
+		d.label = _expand(_wrap(UI.label("", 17, UI.INK, "body", 700), 370), HORIZONTAL_ALIGNMENT_LEFT)
 		rh.add_child(d.label)
 		goals.add_child(row)
 		_goal_rows.append(d)
@@ -771,7 +762,7 @@ func _build_book() -> void:
 	_hint_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_hint_list)
 	left.add_child(scroll)
-	var right: VBoxContainer = page.call("Спогади", UI.CHARGE, Color("FFF6E0"))
+	var right: VBoxContainer = page.call("Спогади", "right")
 	_comic_view = ComicPage.new()
 	_comic_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_comic_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -782,7 +773,6 @@ func _build_book() -> void:
 	_update_comic()
 
 
-## J: the book drops from the top-right corner (the game keeps running); closing marks hints and memories read.
 func toggle_book() -> void:
 	if _book.visible:
 		for id in GameState.hints:
@@ -800,7 +790,6 @@ func toggle_book() -> void:
 	_rebuild_hints()
 
 
-## Index of the first goal not done yet (= goal_steps().size() once free).
 func _active_goal() -> int:
 	var steps := GameState.goal_steps()
 	for i in steps.size():
@@ -809,7 +798,6 @@ func _active_goal() -> int:
 	return steps.size()
 
 
-## «Цілі»: every story goal; done ones checked, the active one highlighted, later ones locked.
 func _update_book() -> void:
 	var i := clampi(GameState.stage, 0, STAGE_NAMES.size() - 1)
 	_book_stage.text = "Етап %d/%d · %s" % [i + 1, STAGE_NAMES.size(), STAGE_NAMES[i]]
@@ -819,25 +807,23 @@ func _update_book() -> void:
 	var pr := _stage_progress()
 	for k in _goal_rows.size():
 		var d: Dictionary = _goal_rows[k]
-		var state := 2 if k < now else (1 if k == now else 0)  # 0 locked, 1 active, 2 done
+		var state := 2 if k < now else (1 if k == now else 0)
 		d.check.visible = state == 2
 		d.lock.visible = state == 0
 		d.ring.visible = state == 1
 		d.label.text = "???" if state == 0 else steps[k].text + (" · " + pr[1] if state == 1 and pr[1] != "" and not "/" in steps[k].text else "")
 		d.label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if state == 1 else TextServer.AUTOWRAP_OFF
-		d.label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING if state == 1 else TextServer.OVERRUN_TRIM_ELLIPSIS  # trimming + autowrap collapses the label
+		d.label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING if state == 1 else TextServer.OVERRUN_TRIM_ELLIPSIS
 		d.label.clip_text = state != 1
-		_set_color(d.label, [UI.LABEL, UI.INK, DARK_GREEN][state])
+		_set_color(d.label, [UI.LABEL, UI.INK, DONE][state])
 		_sb(d.panel).bg_color = Color(UI.GOLD, 0.85) if state == 1 else Color(0, 0, 0, 0)
 
 
-## «Спогади» (comic page): panels A–E open with their memory, F after the finale; the rest stay dark with «?».
 func _update_comic() -> void:
 	for k in COMIC_LETTERS.size():
 		_comic_view.set_panel_state(COMIC_LETTERS[k], GameState.won if k == 5 else (k + 1) in GameState.memories)
 
 
-## Hints, newest first; unread ones stand out until the book is closed. Badge = unread hints + new memories.
 func _rebuild_hints() -> void:
 	for c in _hint_list.get_children():
 		c.queue_free()
@@ -846,14 +832,14 @@ func _rebuild_hints() -> void:
 		var id: String = GameState.hints[i]
 		var fresh: bool = not _read.has(id)
 		unread += int(fresh)
-		var p := UI.panel(UI.PAPER if fresh else UI.LILAC, 14, 4 if fresh else 0, 10, 3, UI.ORANGE if fresh else UI.INK)
+		var p := UI.panel(UI.PAPER if fresh else UI.LILAC, 14, 4 if fresh else 0, 12, 3, UI.ORANGE if fresh else UI.INK)
 		var r := UI.hbox(10)
 		p.add_child(r)
 		if fresh:
-			var chip := UI.chip("нове", UI.ORANGE, UI.INK, 14, 2)
+			var chip := UI.chip("нове", UI.ORANGE, UI.INK, 15, 2)
 			chip.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 			r.add_child(chip)
-		r.add_child(_wrap(UI.label(GameState.HINTS[id], 16, UI.INK, "body", 600), 360 if fresh else 430))
+		r.add_child(_wrap(_hand(GameState.HINTS[id], 22, UI.INK), 340 if fresh else 410))
 		_hint_list.add_child(p)
 	if GameState.hints.is_empty():
 		_hint_list.add_child(_hand("Поки порожньо…", 26))
@@ -861,8 +847,6 @@ func _rebuild_hints() -> void:
 	_book_badge.visible = unread > 0
 	_book_badge.get_child(0).text = str(unread)
 
-
-# --- pause (board 11) ---
 
 func open_pause() -> void:
 	_map.hide()
@@ -873,7 +857,7 @@ func open_pause() -> void:
 	_pause.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_pause)
 	_pause.add_child(UI.backdrop(Color(UI.NIGHT, 0.82)))
-	var t := UI.title("Пауза", 150)
+	var t := UI.painted_title("pauza", 136)
 	_pin(t, Control.PRESET_CENTER_TOP, 0, 70, _pause)
 	_pin(_hand("підземелля затамувало подих", 38, UI.CYAN), Control.PRESET_CENTER_TOP, 0, 250, _pause)
 
@@ -894,7 +878,7 @@ func open_pause() -> void:
 	menu.pressed.connect(_to_menu)
 	for b in [_resume_btn, guide, settings, again, menu]:
 		btns.add_child(b)
-	btns.add_child(UI.label("прогрес не збережеться", 15, UI.DIM, "body", 600))
+	btns.add_child(UI.label("прогрес не збережеться", 17, UI.DIM, "body", 600))
 	_resume_btn.grab_focus.call_deferred()
 
 	var stats := UI.panel(UI.PAPER, 26, 8, 22)
@@ -908,7 +892,7 @@ func open_pause() -> void:
 			["Сили", ", ".join(powers) if powers else "жодної"], ["Шуму наробив", _times(GameState.haunts)],
 			["Священник", _priest_status().trim_prefix("Священник: ")], ["Час", _clock(GameState.elapsed)]]:
 		var r := UI.hbox(10)
-		r.add_child(UI.label(kv[0], 15, UI.LABEL, "body", 900, true))
+		r.add_child(UI.label(kv[0], 16, UI.LABEL, "body", 900, true))
 		r.add_child(_expand(UI.label(kv[1], 20, UI.INK, "body", 900)))
 		sv.add_child(r)
 
@@ -959,9 +943,7 @@ func _to_menu() -> void:
 	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
 
 
-# --- ending (board 13) ---
-
-func _on_finished(_won: bool) -> void:  # the dungeon story has no losing ending
+func _on_finished(_won: bool) -> void:
 	if is_instance_valid(_sub):
 		_sub.queue_free()
 	resume()
@@ -972,20 +954,24 @@ func _on_finished(_won: bool) -> void:  # the dungeon story has no losing ending
 	_end = _full()
 	_end.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_end)
-	_end.add_child(UI.backdrop(UI.NIGHT))
-	_end.add_child(UI.vignette(Color(1, 0.77, 0.19, 0.45)))
-	var col := UI.vbox(22)
+	_end.add_child(UI.backdrop(UI.PAPER))
+	_end.add_child(UI.backdrop(Color(UI.MOM, 0.5)))
+	_end.add_child(UI.vignette(Color(UI.MOM, 0.6)))
+	var col := UI.vbox(20)
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
-	_pin(col, Control.PRESET_CENTER_TOP, 0, 90, _end)
+	_pin(col, Control.PRESET_CENTER_TOP, 0, 70, _end)
 	var centered := func(c: Control):
 		c.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		col.add_child(c)
 	centered.call(UI.pill("Фінал · Звільнення", UI.GOLD, 20, "ghost"))
-	end_title = UI.title("Ти вільний", 150)
+	end_title = UI.painted_title("ty_vilnyi", 200, "ink")
 	centered.call(end_title)
 	if GameState.name_known():
-		centered.call(_hand("Тиміш Ковальчук", 64, UI.CYAN))
-	centered.call(UI.label("Тебе знайшли й пам'ятають. Підземелля старого міста відпустило тебе.", 40, UI.GOLD, "body", 900))
+		var name_label := _hand("Тиміш Ковальчук", 76, UI.GHOST_INK)
+		name_label.label_settings.shadow_size = 10
+		name_label.label_settings.shadow_color = Color(UI.CYAN, 0.45)
+		centered.call(name_label)
+	centered.call(UI.label("Тебе знайшли й пам'ятають. Підземелля старого міста відпустило тебе.", 30, SPEECH, "body", 700))
 	var grid := UI.hbox(22)
 	for kv in [["Час", _clock(GameState.elapsed)], ["Спогади", "%d / %d" % [GameState.memories.size(), GameState.MEMORY_COUNT]],
 			["Шуму наробив", _times(GameState.haunts)]]:
@@ -1012,16 +998,29 @@ func _on_finished(_won: bool) -> void:  # the dungeon story has no losing ending
 	rt.fit_content = true
 	rt.autowrap_mode = TextServer.AUTOWRAP_OFF
 	rt.add_theme_font_override("normal_font", UI.font("body", 500))
-	rt.add_theme_font_override("bold_font", UI.font("body", 800))
-	rt.add_theme_font_size_override("normal_font_size", 21)
-	rt.add_theme_font_size_override("bold_font_size", 21)
+	rt.add_theme_font_override("bold_font", UI.font("body", 900))
+	rt.add_theme_font_size_override("normal_font_size", 22)
+	rt.add_theme_font_size_override("bold_font_size", 22)
 	rt.add_theme_color_override("default_color", UI.PAPER)
-	rt.text = "[b][color=#%s]%s:[/color][/b] спочивай з миром." % [UI.GOLD.to_html(false), _priest.title_text if _priest else "Священник"]
+	rt.text = "[center][b][color=#%s]%s:[/color][/b] спочивай з миром.[/center]" % [UI.MOM.to_html(false), _priest.title_text if _priest else "Священник"]
 	rt.custom_minimum_size.x = 480
 	line.add_child(rt)
 	_pin(line, Control.PRESET_CENTER_BOTTOM, 0, 60, _end)
 
 
 func _on_said(who: String, text: String, color: Color) -> void:
-	_line_text.text = "[center][b][color=#%s]%s:[/color][/b] %s[/center]" % [color.to_html(false), who, text]
+	if who == "Ти":
+		_line_text.text = "[center][i][color=#%s]%s[/color][/i][/center]" % [UI.CYAN.to_html(false), text]
+	else:
+		_line_text.text = "[center][b][color=#%s]%s:[/color][/b] %s[/center]" % [_speaker_color(who, color).to_html(false), who, text]
 	_line_t = LINE_TIME
+
+
+func _speaker_color(who: String, color: Color) -> Color:
+	if _priest and who == _priest.title_text:
+		return UI.MOM
+	if color.h > 0.2 and color.h < 0.45:
+		return UI.GREEN
+	if color.s > 0.45 and color.v > 0.7:
+		return UI.GOLD
+	return UI.PAPER

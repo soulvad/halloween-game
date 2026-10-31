@@ -1,15 +1,11 @@
 extends RefCounted
-## Full-screen menus from the "ВІДПУСТИ — UI" design: board 03 «Налаштування».
-## Used by the main menu and the pause menu: add the returned Control as a child, free it in on_back.
-## It runs while the tree is paused and closes on Esc (shortcut on «Назад»).
 
 const UI = preload("res://scripts/ui.gd")
 
 
-## Board 03, only the settings that work: master volume, fullscreen, item labels, subtitles.
 static func settings(on_back: Callable) -> Control:
 	var root := _screen()
-	place(root, UI.title("Налаштування", 100), 96, 56)
+	place(root, UI.painted_title("nalashtuvannia", 117), 82, 50)
 
 	var box := UI.panel(UI.PAPER, 30, 10, 40)
 	var col := UI.vbox(26)
@@ -69,8 +65,6 @@ static func settings(on_back: Callable) -> Control:
 	return root
 
 
-## Adds `c` to `parent` at design px. Negative x / y = distance of the right / bottom edge from the screen edge.
-## w = fixed width (0 = minimum width).
 static func place(parent: Control, c: Control, x: float, y: float, w := 0.0) -> Control:
 	parent.add_child(c)
 	if x < 0:
@@ -94,13 +88,10 @@ static func place(parent: Control, c: Control, x: float, y: float, w := 0.0) -> 
 	return c
 
 
-## Outlined key + caption on dark ("Esc назад у меню", "↑↓ обрати").
 static func key_hint(key: String, text: String) -> HBoxContainer:
 	var row := UI.hbox(8)
-	var k := UI.chip(key, Color(0, 0, 0, 0), UI.PAPER, 18, 3)
-	(k.get_theme_stylebox("panel") as StyleBoxFlat).border_color = UI.PAPER
-	row.add_child(k)
-	row.add_child(UI.label(text, 18, UI.PAPER, "body", 600))
+	row.add_child(UI.chip(key, UI.PAPER, UI.INK, 18, 3))
+	row.add_child(UI.label(text, 20, UI.DIM, "body", 600))
 	return row
 
 
@@ -124,20 +115,18 @@ static func _back_button(on_back: Callable) -> Button:
 	return b
 
 
-## Checkbox tile: paper when off, green with a tick when on.
 static func _toggle(text: String, on: bool, cb: Callable) -> Button:
-	var b := UI.button(text, "secondary", "", "", 21)
+	var b := UI.button(text, "secondary", "", "", 22)
 	b.toggle_mode = true
 	b.custom_minimum_size = Vector2(440, 0)
-	var on_style := (b.get_theme_stylebox("normal") as StyleBoxFlat).duplicate() as StyleBoxFlat
-	on_style.bg_color = UI.GREEN
-	b.add_theme_stylebox_override("pressed", on_style)
-	b.add_theme_stylebox_override("hover_pressed", on_style)
+	b.add_theme_stylebox_override("pressed", b.get_theme_stylebox("normal"))
+	b.add_theme_stylebox_override("hover_pressed", b.get_theme_stylebox("hover"))
 	b.add_theme_constant_override("h_separation", 14)
+	b.add_theme_constant_override("icon_max_width", 42)
 	b.button_pressed = on
-	b.icon = UI.icon_texture("check" if on else "", 28)
+	b.icon = UI.icon_texture("check_on" if on else "check_off")
 	b.toggled.connect(func(v: bool) -> void:
-		b.icon = UI.icon_texture("check" if v else "", 28)
+		b.icon = UI.icon_texture("check_on" if v else "check_off")
 		cb.call(v))
 	return b
 
@@ -146,20 +135,18 @@ static func _slider() -> HSlider:
 	var s := HSlider.new()
 	s.max_value = 100
 	s.step = 1
-	s.custom_minimum_size = Vector2(0, 36)
+	s.custom_minimum_size = Vector2(0, 52)
 	s.focus_mode = Control.FOCUS_ALL
-	var track := UI.style(UI.LILAC, 12, 4)
-	track.content_margin_top = 8
-	track.content_margin_bottom = 8
-	var fill := UI.style(UI.ORANGE, 12, 4)
-	fill.content_margin_top = 8
-	fill.content_margin_bottom = 8
+	var track := UI.box("bar", UI.LILAC, 0)
+	track.content_margin_top = 14
+	track.content_margin_bottom = 14
+	var fill := UI.box("bar", UI.ORANGE, 0)
+	fill.content_margin_top = 14
+	fill.content_margin_bottom = 14
 	s.add_theme_stylebox_override("slider", track)
 	s.add_theme_stylebox_override("grabber_area", fill)
 	s.add_theme_stylebox_override("grabber_area_highlight", fill)
-	var img := Image.new()
-	img.load_svg_from_string('<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34"><circle cx="17" cy="17" r="14" fill="#FFFDF8" stroke="#17111C" stroke-width="4"/></svg>')
-	var knob := ImageTexture.create_from_image(img)
+	var knob := UI.icon_texture("knob_small")
 	s.add_theme_icon_override("grabber", knob)
 	s.add_theme_icon_override("grabber_highlight", knob)
 	return s
