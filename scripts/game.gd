@@ -7,6 +7,7 @@ extends Node3D
 const Station = preload("res://scripts/station.gd")
 const Visitor = preload("res://scripts/visitor.gd")
 const Wall = preload("res://scripts/wall.gd")
+const Lanterns = preload("res://scripts/lanterns.gd")
 const COMIC_SCENE := "res://scenes/comic.tscn"
 const RELEASE_TIME := 2.5  ## seconds to hold E in the circle
 const PRIEST_DELAY := 15.0  ## from the call to the priest walking in
@@ -34,6 +35,9 @@ func _ready() -> void:
 	GameState.finished.connect(_on_finished)
 	GameState.think("Холодно… Темно… Хто я? Я нічого не пам'ятаю.")
 	GameState.hint("start")
+	var lanterns := Lanterns.new()
+	lanterns.name = "Lanterns"
+	add_child(lanterns)
 	if not GameState.intro_seen:
 		GameState.intro_seen = true
 		comic.call_deferred("prologue")
