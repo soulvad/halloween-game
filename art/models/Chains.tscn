@@ -1,0 +1,131 @@
+[gd_scene format=3]
+
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.2, 0.19, 0.21, 1)
+metallic = 0.75
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2"]
+albedo_color = Color(0.36, 0.22, 0.15, 1)
+metallic = 0.4
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+material = SubResource("StandardMaterial3D_2")
+size = Vector3(0.1, 0.1, 0.03)
+
+[sub_resource type="TorusMesh" id="TorusMesh_4"]
+material = SubResource("StandardMaterial3D_1")
+inner_radius = 0.035
+outer_radius = 0.052
+rings = 16
+ring_segments = 6
+
+[sub_resource type="TorusMesh" id="TorusMesh_5"]
+material = SubResource("StandardMaterial3D_1")
+inner_radius = 0.011
+outer_radius = 0.022
+rings = 12
+ring_segments = 6
+
+[sub_resource type="TorusMesh" id="TorusMesh_6"]
+material = SubResource("StandardMaterial3D_1")
+inner_radius = 0.011
+outer_radius = 0.022
+rings = 12
+ring_segments = 6
+
+[node name="Chains" type="Node3D"]
+
+[node name="Plate0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, 0.86, -0.085)
+mesh = SubResource("BoxMesh_3")
+
+[node name="Link0_0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, -0.12, 0.84, -0.06)
+mesh = SubResource("TorusMesh_5")
+
+[node name="Link0_1" type="MeshInstance3D" parent="."]
+transform = Transform3D(6.1232e-17, 1, 6.1232e-17, 0, 6.1232e-17, -1, -1, 6.1232e-17, 3.7494e-33, -0.12, 0.795, -0.06)
+mesh = SubResource("TorusMesh_5")
+
+[node name="Link0_2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, -0.12, 0.75, -0.06)
+mesh = SubResource("TorusMesh_5")
+
+[node name="Link0_3" type="MeshInstance3D" parent="."]
+transform = Transform3D(6.1232e-17, 1, 6.1232e-17, 0, 6.1232e-17, -1, -1, 6.1232e-17, 3.7494e-33, -0.12, 0.705, -0.06)
+mesh = SubResource("TorusMesh_5")
+
+[node name="Link0_4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, -0.12, 0.66, -0.06)
+mesh = SubResource("TorusMesh_5")
+
+[node name="Link0_5" type="MeshInstance3D" parent="."]
+transform = Transform3D(6.1232e-17, 1, 6.1232e-17, 0, 6.1232e-17, -1, -1, 6.1232e-17, 3.7494e-33, -0.12, 0.615, -0.06)
+mesh = SubResource("TorusMesh_5")
+
+[node name="Link0_6" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, -0.12, 0.57, -0.06)
+mesh = SubResource("TorusMesh_5")
+
+[node name="Link0_7" type="MeshInstance3D" parent="."]
+transform = Transform3D(6.1232e-17, 1, 6.1232e-17, 0, 6.1232e-17, -1, -1, 6.1232e-17, 3.7494e-33, -0.12, 0.525, -0.06)
+mesh = SubResource("TorusMesh_5")
+
+[node name="Link0_8" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, -0.12, 0.48, -0.06)
+mesh = SubResource("TorusMesh_5")
+
+[node name="Link0_9" type="MeshInstance3D" parent="."]
+transform = Transform3D(6.1232e-17, 1, 6.1232e-17, 0, 6.1232e-17, -1, -1, 6.1232e-17, 3.7494e-33, -0.12, 0.435, -0.06)
+mesh = SubResource("TorusMesh_5")
+
+[node name="Cuff0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, -0.12, 0.31, -0.06)
+mesh = SubResource("TorusMesh_4")
+
+[node name="Plate1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 0.86, -0.085)
+mesh = SubResource("BoxMesh_3")
+
+[node name="Link1_0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, 0.12, 0.84, -0.06)
+mesh = SubResource("TorusMesh_6")
+
+[node name="Link1_1" type="MeshInstance3D" parent="."]
+transform = Transform3D(6.1232e-17, 1, 6.1232e-17, 0, 6.1232e-17, -1, -1, 6.1232e-17, 3.7494e-33, 0.12, 0.795, -0.06)
+mesh = SubResource("TorusMesh_6")
+
+[node name="Link1_2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, 0.12, 0.75, -0.06)
+mesh = SubResource("TorusMesh_6")
+
+[node name="Link1_3" type="MeshInstance3D" parent="."]
+transform = Transform3D(6.1232e-17, 1, 6.1232e-17, 0, 6.1232e-17, -1, -1, 6.1232e-17, 3.7494e-33, 0.12, 0.705, -0.06)
+mesh = SubResource("TorusMesh_6")
+
+[node name="Link1_4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, 0.12, 0.66, -0.06)
+mesh = SubResource("TorusMesh_6")
+
+[node name="Link1_5" type="MeshInstance3D" parent="."]
+transform = Transform3D(6.1232e-17, 1, 6.1232e-17, 0, 6.1232e-17, -1, -1, 6.1232e-17, 3.7494e-33, 0.12, 0.615, -0.06)
+mesh = SubResource("TorusMesh_6")
+
+[node name="Link1_6" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, 0.12, 0.57, -0.06)
+mesh = SubResource("TorusMesh_6")
+
+[node name="Link1_7" type="MeshInstance3D" parent="."]
+transform = Transform3D(6.1232e-17, 1, 6.1232e-17, 0, 6.1232e-17, -1, -1, 6.1232e-17, 3.7494e-33, 0.12, 0.525, -0.06)
+mesh = SubResource("TorusMesh_6")
+
+[node name="Link1_8" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, 0.12, 0.48, -0.06)
+mesh = SubResource("TorusMesh_6")
+
+[node name="Cuff1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, 0.12, 0.36, -0.06)
+mesh = SubResource("TorusMesh_4")

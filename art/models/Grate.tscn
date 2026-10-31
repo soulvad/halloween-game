@@ -1,0 +1,72 @@
+[gd_scene format=3]
+
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.36, 0.22, 0.15, 1)
+metallic = 0.55
+roughness = 0.75
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.06, 0.06, 1.2)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+material = SubResource("StandardMaterial3D_1")
+top_radius = 0.018
+bottom_radius = 0.018
+height = 1.4
+radial_segments = 8
+
+[node name="Grate" type="Node3D"]
+
+[node name="Rail0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+mesh = SubResource("BoxMesh_2")
+
+[node name="Rail1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+mesh = SubResource("BoxMesh_2")
+
+[node name="Rail2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.36, 0)
+mesh = SubResource("BoxMesh_2")
+
+[node name="Bar0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, -0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, -0.54)
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Bar1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, -0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, -0.42)
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Bar2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, -0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, -0.3)
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Bar3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, -0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, -0.18)
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Bar4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, -0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, -0.06)
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Bar5" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, -0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0.06)
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Bar6" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.99756, -0.069756, 0, 0.069756, 0.99756, 0, 0, 0, 1, 0, 0.7, 0.18)
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Bar7" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, -0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0.3)
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Bar8" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, -0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0.42)
+mesh = SubResource("CylinderMesh_3")
+
+[node name="Bar9" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, -0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0.54)
+mesh = SubResource("CylinderMesh_3")

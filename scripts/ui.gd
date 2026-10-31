@@ -21,6 +21,7 @@ const LABEL := Color("6B4FA0")  ## small caps labels on paper
 const DIM := Color("C9C2E8")  ## secondary text on dark
 const SHADE := Color(0.09, 0.067, 0.11, 0.9)  ## dark translucent panels
 const LEVEL_COLORS := [Color.WHITE, CYAN, GOLD, MOM]
+const LABEL_NEAR := 2.0  ## m: world labels keep their full size up to here, then shrink with distance (world_label)
 
 ## Inline stroke icons (24x24 viewBox), drawn in `color` by icon().
 const ICONS := {
@@ -63,6 +64,14 @@ static func font(kind := "body", weight := 800) -> Font:
 		f.font_weight = weight
 		_fonts[key] = f
 	return _fonts[key]
+
+
+## Sizes a fixed_size Label3D every frame: `px` (its pixel_size) up to LABEL_NEAR m from the camera, smaller further
+## off like the thing it names, so far labels stay small and near ones never grow huge.
+static func world_label(l: Label3D, px: float) -> void:
+	var cam := l.get_viewport().get_camera_3d()
+	if cam:
+		l.pixel_size = px * minf(1.0, LABEL_NEAR / maxf(cam.global_position.distance_to(l.global_position), 0.01))
 
 
 ## Flat box: `shadow` = solid offset shadow to the bottom-right; `drop` = shadow straight down (buttons).

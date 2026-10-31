@@ -1,0 +1,37 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://art/textures/plan.png" id="1"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(1, 1, 1, 1)
+albedo_texture = ExtResource("1")
+roughness = 0.95
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_2"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector2(0.9, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3"]
+albedo_color = Color(0.35, 0.33, 0.32, 1)
+roughness = 0.85
+
+[sub_resource type="SphereMesh" id="SphereMesh_4"]
+material = SubResource("StandardMaterial3D_3")
+radius = 0.03
+height = 0.04
+radial_segments = 8
+rings = 4
+
+[node name="Plan" type="Node3D"]
+
+[node name="Paper" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.006, 0)
+mesh = SubResource("PlaneMesh_2")
+
+[node name="Weight0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 0.02, -0.26)
+mesh = SubResource("SphereMesh_4")
+
+[node name="Weight1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.41, 0.02, 0.25)
+mesh = SubResource("SphereMesh_4")

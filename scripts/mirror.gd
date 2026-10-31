@@ -10,6 +10,7 @@ const FAR := 40.0
 const LAYER_GLASS := 16  ## visual layer 5: so the mirror doesn't see itself
 const CULL := 0xFFFFF & ~4 & ~2 & ~LAYER_GLASS  ## no own body (3), no world labels (2)
 
+var _glass := GLASS  ## the model's own pane (a box named Glass, Ostap's mirror) replaces the oval
 var _view := SubViewport.new()
 var _cam := Camera3D.new()
 
@@ -33,6 +34,16 @@ func _init(station_size: Vector3) -> void:
 func _ready() -> void:
 	var mat := ShaderMaterial.new()
 	mat.shader = load("res://scripts/mirror.gdshader")
+	var pane := get_parent().find_child("Glass", true, false) as MeshInstance3D
+	if pane and pane.mesh is BoxMesh:
+		var box: Vector3 = pane.mesh.size
+		var t: Transform3D = get_parent().global_transform.affine_inverse() * pane.global_transform
+		_glass = Vector2(box.z * t.basis.get_scale().z, box.y * t.basis.get_scale().y)
+		position = t.origin + Vector3(FACE_X * (box.x * t.basis.get_scale().x / 2 + 0.004), 0, 0)
+		mesh.size = _glass
+		_view.size = Vector2i(roundi(RESOLUTION * _glass.x / _glass.y), RESOLUTION)
+		pane.visible = false
+		mat.set_shader_parameter("oval", false)
 	mat.set_shader_parameter("view", _view.get_texture())
 	material_override = mat
 
@@ -50,4 +61,4 @@ func _process(_delta: float) -> void:
 	var image := eye.global_position - normal * d * 2.0
 	_cam.global_transform = Transform3D(Basis(-glass.basis.x, glass.basis.y, -normal), image)
 	var to_glass := glass.origin - image
-	_cam.set_frustum(GLASS.y, Vector2(to_glass.dot(-glass.basis.x), to_glass.dot(glass.basis.y)), d, FAR)
+	_cam.set_frustum(_glass.y, Vector2(to_glass.dot(-glass.basis.x), to_glass.dot(glass.basis.y)), d, FAR)

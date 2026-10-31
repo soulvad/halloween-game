@@ -11,6 +11,7 @@ const Ambient = preload("res://scripts/ambient.gd")
 const Lanterns = preload("res://scripts/lanterns.gd")
 const Decor = preload("res://scripts/decor.gd")
 const Paintings = preload("res://scripts/paintings.gd")
+const Look = preload("res://scripts/look.gd")
 const COMIC_SCENE := "res://scenes/comic.tscn"
 const Tour = preload("res://scripts/tour.gd")
 const RELEASE_TIME := 2.5  ## seconds to hold E in the circle
@@ -32,6 +33,7 @@ var _region: NavigationRegion3D
 func _ready() -> void:
 	_bake_nav()
 	Wall.textured($Level/Floor.mesh.material, "floor", 0.25)
+	Wall.uneven($Level/Floor)
 	Wall.textured($Level/Ceiling.mesh.material, "ceiling", 0.25)
 	GameState.reset()
 	var ambient := Ambient.new()
@@ -48,6 +50,9 @@ func _ready() -> void:
 	var paintings := Paintings.new()
 	paintings.name = "Paintings"
 	add_child(paintings)
+	var look := Look.new()
+	look.name = "Look"
+	add_child(look)
 	var lanterns := Lanterns.new()
 	lanterns.name = "Lanterns"
 	add_child(lanterns)

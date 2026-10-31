@@ -741,7 +741,7 @@ color = Color(0.12, 0.1, 0.14, 1)
 [node name="CrateR1L" type="StaticBody3D" parent="Level"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0.45, -9.6)
 script = ExtResource("2_wall")
-size = Vector3(1.2, 0.9, 1)
+size = Vector3(0.9, 0.9, 0.95)
 solid_from = 3
 color = Color(0.4, 0.28, 0.18, 1)
 
@@ -762,7 +762,7 @@ color = Color(0.4, 0.28, 0.18, 1)
 [node name="BarrelsR2R" type="StaticBody3D" parent="Level"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.6, 0.5, -1.8)
 script = ExtResource("2_wall")
-size = Vector3(1.2, 1, 1.2)
+size = Vector3(1.05, 1, 0.6)
 solid_from = 3
 color = Color(0.4, 0.28, 0.18, 1)
 
@@ -776,12 +776,12 @@ color = Color(0.4, 0.28, 0.18, 1)
 [node name="CrateR3R" type="StaticBody3D" parent="Level"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0.45, 3)
 script = ExtResource("2_wall")
-size = Vector3(1.4, 0.9, 1)
+size = Vector3(0.9, 0.9, 0.9)
 solid_from = 3
 color = Color(0.4, 0.28, 0.18, 1)
 
 [node name="ShelfR4L" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0.8, 9.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0.8, 9.35)
 script = ExtResource("2_wall")
 size = Vector3(1, 1.6, 0.8)
 solid_from = 3
@@ -795,9 +795,9 @@ solid_from = 3
 color = Color(0.4, 0.28, 0.18, 1)
 
 [node name="StonesRT" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.3, -9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.26, -9)
 script = ExtResource("2_wall")
-size = Vector3(1.2, 0.6, 1)
+size = Vector3(1.2, 0.52, 0.5)
 solid_from = 3
 color = Color(0.4, 0.28, 0.18, 1)
 
@@ -863,7 +863,7 @@ omni_range = 6.0
 [node name="Stations" type="Node3D" parent="."]
 
 [node name="Memory1" type="StaticBody3D" parent="Stations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.4, 0.99, -10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0.99, -9.6)
 script = ExtResource("3_station")
 kind = 0
 title_text = "Свистулька-пташка"
@@ -883,7 +883,7 @@ color = Color(0.6, 0.95, 1, 1)
 memory_id = 2
 
 [node name="Memory3" type="StaticBody3D" parent="Stations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.1, 1.09, 3.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0.99, 3)
 script = ExtResource("3_station")
 kind = 0
 title_text = "Лист від матері"
@@ -922,7 +922,7 @@ size = Vector3(2.4, 0.06, 2.4)
 color = Color(1, 0.56, 0.69, 1)
 
 [node name="Shackles" type="StaticBody3D" parent="Stations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.2, 0.2, -12.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.2, 0.2, -12.35)
 script = ExtResource("3_station")
 kind = 7
 title_text = "Кайдани"
@@ -931,7 +931,7 @@ size = Vector3(0.7, 0.4, 0.3)
 color = Color(0.45, 0.4, 0.38, 1)
 
 [node name="Tally" type="StaticBody3D" parent="Stations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.3, 0.6, -9.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.44, 0.6, -9.6)
 script = ExtResource("3_station")
 kind = 7
 title_text = "Подряпини-дні"
@@ -1039,7 +1039,7 @@ color = Color(1, 0.48, 0.1, 1)
 power = 1
 
 [node name="Grate" type="StaticBody3D" parent="Stations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.6, 0.7, -4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.9, 0.7, -4)
 script = ExtResource("3_station")
 kind = 2
 title_text = "Іржаві ґрати"
@@ -1089,7 +1089,7 @@ color = Color(1, 0.48, 0.1, 1)
 power = 1
 
 [node name="Mirror" type="StaticBody3D" parent="Stations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.35, 1, -2.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.45, 1, -2.6)
 script = ExtResource("3_station")
 kind = 3
 title_text = "Запилене дзеркало"
