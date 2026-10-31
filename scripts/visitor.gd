@@ -68,7 +68,7 @@ func _ready() -> void:
 	_label.fixed_size = true  ## no giant letters next to the camera; UI.world_label shrinks it further off
 	_label.position.y = 2.1
 	_label.layers = 2  ## the minimap camera culls labels
-	_label.visibility_range_end = 12.0
+	_label.visibility_range_end = UI.LABEL_RANGE
 	_label.font = UI.font()
 	_label.modulate = UI.GOLD if kind == Kind.PRIEST else UI.PAPER
 	add_child(_label)
