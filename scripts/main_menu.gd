@@ -36,8 +36,6 @@ func _ready() -> void:
 	_box.name = "Box"
 	var play := _nav(UI.button("Грати", "primary", "Enter", "play", 32), "Play")
 	play.pressed.connect(get_tree().change_scene_to_file.bind("res://scenes/game.tscn"))
-	var how := _nav(UI.button("Як грати", "secondary", "", "ghost", 28), "HowTo", "як вибратися", UI.MUTED)
-	how.pressed.connect(func() -> void: _open(Screens.how_to(_close, play.pressed.emit)))
 	var opts := _nav(UI.button("Налаштування", "secondary", "", "sliders", 28), "Settings")
 	opts.pressed.connect(func() -> void: _open(Screens.settings(_close)))
 	var quit := _nav(UI.button("Вихід", "ghost", "", "exit", 24), "Quit", "закрити гру", UI.DIM)
