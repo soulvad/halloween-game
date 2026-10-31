@@ -1,6 +1,6 @@
 extends Node
 ## Visual looks to compare: Environment overrides + light tint + optional screen pass (look.gdshader).
-## Node `Look`, added by game.gd. F7 cycles; `current` is static, so the choice survives a restart.
+## Node `Look`, added by game.gd. F2 cycles (debug); `current` is static, so the choice survives a restart.
 ## Look 0 is the scene as generated (no overrides). Nothing here touches the generated scene file.
 
 const LOOKS := [
@@ -102,11 +102,26 @@ func _ready() -> void:
 	apply.call_deferred(current)  # after decor / lanterns / stations add their lights
 
 
+# shortcut: debug look switcher (F2 + name label), remove before release
 func _unhandled_input(e: InputEvent) -> void:
-	if e is InputEventKey and e.pressed and not e.echo and e.keycode == KEY_F7:
+	if e is InputEventKey and e.pressed and not e.echo and e.keycode == KEY_F2:
 		apply((current + 1) % LOOKS.size())
-		GameState.think("Вигляд: %s" % LOOKS[current].name)
+		_flash("Вигляд %d/%d: %s" % [current + 1, LOOKS.size(), LOOKS[current].name])
 		get_viewport().set_input_as_handled()
+
+
+func _flash(text: String) -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 100  # over the HUD
+	var label := Label.new()
+	label.text = text
+	label.position = Vector2(24, 24)
+	label.add_theme_font_size_override("font_size", 28)
+	label.add_theme_constant_override("outline_size", 8)
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	layer.add_child(label)
+	add_child(layer)
+	get_tree().create_timer(2.0).timeout.connect(layer.queue_free)
 
 
 func apply(i: int) -> void:
