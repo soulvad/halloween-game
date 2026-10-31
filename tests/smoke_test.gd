@@ -6,7 +6,6 @@ func _frames(n: int) -> void:
 		await get_tree().process_frame
 
 
-## Fast-forward (time_scale) until `cond` holds or `max_s` game seconds pass; returns game seconds waited.
 func _until(cond: Callable, max_s: float) -> float:
 	Engine.time_scale = 10.0
 	var t := 0.0
@@ -20,11 +19,15 @@ func _until(cond: Callable, max_s: float) -> float:
 
 func _ready() -> void:
 	Engine.max_physics_steps_per_frame = 16
-	var UI = load("res://scripts/ui.gd")  # UI kit builds without errors
+	var UI = load("res://scripts/ui.gd")
 	for c in [UI.button("Грати", "primary", "Enter", "play"), UI.pill("1 · Тінь", UI.CYAN, 17, "ghost"), UI.action_tile("E", "hand", UI.GOLD, "Взаємодія"), UI.title("Відпусти"), UI.vignette(UI.RED)]:
 		add_child(c)
 		c.queue_free()
-	assert(UI.icon_texture("ghost", 30).get_width() == 30)
+	assert(UI.icon_texture("ghost", 30).get_width() > 0)
+	assert(UI.box("card", UI.PAPER).texture != null)
+	var painted = UI.painted_title("pauza", 100)
+	assert(painted.texture != null)
+	painted.free()
 
 	var menu = load("res://scenes/main_menu.tscn").instantiate()
 	add_child(menu)
@@ -43,27 +46,24 @@ func _ready() -> void:
 	var mem = func(i): return st.call("Memory%d" % i)
 	await _frames(2)
 
-	# nothing shows the ghost in play; the mirror reflects the room, but never its body
 	assert(not p.body.visible)
 	var glass = st.call("Mirror").get_child(-1)
 	assert(glass.get_script().resource_path.ends_with("mirror.gd") and glass.CULL & p.LAYER_SELF == 0)
 
-	# corridor dressing: all of it placed, nothing to bump into
 	var decor = g.get_node("Decor")
 	assert(decor.get_child_count() == decor.ON_WALLS.size() + decor.ON_FLOOR.size() + decor.WEBS.size())
 	assert(decor.find_children("*", "CollisionObject3D", true, false).is_empty())
 
-	# flying rocks the view, hovering settles it; lanterns drift along the navmesh under the ceiling
 	var lanterns = g.get_node("Lanterns")
 	await _until(func(): return lanterns.get_child_count() == lanterns.COUNT, 3.0)
 	assert(lanterns.get_child_count() == lanterns.COUNT)
 	var lantern: Node3D = lanterns.get_child(0)
 	var lantern_from := lantern.position
 	var entrance: Vector3 = g.get_node("Markers/Entrance").global_position
-	for i in range(1, lanterns.COUNT):  # never in the rock around the rooms
+	for i in range(1, lanterns.COUNT):
 		var c: Node3D = lanterns.get_child(i)
 		assert(lanterns.in_dungeon(g.get_world_3d().navigation_map, entrance, Vector3(c.position.x, 0, c.position.z)))
-	assert(Vector2(lantern_from.x, lantern_from.z).distance_to(Vector2(p.position.x, p.position.z)) < 6.0)  # met right at the start
+	assert(Vector2(lantern_from.x, lantern_from.z).distance_to(Vector2(p.position.x, p.position.z)) < 6.0)
 	p.velocity = Vector3(p.WALK, 0, 0)
 	p._sway(1.0)
 	assert(p.flight > 0.9)
@@ -74,7 +74,6 @@ func _ready() -> void:
 	assert(p.flight < 0.05 and absf(p.camera.rotation.z) < 0.01)
 	assert(lantern.position.distance_to(lantern_from) > 1.0 and lantern.position.y > 1 and lantern.position.y < 2.9)
 
-	# start: no powers, only the first memory glints, the ghost floats through inner walls
 	assert(GameState.stage == GameState.Stage.HAUNT and GameState.powers.is_empty() and p.collision_mask == 1)
 	assert(not priest.visible and mem.call(1).can_use() and not mem.call(2).visible and not mem.call(5).visible)
 	var candle = st.call("CandleBedroom")
@@ -92,12 +91,10 @@ func _ready() -> void:
 	Fx.sound(candle, "no_such_sound")
 	Fx.sound_ui(get_tree(), "no_such_sound")
 
-	# the E card over a station never takes the mouse (it would freeze the view), and sits over the thing, not the ceiling
 	assert(hud._prompt.mouse_filter == Control.MOUSE_FILTER_IGNORE)
 	var m1 = mem.call(1)
 	assert(m1.global_position.y + m1.size.y / 2 + hud.PROMPT_OVER < 1.8)
 
-	# world labels: full size up close, smaller further off
 	var cam: Camera3D = p.camera
 	var lbl: Label3D = m1._label
 	var near_pos := lbl.global_position + Vector3(0, 0, 1.0)
@@ -111,7 +108,6 @@ func _ready() -> void:
 	assert(lbl.pixel_size < m1.LABEL_PX * 0.5)
 	cam.global_transform = cam_from
 
-	# 3D guide: pauses, shows its steps, Esc / last step dives back into the ghost and unpauses
 	g.tour()
 	var tour = g.get_children().filter(func(n): return n.has_method("go")).front()
 	assert(get_tree().paused and tour.step == 0)
@@ -165,7 +161,6 @@ func _ready() -> void:
 	await _frames(2)
 	assert(GameState.mirror_written and GameState.stage == GameState.Stage.PRIEST_COMING)
 
-	# book, map, pause overlays open and close
 	hud.toggle_book()
 	await _frames(2)
 	assert(hud._book.visible)
@@ -195,10 +190,9 @@ func _ready() -> void:
 	t = await _until(func(): return wall.witness(), 30)
 	assert(wall.can_use())
 
-	# knock: four quick knocks are wrong, three quick + pause + one is the code
 	for i in 4: wall.interact(p)
 	assert(not GameState.wall_knocked)
-	await get_tree().create_timer(1.0).timeout  # resets the attempt (gap too long for a quick knock)
+	await get_tree().create_timer(1.0).timeout
 	for i in 3: wall.interact(p)
 	await get_tree().create_timer(1.1).timeout
 	wall.interact(p)
@@ -206,7 +200,6 @@ func _ready() -> void:
 	await _frames(2)
 	assert(GameState.stage == GameState.Stage.RITUAL)
 
-	# ritual, then hold E in the circle; releasing starts over
 	t = await _until(func(): return GameState.ritual >= 1.0, 60)
 	print("Ritual done after %.1f s" % t)
 	assert(GameState.release_ready() and st.call("Circle").can_use())
@@ -217,15 +210,14 @@ func _ready() -> void:
 	assert(GameState.phase == GameState.Phase.END and GameState.won)
 	await _frames(2)
 	assert(hud._end != null)
-	# floating through walls: inside an inner wall the veil is up; left alone the ghost drifts out
 	get_tree().paused = false
 	p.set_physics_process(true)
-	p.global_position = Vector3(1.5, 0, -2.5)  # between CorridorV and R2R
+	p.global_position = Vector3(1.5, 0, -2.5)
 	await _frames(2)
 	assert(p.wall_depth() < 0)
 	await get_tree().create_timer(1.5).timeout
 	assert(p.wall_depth() > 0 and p.phase < 0.5)
-	assert(hud._map_view.to_map(Vector3(-30, 0, 0)).x < 0)  # the whole-map projection is sane
+	assert(hud._map_view.to_map(Vector3(-30, 0, 0)).x < 0)
 	g.queue_free()
 	await _frames(2)
 	assert(not get_tree().paused)

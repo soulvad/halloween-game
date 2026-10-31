@@ -1,9 +1,12 @@
 extends Control
+## One comic page from scripts/comic_data.gd, drawn letterboxed inside this Control. No input handling.
+## Usage: var p = ComicPage.new(); add_child(p); p.setup("memories"); p.set_panel_state("A", true); p.reveal("B")
+## Panels start locked (dark + «?»); `show_locked = false` draws nothing for them instead (prologue).
 
 const UI = preload("res://scripts/ui.gd")
 const Data = preload("res://scripts/comic_data.gd")
-const LOCKED := Color("140B0C")
-const PLACEHOLDER := Color("2A1A20")
+const LOCKED := Color("0F0C14")
+const PLACEHOLDER := Color("1A1622")
 const REVEAL := 0.6
 
 var page_id := ""
@@ -12,10 +15,10 @@ var show_locked := true:
 		show_locked = v
 		queue_redraw()
 
-var _shapes := {}
-var _notes := {}
-var _alpha := {}
-var _art := {}
+var _shapes := {}  # letter -> Array[Vector2], normalized
+var _notes := {}  # letter -> String
+var _alpha := {}  # letter -> 0 (locked) .. 1 (shown)
+var _art := {}  # letter -> Texture2D, only when the file exists
 var _frame: Texture2D
 var _aspect := 1.0
 
@@ -55,6 +58,7 @@ func set_panel_state(letter: String, shown: bool) -> void:
 		queue_redraw()
 
 
+## Fades the panel in over its locked look; returns the tween (null for an unknown letter).
 func reveal(letter: String) -> Tween:
 	if not _alpha.has(letter):
 		return null
@@ -68,6 +72,7 @@ func is_shown(letter: String) -> bool:
 	return _alpha.get(letter, 0.0) >= 1.0
 
 
+## The page area inside this Control (aspect kept, centered).
 func page_rect() -> Rect2:
 	var s := Vector2(size.y * _aspect, size.y)
 	if s.x > size.x:
@@ -97,7 +102,7 @@ func _draw() -> void:
 				c += p
 			c /= pts.size()
 			var q := int(r.size.y * 0.07)
-			draw_string(font, c + Vector2(-q, q * 0.35), "?", HORIZONTAL_ALIGNMENT_CENTER, q * 2, q, Color(UI.MUTED, 0.18 * (1.0 - a)))
+			draw_string(font, c + Vector2(-q, q * 0.35), "?", HORIZONTAL_ALIGNMENT_CENTER, q * 2, q, Color(UI.GREY, 0.18 * (1.0 - a)))
 		if a > 0.0:
 			if _art.has(letter):
 				draw_texture_rect(_art[letter], r, false, Color(1, 1, 1, a))
@@ -105,7 +110,7 @@ func _draw() -> void:
 				draw_colored_polygon(pts, Color(PLACEHOLDER, a))
 				var fs := maxi(8, int(r.size.y * 0.016))
 				draw_multiline_string(font, pts[0] + Vector2(fs, fs * 2), _notes[letter], HORIZONTAL_ALIGNMENT_LEFT,
-					pts[1].x - pts[0].x - fs * 2, fs, -1, Color(UI.MUTED, 0.45 * a))
+					pts[1].x - pts[0].x - fs * 2, fs, -1, Color(UI.GREY, 0.45 * a))
 		if not _frame and (a > 0.0 or show_locked):
 			var line := pts.duplicate()
 			line.append(pts[0])
