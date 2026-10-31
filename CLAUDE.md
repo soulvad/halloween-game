@@ -59,5 +59,5 @@ Story: `docs/comic_script.md` (comic script) + the team's story doc. Тиміш,
 - Art is placeholder boxes; swap meshes without touching logic.
 
 ## TODO (agreed, not built yet)
-- Gameplay rework (`docs/gameplay_plan.md`) is in. Open: mirror after memory 3 or 4, lines in the time-lapse, real memory call sounds in `audio/memory/`.
+- Gameplay rework (`docs/gameplay_plan.md`) is in. Open: mirror after memory 3 or 4, lines in the time-lapse.
 - Comic voice-over: record lines + per-panel timings (`time` / `voice` in the comic data), then drop the temporary on-screen texts.
