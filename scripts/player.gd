@@ -23,6 +23,13 @@ const FLY_PITCH := 0.009  ## rad
 const FLY_LEAN := 0.012  ## rad at walking speed, sideways
 const FLY_RATE := 3.4  ## rad/s of the swell at walking speed
 const FLY_EASE := 2.5  ## how quickly it fades in and out, per second
+const CLOUD: Array[Vector4] = [
+	Vector4(0, 0.58, 0, 0.2), Vector4(-0.13, 0.66, 0.02, 0.1), Vector4(0.12, 0.68, -0.02, 0.1),
+	Vector4(0, 0.2, 0, 0.27), Vector4(-0.25, 0.28, 0, 0.15), Vector4(0.25, 0.28, 0, 0.15),
+	Vector4(-0.34, 0.03, 0.03, 0.12), Vector4(0.34, 0.03, 0.03, 0.12),
+	Vector4(0, -0.15, 0, 0.26), Vector4(-0.16, -0.34, 0.02, 0.17), Vector4(0.15, -0.36, -0.02, 0.17), Vector4(0, -0.54, 0, 0.13),
+]
+const CLOUD_SOFT := 1.5  ## the puffs are larger than the shape: their rims fade out
 const LAYER_SELF := 4  ## visual layer 3: the own body, hidden from the first-person camera
 const PHASE_MASK := 2 | 4 | 64  ## inner walls, furniture, bricked wall / closed doors: what the ghost floats through
 const PHASE_NEAR := 0.45  ## the veil starts this far (m) from a wall's surface
@@ -61,7 +68,8 @@ func _ready() -> void:
 	body.layers = LAYER_SELF
 	camera.cull_mask = 0xFFFFF & ~LAYER_SELF
 	collision_mask = 1
-	body.transparency = 0.6
+	_build_cloud()
+	show_body(false)
 	camera.near = 0.05  # less wall slicing at the surface
 	_probe.radius = PHASE_NEAR
 	var layer := CanvasLayer.new()
@@ -155,6 +163,30 @@ func _unhandled_input(event: InputEvent) -> void:
 		var s = target_station()
 		if s:
 			s.interact(self)
+
+
+## The ghost as others would see it, shown only in the guide: in play nothing shows you, not even a mirror.
+func show_body(on: bool) -> void:
+	body.visible = on
+
+
+## A pale grey-blue cloud in the shape of the boy: puffs for the head, shoulders, chest and a trailing hem.
+func _build_cloud() -> void:
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://scripts/cloud.gdshader")
+	body.mesh = null
+	for puff: Vector4 in CLOUD:  # x, y, z, radius
+		var mesh := SphereMesh.new()
+		mesh.radius = puff.w * CLOUD_SOFT
+		mesh.height = puff.w * CLOUD_SOFT * 2
+		mesh.radial_segments = 16
+		mesh.rings = 8
+		mesh.material = mat
+		var m := MeshInstance3D.new()
+		m.mesh = mesh
+		m.layers = LAYER_SELF
+		m.position = Vector3(puff.x, puff.y, puff.z)
+		body.add_child(m)
 
 
 ## Rock the view while flying. The camera, not the head: the head's pitch is the mouse look.

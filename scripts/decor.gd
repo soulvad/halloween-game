@@ -1,11 +1,10 @@
 extends Node3D
-## Dressing for the corridors and passages, pure decoration: no collision, not in the navmesh, off the minimap.
+## Dressing for the corridors and passages, pure decoration: no collision, not in the navmesh.
 ## Models live in art/decor/ (not art/models/, nothing here replaces a box). Each one is measured and fitted when placed,
 ## so a list entry only says where it goes and how big its longest side is.
 ## Floor things stay within 0.45 m of a wall: visitors keep 0.5 m away from walls and walk through anything else.
 
 const DIR := "res://art/decor/%s.glb"
-const LAYER_HIDDEN_ON_MAP := 2  ## visual layer 2: the minimap culls it
 const E := 90.0  ## on a wall facing +X
 const W := -90.0  ## facing -X
 const S := 0.0  ## facing +Z
@@ -103,7 +102,6 @@ func _place(model: String, at: Vector3, turn_deg: float, longest: float, on_wall
 	var c := box.get_center()
 	n.position = Vector3(-c.x, -box.position.y, -box.position.z if on_wall else -c.z) * fit
 	for m: MeshInstance3D in n.find_children("*", "MeshInstance3D", true, false):
-		m.layers = LAYER_HIDDEN_ON_MAP
 		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	holder.set_meta("size", box.size * fit)
 	holder.add_child(n)
@@ -150,7 +148,6 @@ func _light_torch(torch: Node3D) -> void:
 	mesh.material = mat
 	var flame := MeshInstance3D.new()
 	flame.mesh = mesh
-	flame.layers = LAYER_HIDDEN_ON_MAP
 	flame.position = Vector3(0, size.y + 0.05, size.z * 0.7)
 	var light := OmniLight3D.new()
 	light.light_color = FLAME
