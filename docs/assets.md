@@ -99,4 +99,6 @@
 
 ## 6. Що ще на заглушках
 
+Вже є меблі, двері, свічки, шумні предмети, кіт, кістки й текстури; джерела в `art/CREDITS.md`, збірка в `tools/make_props.py`. Чекають моделей: `Olena`, `Taras`, `Priest`, `Rat`, `Turtle`, `Pizza`, `Chains`, `Bell`, `Mirror`, `Shackles`, `Tally`, `Circle`, `Plan`.
+
 - Звуки світу й музика: місць під них поки немає.

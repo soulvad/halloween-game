@@ -42,6 +42,7 @@ var _knocks: Array[float] = []  ## KNOCK: times of the current attempt
 var _mesh: Node3D  ## placeholder box (MeshInstance3D) or the final model from art/models/<node name>
 var _label: Label3D
 var _light: OmniLight3D
+var _flame: MeshInstance3D  ## CANDLE with a final model: there's no box to glow, so this shows it's lit
 var _block: CollisionShape3D  ## DOOR
 
 
@@ -215,6 +216,8 @@ func _refresh() -> void:
 	match kind:
 		Kind.CANDLE:
 			_light.visible = lit
+			if _flame:
+				_flame.visible = lit
 			if _mat():
 				_mat().emission_enabled = lit
 		Kind.DOOR:
@@ -258,6 +261,18 @@ func _build() -> void:
 		_light.light_energy = 1.2
 		_light.position.y = size.y / 2 + 0.1
 		add_child(_light)
+		if kind == Kind.CANDLE and not m:
+			var mat := StandardMaterial3D.new()
+			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			mat.albedo_color = color
+			var drop := SphereMesh.new()
+			drop.radius = 0.03
+			drop.height = 0.1
+			drop.material = mat
+			_flame = MeshInstance3D.new()
+			_flame.mesh = drop
+			_flame.position.y = size.y / 2 + 0.04
+			add_child(_flame)
 	_label = Label3D.new()
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_label.visibility_range_end = 6.0  ## first person: only nearby things are labelled

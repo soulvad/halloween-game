@@ -38,7 +38,8 @@ func _ready() -> void:
 	# nothing of it shows on the minimap / tour (they cull layer 2)
 	for m in eggs.find_children("*", "MeshInstance3D", true, false):
 		assert(m.layers == Eggs.LAYER_HIDDEN)
-	assert(bones._mesh.layers == Eggs.LAYER_HIDDEN)
+	for m in bones._mesh.find_children("*", "MeshInstance3D", true, false):
+		assert(m.layers == Eggs.LAYER_HIDDEN)
 
 	# cat: nothing until E on the pedestal (no text); it rises, waits, spins for the track's length, stays frozen
 	var pedestal = g.get_node("Stations/Pedestal")
@@ -48,7 +49,7 @@ func _ready() -> void:
 	pedestal.interact(p)
 	await _frames(1)
 	assert(eggs._cat_body.visible and not eggs._cat_sound.playing and eggs.cat_spin <= 0)
-	assert(pedestal.collision_layer == 0 and pedestal._mesh.transparency == 0.0)
+	assert(pedestal.collision_layer == 0 and pedestal.shown)
 	await _until(func(): return eggs.cat_spin > 0, Eggs.CAT_DELAY + 1)
 	assert("cat" in eggs.found and eggs._cat_sound.playing)
 	var spun: float = eggs._cat_body.rotation.y
