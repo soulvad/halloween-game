@@ -22,7 +22,8 @@ const LAYER_VISITOR := 16
 const LABEL_PX := 0.0013  ## name label size up close (UI.world_label)
 const MASK := 7 | 64  ## walls, furniture, rubble
 const HEARD_LINES := ["Ви це чули?", "Звідки цей звук?..", "Там щось є. Ходімо подивимось.", "Знову… Це не вітер."]
-const FOUND_LINES := ["Гляньте… тут щось лежить.", "Стривайте. Що це?", "Ось звідки той звук… Тут річ."]
+const NOTICE_LINES := ["Стривайте… там щось є.", "А це що таке?", "Ось звідки… Ходімо глянемо."]
+const FOUND_LINES := ["Гляньте, яка стара річ…", "Хтось це беріг. Дуже давно.", "Це тут лежить, певно, років двісті."]
 
 @export var kind := Kind.ARCH
 @export var title_text := "Олена"
@@ -110,6 +111,14 @@ func _on_haunted(pos: Vector3, power: float, by: String) -> void:
 ## The power of the noise it is checking right now ("" = none).
 func lured_by() -> String:
 	return _by if _investigate > 0 else ""
+
+
+## Walk up to a memory it noticed (station.gd) and keep looking; `notice` = say so the first time.
+func inspect(pos: Vector3, notice: bool) -> void:
+	_target = pos
+	_investigate = maxf(_investigate, 1.0)
+	if notice:
+		_line(NOTICE_LINES.pick_random(), true)
 
 
 ## Found a memory where it was lured: says so and goes back to exploring.

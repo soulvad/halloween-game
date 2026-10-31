@@ -79,6 +79,8 @@ func _ready() -> void:
 	assert(not priest.visible and mem.call(1).can_use() and not mem.call(2).visible and not mem.call(5).visible)
 	var candle = st.call("CandleBedroom")
 	assert(not candle.can_use())
+	await _frames(1)
+	assert(not st.call("Circle").visible)  # the ritual circle appears with the ritual
 
 	# the E card over a station never takes the mouse (it would freeze the view), and sits over the thing, not the ceiling
 	assert(hud._prompt.mouse_filter == Control.MOUSE_FILTER_IGNORE)
@@ -120,6 +122,7 @@ func _ready() -> void:
 	assert(olena._investigate > 0 and olena.lured_by() == "breath" and GameState.haunts == 1)
 	var t := await _until(func(): return 2 in GameState.memories, 30)
 	print("Memory 2 found after %.1f s" % t)
+	assert(t >= mem.call(2).EXAMINE_TIME)  # she walks up and looks a while, not found on arrival
 	assert(GameState.has_power("sound") and mem.call(3).available())
 
 	# memory 3 wants a noise: a candle right next to it brings Олена, but she finds nothing

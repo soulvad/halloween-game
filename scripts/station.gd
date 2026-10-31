@@ -20,7 +20,9 @@ enum Kind { MEMORY, CANDLE, HAUNT, MIRROR, PLAN, KNOCK, EVIDENCE, CIRCLE, EGG }
 const COOLDOWN := {Kind.CANDLE: 1.5, Kind.HAUNT: 4.0, Kind.EGG: 1.0}
 const WITNESS_RANGE := 7.0  ## an archaeologist this close sees what you do
 const HEAR_KNOCK := 4.0  ## KNOCK: has to be in your room (not the passage outside)
-const FIND_RANGE := 3.0  ## MEMORY 2–4: a lured archaeologist this close finds it
+const FIND_RANGE := 3.0  ## MEMORY 2–4: a lured archaeologist this close notices it and walks up
+const EXAMINE_NEAR := 1.5  ## ...looks at it from this close
+const EXAMINE_TIME := 3.0  ## ...for this long before it's found (slower while still walking up)
 const KNOCK_FAST := 0.7  ## max gap between the first three knocks
 const KNOCK_PAUSE := Vector2(0.8, 2.5)  ## the pause before the last knock
 const LAYER_STATION := 8  ## layer 4: only the player's aim sees it, the ghost floats through
@@ -41,6 +43,8 @@ const HAUNT_LINES := ["*дзень-дзень*", "*скрип*", "*брязкі�
 
 var cooldown := 0.0
 var shown := false  ## EVIDENCE
+var _exam := 0.0  ## MEMORY 2–4: seconds an archaeologist has been looking at it
+var _noticed := false  ## MEMORY 2–4: an archaeologist is walking up to it
 var _knocks: Array[float] = []  ## KNOCK: times of the current attempt
 var _mesh: Node3D  ## placeholder box (MeshInstance3D) or the final model from art/models/<node name>
 var _label: Label3D
@@ -70,10 +74,10 @@ func _process(delta: float) -> void:
 	if kind == Kind.MEMORY:
 		visible = available()
 		_mesh.position.y = sin(Time.get_ticks_msec() * 0.003) * 0.08
-		var v := finder() if visible and memory_id > 1 else null
-		if v:
-			v.found()
-			GameState.remember(memory_id)
+		_examine(delta)
+	if kind == Kind.CIRCLE:  # appears with the ritual
+		visible = GameState.stage == GameState.Stage.RITUAL
+		collision_layer = LAYER_STATION if visible else 0
 	_label.text = title()
 	_label.visible = GameState.show_labels and visible
 	if _label.visible:
@@ -94,6 +98,21 @@ func finder() -> Node3D:
 		if v.kind == Visitor.Kind.ARCH and v.lured_by() == need and _flat(v) < FIND_RANGE:
 			return v
 	return null
+
+
+## MEMORY 2–4: a lured archaeologist notices it, walks up, looks a while, then finds it.
+func _examine(delta: float) -> void:
+	var v := finder() if visible and memory_id > 1 else null
+	if not v:
+		_exam = 0.0
+		_noticed = false
+		return
+	v.inspect(global_position, not _noticed)
+	_noticed = true
+	_exam += delta if _flat(v) < EXAMINE_NEAR else delta * 0.3
+	if _exam >= EXAMINE_TIME:
+		v.found()
+		GameState.remember(memory_id)
 
 
 func _flat(n: Node3D) -> float:
