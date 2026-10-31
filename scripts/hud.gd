@@ -7,6 +7,7 @@ extends CanvasLayer
 const UI = preload("res://scripts/ui.gd")
 const Station = preload("res://scripts/station.gd")
 const ComicPage = preload("res://scripts/comic_page.gd")
+const MapView = preload("res://scripts/map_view.gd")
 const SCREENS := "res://scripts/screens.gd"  ## how-to / settings, written by the menu side
 
 const LINE_TIME := 4.5  ## seconds a subtitle stays
@@ -22,6 +23,7 @@ const POWER_ICON := {
 }
 const STAGE_NAMES := ["Помітьте мене", "Священник", "Знайдіть мою кімнату", "Розкопки", "Твоя кімната", "Ритуал"]  ## by GameState.Stage
 const ROOM := Rect2(17.5, -12.5, 6, 4.7)  ## your sealed room (x, z), from the level layout
+const ROOM_BANNER_TIME := 1.8  ## seconds the room name shows after you float into a room
 const RUBBLE_POS := Vector3(17.5, 0, -10)  ## shortcut: map marker spot if the level has no "Rubble" node; use the node once it exists
 
 var game  ## game.gd (untyped: its methods are not known statically)
@@ -29,8 +31,11 @@ var end_title: Label  ## set when the end screen is up (tests read it)
 var _hud: Control  ## everything shown while playing
 var _pow_count: Label
 var _powers := {}  ## power -> {sb, icon, name, help}
-var _mini_cam: Camera3D
+var _mini: Control  ## map_view.gd following the player
 var _room: Label
+var _room_banner: Label  ## room name, big and faint, when you float into another room (orientation through walls)
+var _room_now := ""
+var _room_t := 0.0
 var _tiles := {}  ## "E" -> {col, sb, icon, cap, badge}
 var _prompt: PanelContainer
 var _prompt_key: StyleBoxFlat
@@ -47,7 +52,7 @@ var _letgo: Control
 var _hold_fill: Panel
 var _hold_label: Label
 var _map: Control
-var _map_cam: Camera3D
+var _map_view: Control  ## map_view.gd, whole dungeon
 var _markers: Array = []  ## [node or Vector3, pill, hide once dug]
 var _haunt_rows: Array = []  ## [station, status label]
 var _map_mem: Array[Label] = []  ## memories 1..5 in the map legend
@@ -267,9 +272,8 @@ func _priest_status() -> String:
 
 
 func _room_at(p: Vector3) -> String:
-	if ROOM.has_point(Vector2(p.x, p.z)):
-		return "Твоя кімната"
-	return "Біля входу" if p.z > 8 else "Підземелля"
+	var n: String = _mini.room_at(p)
+	return n if n != "" else _room_now
 
 
 ## The pause needs the cursor; play may have it captured (first person).
@@ -288,32 +292,6 @@ func _times(n: int) -> String:
 
 func _clock(sec: float) -> String:
 	return "%d:%02d" % [int(sec) / 60, int(sec) % 60]
-
-
-func _orbit_cam(size: float) -> Camera3D:
-	var cam := Camera3D.new()
-	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
-	cam.size = size
-	cam.far = 100
-	cam.cull_mask = 1  # world only: labels live on layer 2
-	cam.rotation_degrees.x = -90  # straight down, north up
-	cam.current = true
-	return cam
-
-
-## SubViewport showing the world from `cam`, sized `sz`.
-func _view(cam: Camera3D, sz: Vector2) -> Control:
-	var holder := Control.new()
-	holder.custom_minimum_size = sz
-	var svc := SubViewportContainer.new()
-	svc.stretch = true
-	svc.set_anchors_preset(Control.PRESET_FULL_RECT)
-	svc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var vp := SubViewport.new()
-	vp.add_child(cam)
-	svc.add_child(vp)
-	holder.add_child(svc)
-	return holder
 
 
 # --- HUD ---
@@ -380,12 +358,12 @@ func _build_right() -> void:
 	var mm := UI.panel(UI.INK, 26, 0, 12, 5, UI.PAPER)
 	var mv := UI.vbox(8)
 	mm.add_child(mv)
-	_mini_cam = _orbit_cam(18)
-	var view := _view(_mini_cam, Vector2(226, 170))
-	var me := UI.icon("ghost", 26, UI.CYAN)
-	view.add_child(me)
-	me.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	mv.add_child(view)
+	_mini = MapView.new()
+	_mini.setup(game)
+	_mini.follow = game.get_node("Player")  # game.player is @onready, not set yet
+	_mini.px_per_m = 11.0
+	_mini.custom_minimum_size = Vector2(260, 190)
+	mv.add_child(_mini)
 	var foot := UI.hbox(8)
 	mv.add_child(foot)
 	_room = UI.label("", 15, UI.PAPER, "body", 700)
@@ -394,12 +372,23 @@ func _build_right() -> void:
 	for p in [_book_tile(), mm]:
 		p.size_flags_horizontal = Control.SIZE_SHRINK_END
 		col.add_child(p)
+	_room_banner = UI.title("", 44, UI.PAPER)
+	_room_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_room_banner.modulate.a = 0
+	_pin(_room_banner, Control.PRESET_CENTER_TOP, 0, 120)
 
 
 func _update_right() -> void:
 	var p: Vector3 = game.player.global_position
-	_mini_cam.global_position = Vector3(p.x, 30, p.z)
-	_room.text = _room_at(p)
+	var r := _room_at(p)
+	if r != _room_now:
+		if _room_now != "":
+			_room_t = ROOM_BANNER_TIME
+		_room_now = r
+		_room_banner.text = r
+	_room.text = r if r != "" else "Підземелля"
+	_room_t -= get_process_delta_time()
+	_room_banner.modulate.a = clampf(_room_t / 0.5, 0, 1) * clampf((ROOM_BANNER_TIME - _room_t) / 0.25, 0, 1)
 
 
 func _build_bottom() -> void:
@@ -620,10 +609,12 @@ func _build_map() -> void:
 	var frame := UI.panel(UI.NIGHT2, 26, 8, 10, 5, UI.PAPER)
 	frame.position = Vector2(60, 150)
 	_map.add_child(frame)
-	_map_cam = _orbit_cam(28.5)
-	_map_cam.position = Vector3(4.75, 40, -0.25)  # dungeon x −14.5..24, z −13..12.5
-	var view := _view(_map_cam, Vector2(1080, 780))
+	var view := MapView.new()
+	view.setup(game)
+	view.names = true
+	view.custom_minimum_size = Vector2(1080, 780)
 	frame.add_child(view)
+	_map_view = view
 	var stations: Array = game.get_node("Stations").get_children()
 	var mark := func(target, text: String, color: Color, until_dug := false):
 		var pill := UI.pill(text, color, 15)
@@ -686,7 +677,7 @@ func _update_map() -> void:
 		var at: bool = n is Vector3 or (is_instance_valid(n) and n.is_visible_in_tree())
 		pill.visible = at and not (m[2] and GameState.stage > GameState.Stage.DIG)
 		if pill.visible:
-			pill.position = _map_cam.unproject_position(n if n is Vector3 else n.global_position) - pill.size / 2
+			pill.position = _map_view.to_map(n if n is Vector3 else n.global_position) - Vector2(pill.size.x / 2, pill.size.y + 10)
 	for i in _map_mem.size():
 		_set_memory_row(_map_mem[i], i + 1)
 	for r in _haunt_rows:
@@ -890,6 +881,8 @@ func open_pause() -> void:
 	_resume_btn.pressed.connect(resume)
 	var how := UI.button("Як грати", "secondary", "", "search")
 	how.pressed.connect(_open_screen.bind("how_to"))
+	var guide := UI.button("Гайд по підземеллю", "secondary", "", "map")
+	guide.pressed.connect(func(): resume(); game.tour())
 	var settings := UI.button("Налаштування", "secondary", "", "sliders")
 	settings.pressed.connect(_open_screen.bind("settings"))
 	how.disabled = not has_screens
@@ -898,7 +891,7 @@ func open_pause() -> void:
 	again.pressed.connect(_restart)
 	var menu := UI.button("У меню", "ghost", "", "exit")
 	menu.pressed.connect(_to_menu)
-	for b in [_resume_btn, how, settings, again, menu]:
+	for b in [_resume_btn, guide, how, settings, again, menu]:
 		btns.add_child(b)
 	btns.add_child(UI.label("прогрес не збережеться", 15, UI.DIM, "body", 600))
 	_resume_btn.grab_focus.call_deferred()

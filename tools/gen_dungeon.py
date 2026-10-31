@@ -254,6 +254,11 @@ transform = {t(20, 0, -9.6, rot_y=True)}
 process_mode = 3
 script = ExtResource("6_hud")
 """)
+# carved floor for the 2D map (scripts/map_view.gd): rooms by name + door gaps, as Rect2(x, z, w, d)
+r2 = lambda a, b, c, d: f"Rect2({a:g}, {b:g}, {c - a:g}, {d - b:g})"
+meta = ('metadata/rooms = {' + ", ".join(f'"{n}": {r2(*r)}' for n, r in rooms.items()) + '}\n'
+        + 'metadata/doors = [' + ", ".join(r2(*d) for d in doors) + ']\n')
+o[0] = o[0].replace('script = ExtResource("1_game")\n', 'script = ExtResource("1_game")\n' + meta, 1)
 with open(OUT, "w", encoding="utf-8", newline="\n") as f:
     f.write("\n".join(o))
 print(len(walls), "wall segments")

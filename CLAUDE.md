@@ -17,6 +17,8 @@ Story: `docs/comic_script.md` (comic script) + the team's story doc. Тиміш,
   2. PRIEST_COMING (15 s) → LURE «Знайдіть мою кімнату»: archaeologists work at their camp table; push the plan (witness) → they head for the bricked wall, but the door (closed, blocks people + navmesh) stops them. Memory 4 → open the door → knock 3 quick + pause + 1 with an archaeologist within 2 m.
   3. DIG (12 s) → EVIDENCE: everyone in your room; show 3 things (witness), then memory 5 appears → RITUAL: the priest prays 20 s, hold `E` in the circle 2.5 s → finale comic → end screen.
 - **Comics** (`scenes/comic.tscn`): two pages in the artist's 6-panel layout. «prologue» plays on the first game start (`GameState.intro_seen`); «memories» panel A–E reveals on memory 1–5, F after the ritual (finale); the same page sits in the J/Tab book. Art/voice/models/textures drop in by file name, see `docs/assets.md`. `game.comic(id)`; the smoke test sets `comics_enabled = false`.
+- **3D guide** (`scripts/tour.gd`, `game.tour()`): after the prologue on the first start (and from the pause), a camera flies over the cut-away dungeon (ceiling + world labels culled) through 7 steps with a glowing marker, a pointer pill and a card; Space/→ next, ← back, Esc skip; it ends by diving into the ghost's eyes.
+- **Wall flight** (`player.gd`): a sphere query against inner walls / furniture / rubble (`PHASE_MASK`) gives the signed distance to the nearest box → `phase.gdshader` veil + FOV widen; left inside a wall with no input the ghost drifts on (its entry direction, else the nearest side). Pushing into an outer wall frosts the screen edges. Floating into another room shows its name (HUD).
 - First person: mouse look, walk 3.5, Shift sprint 6. `Esc` pause, `M` map, `J`/Tab quest + hints book.
 
 ## Files
@@ -27,6 +29,8 @@ Story: `docs/comic_script.md` (comic script) + the team's story doc. Тиміш,
 - `scripts/wall.gd` — `@tool` box from `size` (or `art/models/<node name>` via `visual()` / `model()`, textures via `textured()`); `solid_from` 1 = outer wall (blocks the ghost), 2–3 = inner wall / furniture (people + navmesh only); `people_only` = layer 7 (the bricked wall `Level/Rubble`). `box()`, `holy_glow()`.
 - `scripts/player.gd` — first-person ghost: `Head/Camera3D`, aim `RayCast3D` (layer 4) then `Reach` fallback, `E`; collision mask 1.
 - `scripts/game.gd` — navmesh bake (`_bake_nav()`, `rebake_nav()`), stage transitions, comics (`comic(id)`), `_open_room()`, release hold (`at_release()`, `hold`, `_release()`).
+- `scripts/map_view.gd` — drawn 2D map (minimap follows the player, M map fits the dungeon): floor from the `rooms` / `doors` metadata the generator writes on the game root, furniture, rubble, doors, lit candles, the next memory, people, your arrow; `ROOM_NAMES`, `room_at()`, `to_map()`.
+- `scripts/tour.gd` — the 3D guide (`STEPS`: target node path, camera height / distance, card text, key chips).
 - `scripts/hud.gd` — all in-game UI built in code with `scripts/ui.gd` (HUD with powers row + memories counter, goal panel, map, pause, book, end screen); owns `Esc` / `M` / `J`.
 - `scenes/game.tscn` — **generated** by `python tools/gen_dungeon.py scenes/game.tscn` (rooms as 0.25 m grid rectangles + doors → wall segments, furniture, stations, lights, `Markers` (Entrance, Camp, RoomCenter, dig sites), visitors, player). Edit the generator, not the scene. Keep passages/doors ≥ 1.75 m wide or the navmesh (agent radius 0.5) closes them.
 - `tools/painter/` (`paint.bat`) — hand-drawn texture painter.
@@ -42,5 +46,4 @@ Story: `docs/comic_script.md` (comic script) + the team's story doc. Тиміш,
 - Art is placeholder boxes; swap meshes without touching logic.
 
 ## TODO (agreed, not built yet)
-- Fly-over intro after the prologue comic: top-down camera along a path over the dungeon, showing the main features (archaeologists, memory glints, the bricked wall). Skippable.
 - Comic voice-over: record lines + per-panel timings (`time` / `voice` in the comic data), then drop the temporary on-screen texts.

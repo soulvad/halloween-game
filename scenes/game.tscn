@@ -34,6 +34,8 @@ size = Vector3(40.5, 0.2, 27.5)
 
 [node name="Game" type="Node3D"]
 script = ExtResource("1_game")
+metadata/rooms = {"CorridorV": Rect2(-1.25, -7, 2.5, 19), "CorridorH": Rect2(-11.5, -7, 24, 2.25), "FarLeft": Rect2(-14, -9.5, 2, 6.75), "R1L": Rect2(-9, -10.5, 8, 3), "R1R": Rect2(1.75, -10.5, 7.75, 3), "R2L": Rect2(-9, -4.25, 7.25, 2.75), "R2R": Rect2(1.75, -4.25, 7.75, 3.25), "R3L": Rect2(-8.5, -0.5, 6.75, 4), "R3R": Rect2(1.75, 0, 7.75, 3.75), "R4L": Rect2(-8, 4.5, 6.25, 5.25), "R4R": Rect2(1.75, 4.25, 8.25, 5.25), "RightTall": Rect2(13, -9.75, 2.75, 7), "PassageUp": Rect2(10.25, -11.75, 1.75, 4.75), "PassageTop": Rect2(10.25, -11.75, 7.25, 1.75), "YourRoom": Rect2(17.5, -12.5, 6, 4.75)}
+metadata/doors = [Rect2(-12, -7, 0.5, 1.75), Rect2(-3.75, -7.5, 1.75, 0.5), Rect2(2.5, -7.5, 1.75, 0.5), Rect2(-3.75, -4.75, 1.75, 0.5), Rect2(2.5, -4.75, 1.75, 0.5), Rect2(-1.75, 0.25, 0.5, 1.75), Rect2(1.25, 0.25, 0.5, 1.75), Rect2(-1.75, 6.25, 0.5, 1.75), Rect2(1.25, 6.25, 0.5, 1.75), Rect2(12.5, -7, 0.5, 1.75)]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_dungeon")
