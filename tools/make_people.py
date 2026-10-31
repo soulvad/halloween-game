@@ -12,7 +12,6 @@ from mathutils import Vector
 
 args = sys.argv[sys.argv.index("--") + 1:]
 OUT, SRC = [os.path.abspath(a) for a in args[:2]]
-DARK = (0.02, 0.02, 0.025, 1)
 
 
 def bounds(objs):
@@ -76,6 +75,7 @@ def rigged(name, source, clips, size_axis, size, turn=math.pi, recolor=None):
     for mat, color in (recolor or {}).items():
         node = bpy.data.materials[mat].node_tree.nodes.get("Principled BSDF")
         node.inputs["Base Color"].default_value = color
+    rig.data.pose_position = "REST"
     # the root keeps all its children, only its own transform changes
     root = rig
     while root.parent:
@@ -129,8 +129,6 @@ def place(objs, box, stretch=False):
 WALK = {"walk": "Walk", "idle": "Idle"}
 rigged("Olena", "AdvW", WALK, 2, 1.68)
 rigged("Taras", "AdvM", WALK, 2, 1.78, turn=0.0)  # this one already looks the other way
-# the same adventurer in black: gear and clothes dark, beard and gold kept
-rigged("Priest", "AdvM", WALK, 2, 1.78, turn=0.0, recolor={"Green": DARK, "Brown": DARK, "Brown2": DARK})
 rigged("Rat", "Rat", {"run": "Rat_Run", "idle": "Rat_Idle"}, 1, 0.42)
 
 static("Pizza", "PizzaQ", (0.84, 0.1, 0.84))
@@ -162,3 +160,25 @@ mesh.update()
 objs[0].data.update()
 place(objs, (0.75, 1.3, 0.5))
 export("Turtle")
+
+
+# the jack-o'-lantern: the carved eyes and mouth get a material of their own, lanterns.gd keeps it black
+objs = load("Lantern")
+pumpkin = objs[0]
+image = next(i for i in bpy.data.images if i.size[0] > 0)
+pixels = image.pixels[:]
+uvs = pumpkin.data.uv_layers[0].data
+top = max(v.co.z for v in pumpkin.data.vertices)
+low = min(v.co.z for v in pumpkin.data.vertices)
+carved = bpy.data.materials.new("Carved")
+pumpkin.data.materials.append(carved)
+count = 0
+for p in pumpkin.data.polygons:
+    u = sum(uvs[i].uv.x for i in p.loop_indices) / p.loop_total
+    v = sum(uvs[i].uv.y for i in p.loop_indices) / p.loop_total
+    x, y = int(u * image.size[0]) % image.size[0], int(v * image.size[1]) % image.size[1]
+    if pixels[(y * image.size[0] + x) * 4] < 0.35 and p.center.z < low + (top - low) * 0.8:  # the stem is dark as well
+        p.material_index = 1
+        count += 1
+print("carved faces", count, "of", len(pumpkin.data.polygons))
+export("Lantern")
