@@ -28,14 +28,7 @@ func _ready() -> void:
 		c.finished.connect(func(): state.done = true)
 		assert(get_tree().paused, "%s: tree not paused" % id)
 		var presses: int = 12 if id == "prologue" else c._order.size()
-		if id == "memory_4":  # no art yet: still on the sheet
-			assert(c.page.page_id == "memories")
-			var n := id.to_int()
-			for i in 5:
-				var shown: bool = c.page.is_shown("ABCDE"[i])
-				assert(shown == (i + 1 < n), "%s: panel %s shown=%s" % [id, "ABCDE"[i], shown])
-			assert(not c.page.is_shown("F"))
-		elif id.begins_with("memory_"):
+		if id.begins_with("memory_"):
 			assert(c.page.page_id == id, "%s: not on its own page" % id)
 		if id == "finale":
 			for l in "ABCDE":
