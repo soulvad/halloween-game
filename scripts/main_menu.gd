@@ -1,26 +1,26 @@
 extends Control
-## Board 01 «Головне меню». Built in code; nav buttons live in `Box` (smoke test checks `Box/Play`).
 
 const UI = preload("res://scripts/ui.gd")
 const Screens = preload("res://scripts/screens.gd")
+
+const BOB_HEIGHT := 10.0
+const BOB_TIME := 1.8
 
 var _box: VBoxContainer
 var _screen: Control
 
 
 func _ready() -> void:
-	add_child(UI.backdrop())
-	add_child(UI.vignette(Color(UI.INK, 0.7)))
+	add_child(UI.picture("menu"))
+	add_child(UI.side_shade(0.55, 0.85))
+	add_child(UI.vignette(Color(UI.INK, 0.45)))
 
-	var ghost := UI.icon("ghost", 420, UI.PAPER)
-	ghost.modulate.a = 0.85
-	Screens.place(self, ghost, 1180, 540)
-	var bubble := UI.panel(UI.PAPER, 20, 5, 0, 4)
-	(bubble.get_theme_stylebox("panel") as StyleBoxFlat).content_margin_left = 18
-	(bubble.get_theme_stylebox("panel") as StyleBoxFlat).content_margin_right = 18
+	var bubble := PanelContainer.new()
+	bubble.add_theme_stylebox_override("panel", UI.parchment(14))
 	bubble.add_child(UI.label("Випустіть мене…", 32, UI.INK, "hand", 700))
-	bubble.rotation_degrees = 3
-	Screens.place(self, bubble, 1300, 440)
+	bubble.rotation_degrees = -4
+	Screens.place(self, bubble, 1180, 300)
+	_bob(bubble, BOB_HEIGHT, BOB_TIME)
 
 	var head := UI.vbox(10)
 	var badge := UI.pill("Ігровий хакатон 7.0 · Прозорий + Відпускати", UI.ORANGE, 19)
@@ -57,7 +57,6 @@ func _ready() -> void:
 	play.grab_focus()
 
 
-## Adds a nav button to Box, with an optional note on its right edge.
 func _nav(b: Button, node_name: String, note := "", note_color := UI.INK) -> Button:
 	b.name = node_name
 	_box.add_child(b)
@@ -69,9 +68,15 @@ func _nav(b: Button, node_name: String, note := "", note_color := UI.INK) -> But
 	return b
 
 
+func _bob(node: Control, height: float, time: float) -> void:
+	var tw := node.create_tween().set_loops().set_trans(Tween.TRANS_SINE)
+	tw.tween_property(node, "position:y", -height, time).as_relative()
+	tw.tween_property(node, "position:y", height, time).as_relative()
+
+
 func _open(screen: Control) -> void:
 	_screen = screen
-	_box.hide()  # keeps focus from wandering to the menu behind the screen
+	_box.hide()
 	add_child(screen)
 
 

@@ -6,17 +6,24 @@
 [ext_resource type="Script" path="res://scripts/visitor.gd" id="4_visitor"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="5_player"]
 [ext_resource type="Script" path="res://scripts/hud.gd" id="6_hud"]
+[ext_resource type="PackedScene" path="res://art/models/Pumpkin.tscn" id="7_pumpkin"]
 
 [sub_resource type="Environment" id="Environment_dungeon"]
 background_mode = 1
-background_color = Color(0.02, 0.015, 0.03, 1)
+background_color = Color(0.04, 0.02, 0.07, 1)
 ambient_light_source = 2
-ambient_light_color = Color(0.3, 0.3, 0.45, 1)
+ambient_light_color = Color(0.36, 0.28, 0.4, 1)
 ambient_light_energy = 0.6
 tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.9
+glow_bloom = 0.08
+glow_hdr_threshold = 0.85
 fog_enabled = true
-fog_light_color = Color(0.12, 0.1, 0.18, 1)
-fog_density = 0.04
+fog_light_color = Color(0.16, 0.1, 0.14, 1)
+fog_density = 0.035
+adjustment_enabled = true
+adjustment_saturation = 0.95
 
 [sub_resource type="StandardMaterial3D" id="Mat_floor"]
 albedo_color = Color(0.2, 0.18, 0.2, 1)
@@ -856,6 +863,56 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.5, 2.4, -10)
 light_color = Color(0.6, 0.9, 1, 1)
 light_energy = 0.6
 omni_range = 6.0
+
+[node name="Neon0" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 2.6, -1.4)
+light_color = Color(0.8, 0.45, 0.6, 1)
+light_energy = 0.35
+omni_range = 6
+
+[node name="Neon1" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 2.6, -6)
+light_color = Color(0.8, 0.45, 0.6, 1)
+light_energy = 0.35
+omni_range = 6
+
+[node name="Neon2" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.5, 2.6, -6.5)
+light_color = Color(0.8, 0.45, 0.6, 1)
+light_energy = 0.35
+omni_range = 6
+
+[node name="Neon3" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 2.6, -9)
+light_color = Color(0.8, 0.45, 0.6, 1)
+light_energy = 0.35
+omni_range = 6
+
+[node name="Neon4" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, 9.5)
+light_color = Color(0.8, 0.45, 0.6, 1)
+light_energy = 0.35
+omni_range = 6
+
+[node name="Decor" type="Node3D" parent="."]
+
+[node name="Pumpkin0" parent="Decor" instance=ExtResource("7_pumpkin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9, 0, 11.9)
+
+[node name="Pumpkin1" parent="Decor" instance=ExtResource("7_pumpkin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 12)
+
+[node name="Pumpkin2" parent="Decor" instance=ExtResource("7_pumpkin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 4.9)
+
+[node name="Pumpkin3" parent="Decor" instance=ExtResource("7_pumpkin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.4, 0, 8.9)
+
+[node name="Pumpkin4" parent="Decor" instance=ExtResource("7_pumpkin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.2, 0, -4.9)
+
+[node name="Pumpkin5" parent="Decor" instance=ExtResource("7_pumpkin")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.3, 0, -5)
 
 [node name="Stations" type="Node3D" parent="."]
 

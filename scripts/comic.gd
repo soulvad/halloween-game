@@ -1,29 +1,23 @@
 extends CanvasLayer
-## Comic player over the game. Two pages (scripts/comic_data.gd), drawn by scripts/comic_page.gd:
-##   "prologue"  — prologue page, panels A..F appear one by one
-##   "memory_N"  — memories page: found memories (GameState.memories) shown, others locked, panel N (A..E) reveals
-##   "finale"    — memories page, A..E shown, F reveals
-## Usage: var c = preload("res://scenes/comic.tscn").instantiate(); add_child(c); c.play("memory_2"); await c.finished
-## E / Space / Enter / click = next panel (finish after the last one), Esc = skip all.
 
 signal finished
 
 const UI = preload("res://scripts/ui.gd")
 const Data = preload("res://scripts/comic_data.gd")
 const ComicPage = preload("res://scripts/comic_page.gd")
-const SCREEN := Vector2(1920, 1080)  # base resolution (stretch mode canvas_items)
+const SCREEN := Vector2(1920, 1080)
 const MARGIN := 40.0
 const MEMORY_LETTERS := "ABCDE"
-const VOICE_TAIL := 0.4  # pause after a voice line before auto-advance
+const VOICE_TAIL := 0.4
 
-var _order: Array[String] = []  # letters to reveal, one per step
+var _order: Array[String] = []
 var _step := -1
-var _auto := 0.0  # seconds left until auto-advance, 0 = wait for input
+var _auto := 0.0
 var _done := false
 var _was_paused := false
 var _mouse_mode := Input.MOUSE_MODE_VISIBLE
 
-var page: Control  # ComicPage
+var page: Control
 var _sub: PanelContainer
 var _who: Label
 var _text: Label
@@ -31,17 +25,17 @@ var _voice := AudioStreamPlayer.new()
 
 
 func _ready() -> void:
-	var root := UI.backdrop(Color("08060B"))
-	root.mouse_filter = Control.MOUSE_FILTER_STOP  # nothing behind the comic gets clicks
+	var root := UI.sky(Color("0C0618"))
+	root.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(root)
 	page = ComicPage.new()
 	page.position = Vector2(MARGIN, MARGIN)
 	page.size = SCREEN - Vector2(MARGIN, MARGIN) * 2
 	add_child(page)
-	_sub = UI.panel(UI.PAPER, 20, 7, 22)
+	_sub = UI.panel(UI.CARD, 20, 7, 22)
 	var col := UI.vbox(6)
-	_who = UI.label("", 18, UI.LABEL, "body", 900, true)
-	_text = UI.label("", 26, UI.INK, "body", 700)
+	_who = UI.label("", 18, UI.GOLD, "body", 900, true)
+	_text = UI.label("", 26, UI.PAPER, "body", 700)
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(_who)
 	col.add_child(_text)
@@ -72,12 +66,11 @@ func play(id: String) -> void:
 			page.set_panel_state(MEMORY_LETTERS[i], id == "finale" or (i + 1 in GameState.memories and i + 1 != n))
 		_order = [MEMORY_LETTERS[n - 1] if n > 0 else "F"]
 	else:
-		_finish.call_deferred()  # deferred: the caller has not reached `await finished` yet
+		_finish.call_deferred()
 		return
-	# Subtitles in the right margin of the page.
 	var r: Rect2 = page.page_rect()
 	_sub.position = page.position + Vector2(r.end.x + MARGIN, r.size.y * 0.55)
-	_text.custom_minimum_size.x = maxf(300, SCREEN.x - _sub.position.x - MARGIN - 44)  # 44 = panel padding
+	_text.custom_minimum_size.x = maxf(300, SCREEN.x - _sub.position.x - MARGIN - 44)
 	_show(0)
 
 
@@ -105,7 +98,6 @@ func _process(delta: float) -> void:
 			advance()
 
 
-## Next panel, or finish after the last one.
 func advance() -> void:
 	if _done:
 		return
@@ -125,7 +117,7 @@ func _show(i: int) -> void:
 	_who.text = p.get("who", "")
 	_who.visible = _who.text != ""
 	_text.text = text
-	_sub.reset_size()  # shrink back after a longer line
+	_sub.reset_size()
 
 	_voice.stop()
 	_auto = 0.0

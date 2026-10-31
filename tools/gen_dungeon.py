@@ -1,11 +1,9 @@
-# Generates scenes/game.tscn: "Підземелля старого міста" from the user's sketch.
-# Carved spaces (rooms, corridors, doors) are rectangles on a 0.25 m grid; walls go on every carved/rock edge.
 import sys, math
 
 OUT = sys.argv[1]
 G = 0.25
 X0, X1, Z0, Z1 = -14.5, 24.0, -13.0, 12.5
-H = 3.0  # wall height
+H = 3.0
 
 def t(x, y, z, rot_y=False):
     b = "0, 0, 1, 0, 1, 0, -1, 0, 0" if rot_y else "1, 0, 0, 0, 1, 0, 0, 0, 1"
@@ -13,7 +11,6 @@ def t(x, y, z, rot_y=False):
 def v3(s): return f"Vector3({s[0]:g}, {s[1]:g}, {s[2]:g})"
 def col(c): return f"Color({c[0]:g}, {c[1]:g}, {c[2]:g}, 1)"
 
-# name -> (x0, z0, x1, z1)
 rooms = {
     "CorridorV": (-1.25, -7.0, 1.25, 12.0),
     "CorridorH": (-11.5, -7.0, 12.5, -4.75),
@@ -27,13 +24,13 @@ rooms = {
     "PassageTop": (10.25, -11.75, 17.5, -10.0),
     "YourRoom": (17.5, -12.5, 23.5, -7.75),
 }
-doors = [  # >= 1.75 m wide, or the navmesh (agent radius 0.5) closes them
-    (-12, -7.0, -11.5, -5.25),  # far left
-    (-3.75, -7.5, -2, -7.0), (2.5, -7.5, 4.25, -7.0),  # row 1
-    (-3.75, -4.75, -2, -4.25), (2.5, -4.75, 4.25, -4.25),  # row 2
-    (-1.75, 0.25, -1.25, 2.0), (1.25, 0.25, 1.75, 2.0),  # row 3
-    (-1.75, 6.25, -1.25, 8.0), (1.25, 6.25, 1.75, 8.0),  # row 4
-    (12.5, -7.0, 13, -5.25),  # right tall room
+doors = [
+    (-12, -7.0, -11.5, -5.25),
+    (-3.75, -7.5, -2, -7.0), (2.5, -7.5, 4.25, -7.0),
+    (-3.75, -4.75, -2, -4.25), (2.5, -4.75, 4.25, -4.25),
+    (-1.75, 0.25, -1.25, 2.0), (1.25, 0.25, 1.75, 2.0),
+    (-1.75, 6.25, -1.25, 8.0), (1.25, 6.25, 1.75, 8.0),
+    (12.5, -7.0, 13, -5.25),
 ]
 NX, NZ = round((X1 - X0) / G), round((Z1 - Z0) / G)
 grid = [[False] * NZ for _ in range(NX)]
@@ -44,11 +41,10 @@ for (a, b, c, d) in list(rooms.values()) + doors:
 def carved(i, k): return 0 <= i < NX and 0 <= k < NZ and grid[i][k]
 
 WALL = (0.36, 0.33, 0.38); BOUND = (0.12, 0.1, 0.14); FURN = (0.4, 0.28, 0.18)
-walls = []  # (name, (x, z), size, solid_from, color)
+walls = []
 T = 0.3
-# horizontal edges (between k-1 and k), runs along x
 for k in range(NZ + 1):
-    for side in (-1, 1):  # -1: rock is at k-1 (north edge of cell k), 1: rock at k (south edge of cell k-1)
+    for side in (-1, 1):
         i = 0
         while i < NX:
             cell = k if side == -1 else k - 1
@@ -97,9 +93,6 @@ wall_nodes += [(n, p, s, 3, FURN) for n, p, s in furniture]
 MEMORY, CANDLE, HAUNT, MIRROR, PLAN, DOOR, KNOCK, EVIDENCE, CIRCLE = range(9)
 CYAN = (0.6, 0.95, 1); ORANGE = (1, 0.48, 0.1); DULL = (0.45, 0.4, 0.38); FLAME = (1, 0.75, 0.35)
 GLINT = (0.18, 0.18, 0.18); CANDLE_SIZE = (0.12, 0.3, 0.12)
-# Rooms in the story: R1L servants' bedroom, CorridorH corridor with shackles, R3R kitchen, R2R mirror room,
-# R4R archaeologists' camp, FarLeft steward's closet, PassageUp/Top behind the door, YourRoom behind the bricked wall.
-# name, (x, z), kind, title, need, size, color, extra exports (y = height of the base)
 stations = [
     ("Memory1", (-8.4, -10.0), MEMORY, "Свистулька-пташка", "", GLINT, CYAN, {"memory_id": 1, "y": 0.9}),
     ("Memory2", (-9.5, -6.7), MEMORY, "Бляха «17»", "", GLINT, CYAN, {"memory_id": 2, "y": 0.6}),
@@ -135,6 +128,8 @@ ARCH, PRIEST = 0, 1
 visitors = [("Olena", (0, 11.0), ARCH, "Олена", (0.35, 0.55, 0.4)), ("Taras", (0.8, 11.6), ARCH, "Тарас", (0.55, 0.45, 0.3)),
             ("Priest", (0, 11.8), PRIEST, "Отець Василь", (0.12, 0.1, 0.12))]
 lights = [((0, 2.4, -5.9), 7), ((0, 2.4, 4), 7), ((-11, 2.4, -6), 6), ((11.1, 2.4, -9), 6), ((-5, 2.4, 7), 6), ((5.5, 2.4, -2.6), 6)]
+neon_lights = [((5.5, 2.6, -1.4), 6), ((-13, 2.6, -6), 6), ((14.5, 2.6, -6.5), 6), ((-5, 2.6, -9), 6), ((0, 2.6, 9.5), 6)]
+pumpkins = [(-0.9, 11.9), (1.0, 12.0), (5.0, 4.9), (9.4, 8.9), (-11.2, -4.9), (12.3, -5.0)]
 
 o = ["""[gd_scene format=3]
 
@@ -144,17 +139,24 @@ o = ["""[gd_scene format=3]
 [ext_resource type="Script" path="res://scripts/visitor.gd" id="4_visitor"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="5_player"]
 [ext_resource type="Script" path="res://scripts/hud.gd" id="6_hud"]
+[ext_resource type="PackedScene" path="res://art/models/Pumpkin.tscn" id="7_pumpkin"]
 
 [sub_resource type="Environment" id="Environment_dungeon"]
 background_mode = 1
-background_color = Color(0.02, 0.015, 0.03, 1)
+background_color = Color(0.04, 0.02, 0.07, 1)
 ambient_light_source = 2
-ambient_light_color = Color(0.3, 0.3, 0.45, 1)
+ambient_light_color = Color(0.36, 0.28, 0.4, 1)
 ambient_light_energy = 0.6
 tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.9
+glow_bloom = 0.08
+glow_hdr_threshold = 0.85
 fog_enabled = true
-fog_light_color = Color(0.12, 0.1, 0.18, 1)
-fog_density = 0.04
+fog_light_color = Color(0.16, 0.1, 0.14, 1)
+fog_density = 0.035
+adjustment_enabled = true
+adjustment_saturation = 0.95
 
 [sub_resource type="StandardMaterial3D" id="Mat_floor"]
 albedo_color = Color(0.2, 0.18, 0.2, 1)
@@ -218,6 +220,16 @@ light_color = Color(0.6, 0.9, 1, 1)
 light_energy = 0.6
 omni_range = 6.0
 """)
+for n, ((x, y, z), r) in enumerate(neon_lights):
+    o.append(f"""[node name="Neon{n}" type="OmniLight3D" parent="Lights"]
+transform = {t(x, y, z)}
+light_color = Color(0.8, 0.45, 0.6, 1)
+light_energy = 0.35
+omni_range = {r}
+""")
+o.append('[node name="Decor" type="Node3D" parent="."]\n')
+for n, (x, z) in enumerate(pumpkins):
+    o.append(f'[node name="Pumpkin{n}" parent="Decor" instance=ExtResource("7_pumpkin")]\ntransform = {t(x, 0, z)}\n')
 o.append('[node name="Stations" type="Node3D" parent="."]\n')
 for name, (x, z), kind, title, need, size, c, extra in stations:
     ex = dict(extra)

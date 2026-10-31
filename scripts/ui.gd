@@ -1,23 +1,41 @@
 extends RefCounted
 
-const INK := Color("17111C")
-const PAPER := Color("FFFDF8")
-const NIGHT := Color("1E1238")
-const NIGHT2 := Color("2A1D40")
-const GOLD := Color("FFC531")
-const CHARGE := Color("B48CFF")
-const CYAN := Color("9BF6FF")
-const MOM := Color("FF8FB1")
-const RED := Color("FF4D5E")
-const GREEN := Color("8BEA4E")
-const ORANGE := Color("FF7A1A")
-const LILAC := Color("EDE6FF")
-const GREY := Color("D9D4E8")
-const MUTED := Color("4A3378")
-const LABEL := Color("6B4FA0")
-const DIM := Color("C9C2E8")
-const SHADE := Color(0.09, 0.067, 0.11, 0.9)
+const INK := Color("140B0C")
+const PAPER := Color("EBDDC3")
+const NIGHT := Color("1B1116")
+const NIGHT2 := Color("2A1A20")
+const CARD := Color(0.13, 0.075, 0.08, 0.95)
+const CARD_HI := Color("3A2629")
+const EDGE := Color("A07A3C")
+const GLOW := Color(0.9, 0.55, 0.2, 0.3)
+const NEON := Color("D26A9E")
+const PUMPKIN := Color("D2782A")
+const PUMPKIN_DARK := Color("6B3410")
+const GOLD := Color("E0B060")
+const CHARGE := Color("9C86C8")
+const CYAN := Color("A8DCD8")
+const MOM := Color("D98AA8")
+const RED := Color("B5463C")
+const GREEN := Color("A8C070")
+const ORANGE := Color("D2782A")
+const LILAC := Color("E6D5B8")
+const GREY := Color("3A2C2C")
+const MUTED := Color("BFA88A")
+const LABEL := Color("A88F6E")
+const DIM := Color("8C7A64")
+const SHADE := Color(0.08, 0.045, 0.05, 0.9)
+const TITLE_OUTLINE := Color("1A0E08")
+const HORIZON := Color(0.42, 0.18, 0.2)
+const HILLS_FAR := Color(0.16, 0.09, 0.1)
+const HILLS_NEAR := Color(0.09, 0.05, 0.06)
 const LEVEL_COLORS := [Color.WHITE, CYAN, GOLD, MOM]
+const MAX_BORDER := 3
+const SECONDARY_EDGE := Color("1A0E0A")
+const CARD_TEXTURE := "res://art/ui/card9.png"
+const CARD_TEXTURE_MARGIN := 27
+const PLANK_TEXTURE := "res://art/ui/plank9.png"
+const PLANK_MARGIN := Vector2(24, 18)
+const PARCHMENT_TEXTURE := "res://art/ui/parchment.jpg"
 
 const ICONS := {
 	"ghost": '<path d="M5 20V10a7 7 0 0 1 14 0v10l-2.5-2-2.3 2-2.2-2-2.2 2-2.3-2Z"/><circle cx="9.5" cy="10" r="1.2" fill="#C"/><circle cx="14.5" cy="10" r="1.2" fill="#C"/>',
@@ -42,10 +60,12 @@ const ICONS := {
 }
 
 const FONT_FILES := {
-	"display": "res://fonts/RubikWetPaint.ttf",
-	"body": "res://fonts/Rubik.ttf",
-	"hand": "res://fonts/Caveat.ttf",
+	"display": "res://fonts/Oranienbaum.ttf",
+	"body": "res://fonts/OldStandard-Regular.ttf",
+	"body_bold": "res://fonts/OldStandard-Bold.ttf",
+	"hand": "res://fonts/BadScript.ttf",
 }
+const BOLD_FROM := 700
 
 static var _fonts := {}
 static var _icons := {}
@@ -55,14 +75,15 @@ static func font(kind := "body", weight := 800) -> Font:
 	var key := "%s%d" % [kind, weight]
 	if not _fonts.has(key):
 		var names := {
-			"display": ["Rubik Wet Paint", "Rubik", "Segoe UI Black", "Arial Black"],
-			"hand": ["Caveat", "Segoe Print", "Comic Sans MS"],
+			"display": ["Oranienbaum", "Georgia", "Times New Roman"],
+			"hand": ["Bad Script", "Segoe Script", "Georgia"],
 		}
 		var system := SystemFont.new()
-		system.font_names = PackedStringArray(names.get(kind, ["Rubik", "Segoe UI", "Arial"]))
+		system.font_names = PackedStringArray(names.get(kind, ["Old Standard TT", "Georgia", "Times New Roman"]))
 		system.font_weight = weight
 		_fonts[key] = system
-		var path: String = FONT_FILES.get(kind, FONT_FILES.body)
+		var file_kind := "body_bold" if kind == "body" and weight >= BOLD_FROM else kind
+		var path: String = FONT_FILES.get(file_kind, FONT_FILES.body)
 		if ResourceLoader.exists(path):
 			var file := FontVariation.new()
 			file.base_font = load(path)
@@ -72,26 +93,59 @@ static func font(kind := "body", weight := 800) -> Font:
 	return _fonts[key]
 
 
-static func style(bg: Color, radius := 26, border := 5, shadow := 0, border_color := INK, drop := 0) -> StyleBoxFlat:
+static func style(bg: Color, radius := 26, border := 5, shadow := 0, border_color := EDGE, drop := 0) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = bg
 	s.set_corner_radius_all(radius)
-	s.set_border_width_all(border)
+	s.set_border_width_all(mini(border, MAX_BORDER))
 	s.border_color = border_color
 	if shadow > 0 or drop > 0:
-		s.shadow_color = INK
-		s.shadow_size = 1
-		s.shadow_offset = Vector2(shadow, shadow) if shadow > 0 else Vector2(0, drop)
+		s.shadow_color = GLOW
+		s.shadow_size = 8 + maxi(shadow, drop) * 2
+		s.shadow_offset = Vector2(0, maxi(shadow, drop) * 0.6)
 	s.anti_aliasing = true
 	return s
 
 
-static func panel(bg := PAPER, radius := 26, shadow := 7, pad := 20, border := 5, border_color := INK) -> PanelContainer:
+static func panel(bg := CARD, radius := 26, shadow := 7, pad := 20, border := 5, border_color := EDGE) -> PanelContainer:
 	var p := PanelContainer.new()
+	if bg == CARD and ResourceLoader.exists(CARD_TEXTURE):
+		p.add_theme_stylebox_override("panel", framed(pad))
+		return p
 	var s := style(bg, radius, border, shadow, border_color)
 	s.set_content_margin_all(pad)
 	p.add_theme_stylebox_override("panel", s)
 	return p
+
+
+static func framed(pad := 20) -> StyleBoxTexture:
+	var s := StyleBoxTexture.new()
+	s.texture = load(CARD_TEXTURE)
+	s.set_texture_margin_all(CARD_TEXTURE_MARGIN)
+	s.set_content_margin_all(pad + CARD_TEXTURE_MARGIN * 0.6)
+	return s
+
+
+static func parchment(pad := 16) -> StyleBox:
+	if not ResourceLoader.exists(PARCHMENT_TEXTURE):
+		var flat := style(PAPER, 10, 0)
+		flat.set_content_margin_all(pad)
+		return flat
+	var s := StyleBoxTexture.new()
+	s.texture = load(PARCHMENT_TEXTURE)
+	s.set_content_margin_all(pad)
+	return s
+
+
+static func plank(tint := Color.WHITE) -> StyleBoxTexture:
+	var s := StyleBoxTexture.new()
+	s.texture = load(PLANK_TEXTURE)
+	s.texture_margin_left = PLANK_MARGIN.x
+	s.texture_margin_right = PLANK_MARGIN.x
+	s.texture_margin_top = PLANK_MARGIN.y
+	s.texture_margin_bottom = PLANK_MARGIN.y
+	s.modulate_color = tint
+	return s
 
 
 static func label(text: String, size := 20, color := INK, kind := "body", weight := 800, upper := false) -> Label:
@@ -109,11 +163,11 @@ static func label(text: String, size := 20, color := INK, kind := "body", weight
 static func title(text: String, size := 110, color := PAPER) -> Label:
 	var l := label(text, size, color, "display", 900)
 	var ls := l.label_settings
-	ls.outline_size = maxi(4, int(size * 0.08))
-	ls.outline_color = INK
-	ls.shadow_size = ls.outline_size
-	ls.shadow_color = INK
-	ls.shadow_offset = Vector2.ONE * maxf(3, size * 0.06)
+	ls.outline_size = maxi(4, int(size * 0.07))
+	ls.outline_color = TITLE_OUTLINE
+	ls.shadow_size = maxi(6, int(size * 0.12))
+	ls.shadow_color = Color(GOLD, 0.35)
+	ls.shadow_offset = Vector2(0, maxf(3, size * 0.05))
 	return l
 
 
@@ -123,25 +177,37 @@ static func button(text: String, kind := "primary", hint := "", icon_name := "",
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	b.focus_mode = Control.FOCUS_ALL
 	var ghost := kind == "ghost"
-	var bg: Color = {"primary": GOLD, "secondary": PAPER}.get(kind, Color(0, 0, 0, 0))
-	var fg := PAPER if ghost else INK
-	var normal := style(bg, 22, 4 if ghost else 5, 0, PAPER if ghost else INK, 0 if ghost else 8)
-	normal.content_margin_left = 24
-	normal.content_margin_right = 96 if hint != "" else 24
-	normal.content_margin_top = 14
-	normal.content_margin_bottom = 14
-	var hover := normal.duplicate() as StyleBoxFlat
-	hover.bg_color = Color(1, 1, 1, 0.1) if ghost else bg.lightened(0.18)
-	var pressed := hover.duplicate() as StyleBoxFlat
-	pressed.shadow_offset = Vector2(0, 2)
+	var primary := kind == "primary"
+	var fg := GOLD if primary else PAPER
+	var normal: StyleBox
+	var hover: StyleBox
+	var pressed: StyleBox
+	var disabled: StyleBox
+	if ghost:
+		normal = style(Color(INK, 0.35), 10, 2, 0, Color(EDGE, 0.8))
+		hover = style(Color(GOLD, 0.12), 10, 2, 0, GOLD)
+		pressed = style(Color(GOLD, 0.2), 10, 2, 0, GOLD)
+		disabled = style(Color(INK, 0.2), 10, 2, 0, GREY)
+	else:
+		var base := Color.WHITE if primary else Color(0.62, 0.55, 0.55)
+		normal = plank(base)
+		hover = plank(base.lightened(0.25))
+		pressed = plank(base.darkened(0.25))
+		disabled = plank(Color(0.4, 0.38, 0.38))
+	for st: StyleBox in [normal, hover, pressed, disabled]:
+		st.content_margin_left = 28
+		st.content_margin_right = 96 if hint != "" else 28
+		st.content_margin_top = 14
+		st.content_margin_bottom = 14
+	pressed.content_margin_top = 17
 	var focus := StyleBoxFlat.new()
 	focus.draw_center = false
-	focus.set_border_width_all(4)
-	focus.border_color = ORANGE
-	focus.set_corner_radius_all(26)
-	focus.set_expand_margin_all(6)
-	var disabled := normal.duplicate() as StyleBoxFlat
-	disabled.bg_color = GREY
+	focus.set_border_width_all(2)
+	focus.border_color = GOLD
+	focus.set_corner_radius_all(8)
+	focus.set_expand_margin_all(5)
+	focus.shadow_color = Color(GOLD, 0.35)
+	focus.shadow_size = 10
 	b.add_theme_stylebox_override("normal", normal)
 	b.add_theme_stylebox_override("hover", hover)
 	b.add_theme_stylebox_override("pressed", pressed)
@@ -177,7 +243,9 @@ static func chip(text: String, bg := PAPER, fg := INK, size := 16, border := 3) 
 static func pill(text: String, bg: Color, size := 17, icon_name := "") -> PanelContainer:
 	var p := panel(bg, 999, 4, 0, 4)
 	var s := p.get_theme_stylebox("panel") as StyleBoxFlat
-	s.shadow_offset = Vector2(4, 4)
+	s.shadow_color = Color(bg, 0.45)
+	s.shadow_offset = Vector2(0, 3)
+	s.border_color = bg.darkened(0.35)
 	s.content_margin_left = 14
 	s.content_margin_right = 14
 	s.content_margin_top = 5
@@ -194,9 +262,9 @@ static func action_tile(key: String, icon_name: String, bg: Color, caption: Stri
 	var col := vbox(6)
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	var tile := panel(bg, 22, 0, 0)
-	(tile.get_theme_stylebox("panel") as StyleBoxFlat).shadow_offset = Vector2(0, 6)
-	(tile.get_theme_stylebox("panel") as StyleBoxFlat).shadow_color = INK
-	(tile.get_theme_stylebox("panel") as StyleBoxFlat).shadow_size = 1
+	(tile.get_theme_stylebox("panel") as StyleBoxFlat).shadow_offset = Vector2(0, 4)
+	(tile.get_theme_stylebox("panel") as StyleBoxFlat).shadow_color = GLOW
+	(tile.get_theme_stylebox("panel") as StyleBoxFlat).shadow_size = 14
 	tile.custom_minimum_size = Vector2(92, 92)
 	var ic := icon(icon_name, 44)
 	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -250,7 +318,7 @@ static func vbox(sep := 12) -> VBoxContainer:
 	return b
 
 
-static func rule(color := INK, thickness := 4) -> ColorRect:
+static func rule(color := Color(EDGE, 0.6), thickness := 2) -> ColorRect:
 	var r := ColorRect.new()
 	r.color = color
 	r.custom_minimum_size = Vector2(0, thickness)
@@ -258,11 +326,81 @@ static func rule(color := INK, thickness := 4) -> ColorRect:
 	return r
 
 
+static var _sky_shader: Shader
+
+
 static func backdrop(color := NIGHT) -> ColorRect:
+	return sky(color, 0.0, 0.0)
+
+
+static func sky(color := NIGHT, moon_size := 0.0, hills := 0.0, moon := Vector2(0.8, 0.2)) -> ColorRect:
 	var r := ColorRect.new()
-	r.color = color
+	r.color = Color.WHITE
 	r.set_anchors_preset(Control.PRESET_FULL_RECT)
+	if not _sky_shader:
+		_sky_shader = load("res://shaders/night_sky.gdshader")
+	var m := ShaderMaterial.new()
+	m.shader = _sky_shader
+	m.set_shader_parameter("top", color.darkened(0.45))
+	m.set_shader_parameter("mid", color)
+	m.set_shader_parameter("horizon", HORIZON)
+	m.set_shader_parameter("far_hills", HILLS_FAR)
+	m.set_shader_parameter("near_hills", HILLS_NEAR)
+	m.set_shader_parameter("alpha", color.a)
+	m.set_shader_parameter("moon", moon)
+	m.set_shader_parameter("moon_size", moon_size)
+	m.set_shader_parameter("hills", hills)
+	r.material = m
 	return r
+
+
+static func picture(art_name: String, dim := 0.0, fallback := NIGHT) -> Control:
+	var path := "res://art/ui/%s.jpg" % art_name
+	if not ResourceLoader.exists(path):
+		return sky(fallback, 0.06, 1.0)
+	var root := Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var t := TextureRect.new()
+	t.texture = load(path)
+	t.set_anchors_preset(Control.PRESET_FULL_RECT)
+	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(t)
+	if dim > 0.0:
+		var shade := ColorRect.new()
+		shade.color = Color(INK, dim)
+		shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+		shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		root.add_child(shade)
+	return root
+
+
+static func side_shade(width := 0.6, strength := 0.8) -> TextureRect:
+	var g := Gradient.new()
+	g.set_color(0, Color(INK, strength))
+	g.set_color(1, Color(INK, 0.0))
+	var tex := GradientTexture2D.new()
+	tex.gradient = g
+	tex.fill_to = Vector2(1, 0)
+	var t := TextureRect.new()
+	t.texture = tex
+	t.anchor_bottom = 1.0
+	t.anchor_right = width
+	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	t.stretch_mode = TextureRect.STRETCH_SCALE
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return t
+
+
+static func svg(source: String, width: float) -> TextureRect:
+	var img := Image.new()
+	var native := float(source.get_slice('width="', 1).get_slice('"', 0))
+	img.load_svg_from_string(source, width / maxf(native, 1.0))
+	var t := TextureRect.new()
+	t.texture = ImageTexture.create_from_image(img)
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return t
 
 
 static func vignette(tint: Color) -> ColorRect:
