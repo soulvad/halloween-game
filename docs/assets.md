@@ -77,6 +77,11 @@
 | `Olena`, `Taras`, `Priest` | археологиня, археолог, священник (origin біля ніг) | ~0.6 × 1.7 × 0.6 |
 | `Lantern` | ліхтар Джека, літає підземеллям. Є: Kay Lousberg, [Jackolantern](https://poly.pizza/m/iSDZJLP0xs), CC0. Гра зменшує його в 5 разів, обличчя дивиться на +Z | 1.5 × 1.3 × 1.5 |
 
+**Декор коридорів** лежить в `art/decor/`, без зіткнень; де що стоїть, задано списками в `scripts/decor.gd`. Усе під CC0:
+- смолоскипи, прапори, щити, ключі, діжки, скрині тощо: Kay Lousberg, [KayKit Dungeon Remastered](https://github.com/KayKit-Game-Assets/KayKit-Dungeon-Remastered-1.0);
+- [череп](https://poly.pizza/m/7clFQGz5jH) і [череп зі свічкою](https://poly.pizza/m/94tuTO5eJv): Kay Lousberg;
+- [павутина](https://poly.pizza/m/EHYNWew6JK), [павук](https://poly.pizza/m/yRYJiAJyiM), [ліани](https://poly.pizza/m/EVS4viM9BL), [гриб](https://poly.pizza/m/db1tjMhmiA): Quaternius.
+
 ## 4. Текстури
 
 `art/textures/` — тайлові PNG, можна малювати в нашій малювалці (`paint.bat`):

@@ -43,6 +43,11 @@ func _ready() -> void:
 	var mem = func(i): return st.call("Memory%d" % i)
 	await _frames(2)
 
+	# corridor dressing: all of it placed, nothing to bump into
+	var decor = g.get_node("Decor")
+	assert(decor.get_child_count() == decor.ON_WALLS.size() + decor.ON_FLOOR.size() + decor.WEBS.size())
+	assert(decor.find_children("*", "CollisionObject3D", true, false).is_empty())
+
 	# flying rocks the view, hovering settles it; lanterns drift along the navmesh under the ceiling
 	var lanterns = g.get_node("Lanterns")
 	await _until(func(): return lanterns.get_child_count() == lanterns.COUNT, 3.0)
