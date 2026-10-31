@@ -83,12 +83,17 @@ class Lantern extends Node3D:
 			meshes.append(root)
 		for m: MeshInstance3D in meshes:
 			m.layers = LAYER_HIDDEN_ON_MAP
-			var mat := m.mesh.surface_get_material(0).duplicate() as StandardMaterial3D
-			mat.albedo_color = Color(1.0, 0.62, 0.3)
-			mat.emission_enabled = true
-			mat.emission = GLOW
-			mat.emission_energy_multiplier = 0.55
-			m.material_override = mat
+			for s in m.mesh.get_surface_count():
+				var mat := m.mesh.surface_get_material(s).duplicate() as StandardMaterial3D
+				if mat.resource_name == "Carved":  # the eyes and mouth stay black, whatever the light
+					mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+					mat.albedo_color = Color.BLACK
+				else:
+					mat.albedo_color = Color(1.0, 0.62, 0.3)
+					mat.emission_enabled = true
+					mat.emission = GLOW
+					mat.emission_energy_multiplier = 0.55
+				m.set_surface_override_material(s, mat)
 
 	func _process(delta: float) -> void:
 		_t += delta

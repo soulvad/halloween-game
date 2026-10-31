@@ -75,7 +75,7 @@
 | `Circle` | коло ритуалу на підлозі | 2.4 × 0.06 × 2.4 |
 | `CrateR1L`, `TableR1R`, `BunksR2L`, `BarrelsR2R`, `PlankR3L`, `CrateR3R`, `ShelfR4L`, `TableR4R`, `StonesRT`, `BunkYourRoom` | меблі | див. `tools/gen_dungeon.py` |
 | `Olena`, `Taras`, `Priest` | археологиня, археолог, священник (origin біля ніг) | ~0.6 × 1.7 × 0.6 |
-| `Lantern` | ліхтар Джека, літає підземеллям. Є: Kay Lousberg, [Jackolantern](https://poly.pizza/m/iSDZJLP0xs), CC0. Гра зменшує його в 5 разів, обличчя дивиться на +Z | 1.5 × 1.3 × 1.5 |
+| `Lantern` | ліхтар Джека, літає підземеллям. Є: Kay Lousberg, [Jackolantern](https://poly.pizza/m/iSDZJLP0xs), CC0. Гра зменшує його в 5 разів, обличчя дивиться на +Z. Очі й рот мають окремий матеріал `Carved`, він лишається чорним | 1.5 × 1.3 × 1.5 |
 
 ## 4. Текстури
 
@@ -100,6 +100,6 @@
 
 ## 6. Що ще на заглушках
 
-Вже є меблі, двері, свічки, шумні предмети, кіт, кістки, персонажі, щур, черепахи, піца, дзеркало й текстури; джерела в `art/CREDITS.md`, збірка в `tools/make_props.py` і `tools/make_people.py`. Анімовані моделі людей мають кліпи `walk` і `idle`, щур `run` і `idle`. Чекають моделей: `Chains`, `Shackles`, `Tally`, `Bowl`, `Circle`, `Plan`, `Wall`, `Memory`.
+Вже є меблі, двері, свічки, шумні предмети, кіт, кістки, персонажі, щур, черепахи, піца, дзеркало й текстури; джерела в `art/CREDITS.md`, збірка в `tools/make_props.py`, `tools/make_people.py` і `tools/make_priest.py`. Анімовані моделі людей мають кліпи `walk` і `idle`, щур `run` і `idle`. Чекають моделей: `Chains`, `Shackles`, `Tally`, `Bowl`, `Circle`, `Plan`, `Wall`, `Memory`.
 
 - Звуки світу й музика: місць під них поки немає.
