@@ -41,6 +41,7 @@ Story: `docs/comic_script.md` (comic script) + the team's story doc. Тиміш,
 - `scripts/hud.gd` — all in-game UI built in code with `scripts/ui.gd` (HUD with powers row + memories counter, goal panel, map, pause, book, end screen); owns `Esc` / `M` / `J`.
 - `scenes/game.tscn` — **generated** by `python tools/gen_dungeon.py scenes/game.tscn` (rooms as 0.25 m grid rectangles + doors → wall segments, furniture, stations, lights, `Markers` (Entrance, Camp, RoomCenter, dig sites), visitors, player). Edit the generator, not the scene. Keep passages/doors ≥ 1.75 m wide or the navmesh (agent radius 0.5) closes them.
 - `tools/painter/` (`paint.bat`) — hand-drawn texture painter.
+- `scripts/look.gd` + `look.gdshader` — node `Look` (game.gd): visual presets `LOOKS` (Environment overrides, light tint/energy folded into `light_color`, screen pass ink / cel bands / vignette / grain); look 0 = scene as generated; `F7` cycles. `tests/look_capture.tscn` (windowed, not headless) renders every look from 6 viewpoints into `docs/looks/`, compared in `docs/looks/index.html`.
 - `scripts/walk_rig.gd` — legacy, unused.
 
 ## Collision layers
