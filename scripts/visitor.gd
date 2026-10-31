@@ -20,6 +20,7 @@ const STAY := Vector2(5, 10)  ## seconds spent at a dig site
 const FOLLOW := 1.8  ## the priest keeps this far behind the archaeologists
 const ROOM_SPOTS := [Vector3(-1.5, 0, 1.3), Vector3(1.4, 0, 1.5), Vector3(0, 0, -1.6)]  ## around your room's centre
 const LAYER_VISITOR := 16
+const LABEL_PX := 0.0013  ## name label size up close (UI.world_label)
 const MASK := 7 | 64  ## walls, furniture, rubble
 const HEARD_LINES := ["Ви це чули?", "Звідки цей звук?..", "Там щось є. Ходімо подивимось.", "Знову… Це не вітер."]
 const WALL_LINES := ["На плані тут порожнеча… а кімнати немає. Ходімо глянемо.", "Дивно — коридор є, а кімнати нема."]
@@ -63,8 +64,8 @@ func _ready() -> void:
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_label.font_size = 48
 	_label.outline_size = 12
-	_label.pixel_size = 0.0013
-	_label.fixed_size = true
+	_label.pixel_size = LABEL_PX
+	_label.fixed_size = true  ## no giant letters next to the camera; UI.world_label shrinks it further off
 	_label.position.y = 2.1
 	_label.layers = 2  ## the minimap camera culls labels
 	_label.visibility_range_end = 12.0
@@ -107,6 +108,7 @@ func _on_haunted(pos: Vector3, power: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	UI.world_label(_label, LABEL_PX)
 	_talk = maxf(_talk - delta, 0)
 	_investigate = maxf(_investigate - delta, 0)
 	var target := global_position

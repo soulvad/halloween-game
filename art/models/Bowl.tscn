@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://art/models/src/kenney/detail-bowl.glb" id="1"]
+
+[node name="Bowl" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1.5385, 0, 1.8841e-16, 0, 1.5385, 0, -1.8841e-16, 0, -1.5385, -0.15455, -0, 0.15455)
+
+[node name="On" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+visible = false
+light_color = Color(1, 0.8, 0.4, 1)
+light_energy = 0.7
+omni_range = 1.6

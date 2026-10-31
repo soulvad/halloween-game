@@ -18,4 +18,8 @@
 | Підлога | `art/textures/floor.png` | [Poly Haven, T Brick Floor 002](https://polyhaven.com/a/t_brick_floor_002) |
 | Стеля | `art/textures/ceiling.png` | [Poly Haven, Rock Wall 12](https://polyhaven.com/a/rock_wall_12) |
 
+Не CC0: `art/textures/air_raid_phone.jpg` (екран телефона) — тестовий скриншот сповіщень про тривогу, який дала команда. Джерело і право на використання ще треба уточнити.
+
 Моделі збирають `tools/make_props.py`, `tools/make_people.py`, `tools/make_priest.py` і `tools/make_skeleton.py`.
+
+Портрети в `art/paintings/` (Шевченко, Бандера, відео й маска з Франком) дала команда, це не CC0: джерело і права треба уточнити перед публікацією.

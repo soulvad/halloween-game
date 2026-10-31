@@ -93,7 +93,7 @@
 
 ## 5. Пасхалки
 
-**Моделі** в `art/models/`, origin по центру знизу: `Pedestal` (п'єдестал кота, 0.7 × 0.8 × 0.7 м), `Cat`, `Rat`, `Skeleton`, `Bones` (купа кісток), `Turtle` (одна на всіх), `Pizza`. Модель без власної анімації просто гойдається.
+**Моделі** в `art/models/`, origin по центру знизу: `Pedestal` (п'єдестал кота, 0.7 × 0.8 × 0.7 м), `Cat`, `Rat`, `Skeleton`, `Bones` (купа кісток), `Turtle` (одна на всіх), `Pizza`. Модель без власної анімації просто гойдається. Телефон на столі археологів будується в коді (`scripts/air_raid_phone.gd`), його екран — `art/textures/air_raid_phone.jpg`; пропорції екрана беруться з картинки.
 
 `Skeleton.glb` уже є: [Skeleton with rig](https://opengameart.org/content/skeleton-with-rig), автор Gord Goodwin, CC0. Її збирає `tools/make_skeleton.py` (там команда запуску): бере `.blend` зі сторінки і додає танець. Одне коло танцю триває `EggAudio.BAR` (16 нот мелодії). Якщо покласти свій трек `skeleton`, треба виставити `BEAT` під його темп, інакше скелет танцюватиме не в такт.
 

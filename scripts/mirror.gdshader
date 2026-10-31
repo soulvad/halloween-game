@@ -4,13 +4,14 @@ render_mode unshaded, cull_back;
 // left is on our right. Old, dusty glass: slightly dim, hazier towards the rim.
 
 uniform sampler2D view : source_color, filter_linear;
+uniform bool oval = true;  // false: a rectangular pane (haze by the distance to the edge)
 uniform vec3 dust = vec3(0.5, 0.52, 0.55);
 
 void fragment() {
 	vec2 p = UV * 2.0 - 1.0;
-	float r = length(p);
+	float r = oval ? length(p) : max(abs(p.x), abs(p.y));
 	if (r > 1.0) {
 		discard;
 	}
-	ALBEDO = mix(texture(view, vec2(1.0 - UV.x, UV.y)).rgb * 0.88, dust, 0.05 + 0.3 * r * r * r);
+	ALBEDO = mix(texture(view, vec2(1.0 - UV.x, UV.y)).rgb * 0.88, dust, 0.04 + (oval ? 0.3 * r * r * r : 0.25 * pow(r, 6.0)));
 }

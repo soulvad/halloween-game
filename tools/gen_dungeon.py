@@ -85,12 +85,12 @@ wall_nodes += [
     ("BoundN", (cx, Z0 - 0.5), (w + 2, H, 1), 1, BOUND), ("BoundS", (cx, Z1 + 0.5), (w + 2, H, 1), 1, BOUND),
     ("BoundW", (X0 - 0.5, cz), (1, H, d + 2), 1, BOUND), ("BoundE", (X1 + 0.5, cz), (1, H, d + 2), 1, BOUND),
 ]
-furniture = [
-    ("CrateR1L", (-7.5, -9.6), (1.2, 0.9, 1.0)), ("TableR1R", (7.5, -9.7), (2.2, 0.8, 1.0)),
-    ("BunksR2L", (-8.3, -2.9), (1.0, 0.7, 2.4)), ("BarrelsR2R", (8.6, -1.8), (1.2, 1.0, 1.2)),
-    ("PlankR3L", (-7.8, 2.6), (1.0, 0.6, 1.6)), ("CrateR3R", (8.5, 3.0), (1.4, 0.9, 1.0)),
-    ("ShelfR4L", (-7.5, 9.2), (1.0, 1.6, 0.8)), ("TableR4R", (8.0, 5.2), (2.0, 0.8, 1.2)),
-    ("StonesRT", (15.0, -9.0), (1.2, 0.6, 1.0)), ("BunkYourRoom", (18.3, -8.4), (1.4, 0.5, 0.9)),
+furniture = [  # sizes match art/models/<name>.glb, the box is only the fallback
+    ("CrateR1L", (-7.5, -9.6), (0.9, 0.9, 0.95)), ("TableR1R", (7.5, -9.7), (2.2, 0.8, 1.0)),
+    ("BunksR2L", (-8.3, -2.9), (1.0, 0.7, 2.4)), ("BarrelsR2R", (8.6, -1.8), (1.05, 1.0, 0.6)),
+    ("PlankR3L", (-7.8, 2.6), (1.0, 0.6, 1.6)), ("CrateR3R", (8.5, 3.0), (0.9, 0.9, 0.9)),
+    ("ShelfR4L", (-7.5, 9.35), (1.0, 1.6, 0.8)), ("TableR4R", (8.0, 5.2), (2.0, 0.8, 1.2)),
+    ("StonesRT", (15.0, -9.0), (1.2, 0.52, 0.5)), ("BunkYourRoom", (18.3, -8.4), (1.4, 0.5, 0.9)),
 ]
 wall_nodes += [(n, p, s, 3, FURN) for n, p, s in furniture]
 
@@ -101,14 +101,14 @@ GLINT = (0.18, 0.18, 0.18); CANDLE_SIZE = (0.12, 0.3, 0.12)
 # R4R archaeologists' camp, FarLeft steward's closet, PassageUp/Top behind the door, YourRoom behind the bricked wall.
 # name, (x, z), kind, title, need, size, color, extra exports (y = height of the base)
 stations = [
-    ("Memory1", (-8.4, -10.0), MEMORY, "Свистулька-пташка", "", GLINT, CYAN, {"memory_id": 1, "y": 0.9}),
+    ("Memory1", (-7.5, -9.6), MEMORY, "Свистулька-пташка", "", GLINT, CYAN, {"memory_id": 1, "y": 0.9}),
     ("Memory2", (-9.5, -6.7), MEMORY, "Бляха «17»", "", GLINT, CYAN, {"memory_id": 2, "y": 0.6}),
-    ("Memory3", (9.1, 3.4), MEMORY, "Лист від матері", "", GLINT, CYAN, {"memory_id": 3, "y": 1.0}),
+    ("Memory3", (8.5, 3.0), MEMORY, "Лист від матері", "", GLINT, CYAN, {"memory_id": 3, "y": 0.9}),
     ("Memory4", (-13.2, -9.0), MEMORY, "Ключ від хвіртки", "", GLINT, CYAN, {"memory_id": 4, "y": 0.6}),
     ("Memory5", (23.3, -11.6), MEMORY, "Ім'я на стіні", "", GLINT, CYAN, {"memory_id": 5, "y": 1.1}),
     ("Circle", (20.5, -10.0), CIRCLE, "Коло ритуалу", "", (2.4, 0.06, 2.4), (1, 0.56, 0.69), {}),
-    ("Shackles", (18.2, -12.1), EVIDENCE, "Кайдани", "", (0.7, 0.4, 0.3), DULL, {}),
-    ("Tally", (23.3, -9.6), EVIDENCE, "Подряпини-дні", "", (0.12, 1.2, 1.6), DULL, {}),
+    ("Shackles", (18.2, -12.35), EVIDENCE, "Кайдани", "", (0.7, 0.4, 0.3), DULL, {}),
+    ("Tally", (23.44, -9.6), EVIDENCE, "Подряпини-дні", "", (0.12, 1.2, 1.6), DULL, {}),
     ("Bowl", (21.6, -8.2), EVIDENCE, "Миска", "", (0.5, 0.2, 0.5), DULL, {}),
     ("CandleEntrance", (0.9, 5.5), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.8}),
     ("CandleHall", (0.9, -1.0), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.8}),
@@ -119,12 +119,12 @@ stations = [
     ("Chains", (-10.5, -6.85), HAUNT, "Кайдани на стіні", "sound", (0.4, 0.9, 0.2), ORANGE, {"power": 1}),
     ("Bell", (-6.0, -6.7), HAUNT, "Дзвоник слуг", "sound", (0.3, 0.4, 0.3), ORANGE, {"power": 1}),
     ("Jug", (6.0, 2.0), HAUNT, "Глиняний глек", "sound", (0.4, 0.5, 0.4), ORANGE, {"power": 1}),
-    ("Grate", (-13.6, -4.0), HAUNT, "Іржаві ґрати", "sound", (0.2, 1.4, 1.2), ORANGE, {"power": 1}),
+    ("Grate", (-13.9, -4.0), HAUNT, "Іржаві ґрати", "sound", (0.2, 1.4, 1.2), ORANGE, {"power": 1}),
     ("Chest", (-5.0, 8.2), HAUNT, "Стара скриня", "sound", (1.0, 0.6, 0.6), ORANGE, {"power": 1}),
     ("Niche", (15.2, -4.2), HAUNT, "Кістки в ніші", "sound", (0.5, 0.4, 0.4), ORANGE, {"power": 1}),
     ("GateBell", (0.85, 10.0), HAUNT, "Дзвін біля входу", "sound", (0.3, 0.5, 0.3), ORANGE, {"power": 1}),
     ("DripChain", (11.6, -8.6), HAUNT, "Ланцюг у проході", "sound", (0.2, 0.9, 0.2), ORANGE, {"power": 1}),
-    ("Mirror", (9.35, -2.6), MIRROR, "Запилене дзеркало", "write", (0.1, 1.4, 0.9), (0.6, 0.65, 0.7), {"y": 0.3}),
+    ("Mirror", (9.45, -2.6), MIRROR, "Запилене дзеркало", "write", (0.1, 1.4, 0.9), (0.6, 0.65, 0.7), {"y": 0.3}),
     ("Plan", (8.0, 5.2), PLAN, "План маєтку", "sound", (0.9, 0.04, 0.6), (0.85, 0.75, 0.55), {"y": 0.8}),
     ("Door", (11.125, -7.0), DOOR, "Двері", "hands", (1.75, 2.4, 0.15), (0.35, 0.22, 0.12), {}),
     ("Wall", (13.95, -10.875), KNOCK, "Цегляна стіна", "hands", (0.1, 2.0, 1.5), (0.5, 0.3, 0.25), {"y": 0.2}),

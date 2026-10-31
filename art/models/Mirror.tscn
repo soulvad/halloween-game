@@ -1,0 +1,68 @@
+[gd_scene format=3]
+
+[ext_resource type="FontFile" path="res://fonts/Caveat.ttf" id="1"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.22, 0.13, 0.08, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2"]
+albedo_color = Color(0.5, 0.56, 0.62, 1)
+metallic = 1
+roughness = 0.18
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.09, 0.08, 0.9)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.09, 0.08, 0.9)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.09, 1.4, 0.08)
+
+[sub_resource type="PrismMesh" id="PrismMesh_6"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.9, 0.16, 0.08)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+material = SubResource("StandardMaterial3D_2")
+size = Vector3(0.02, 1.24, 0.74)
+
+[node name="Mirror" type="Node3D"]
+
+[node name="Top" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.36, 0)
+mesh = SubResource("BoxMesh_3")
+
+[node name="Bottom" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+mesh = SubResource("BoxMesh_4")
+
+[node name="Left" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, -0.41)
+mesh = SubResource("BoxMesh_5")
+
+[node name="Right" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0.41)
+mesh = SubResource("BoxMesh_5")
+
+[node name="Crown" type="MeshInstance3D" parent="."]
+transform = Transform3D(6.1232e-17, 0, 1, 0, 1, 0, -1, 0, 6.1232e-17, 0, 1.48, 0)
+mesh = SubResource("PrismMesh_6")
+
+[node name="Glass" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.01, 0.7, 0)
+mesh = SubResource("BoxMesh_7")
+
+[node name="On" type="Label3D" parent="."]
+transform = Transform3D(6.0897e-17, -6.4005e-18, -1, 0.10453, 0.99452, 0, 0.99452, -0.10453, 6.1232e-17, -0.03, 0.812, 0)
+visible = false
+pixel_size = 0.0022
+font = ExtResource("1")
+font_size = 96
+outline_size = 0
+modulate = Color(0.72, 0.06, 0.05, 1)
+text = "ДОПОМОЖІТЬ"

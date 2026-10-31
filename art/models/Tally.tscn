@@ -1,0 +1,25 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://art/textures/tally.png" id="1"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(1, 1, 1, 1)
+albedo_texture = ExtResource("1")
+roughness = 0.95
+
+[sub_resource type="QuadMesh" id="QuadMesh_2"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector2(1.6, 1.2)
+
+[node name="Tally" type="Node3D"]
+
+[node name="Scratches" type="MeshInstance3D" parent="."]
+transform = Transform3D(6.1232e-17, 0, -1, 0, 1, 0, 1, 0, 6.1232e-17, -0.05, 0.6, 0)
+mesh = SubResource("QuadMesh_2")
+
+[node name="On" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+visible = false
+light_color = Color(1, 0.8, 0.4, 1)
+light_energy = 0.9
+omni_range = 1.6
