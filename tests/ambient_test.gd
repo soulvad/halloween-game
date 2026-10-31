@@ -50,6 +50,25 @@ func _ready() -> void:
 	# no effect on the story
 	assert(GameState.stage == stage and GameState.haunts == 0)
 
+	# memory calls: one per unfound memory 1–4, through walls, silenced once remembered; none for 5
+	assert(not a._callers.has(5))
+	var unfound: Array = [1, 2, 3, 4].filter(func(i): return i not in GameState.memories)
+	assert(not unfound.is_empty())
+	for i in unfound:
+		var c: AudioStreamPlayer3D = a._callers[i]
+		assert(c.stream != null and c.max_distance == Ambient.MEMORY_REACH)
+		var t: Timer = c.get_child(0)
+		assert(t.wait_time >= Ambient.CALL_MIN and t.wait_time <= Ambient.CALL_MAX and not t.is_stopped())
+	var first: int = unfound[0]
+	var caller: AudioStreamPlayer3D = a._callers[first]
+	caller.get_child(0).timeout.emit()
+	assert(caller.playing)
+	GameState.remember(first)
+	await _frames(2)
+	assert(not a._callers.has(first) and not is_instance_valid(caller))
+	for i in unfound.slice(1):
+		assert(a._callers.has(i))
+
 	# the end: everything fades away
 	a._on_finished(true)
 	await get_tree().create_timer(Ambient.FADE_OUT + 0.3).timeout
