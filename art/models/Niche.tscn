@@ -1,0 +1,19 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://art/models/src/kaykit/skull.gltf" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/src/kaykit/bone_A.gltf" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/src/kaykit/bone_B.gltf" id="3"]
+
+[node name="Niche" type="Node3D"]
+
+[node name="Skull" parent="." instance=ExtResource("1")]
+transform = Transform3D(-0.20785, 0, 0.12, 0, 0.24, 0, -0.12, 0, -0.20785, 0.05, 0, 0.02)
+
+[node name="BoneA" parent="." instance=ExtResource("2")]
+transform = Transform3D(0.46985, 0, 0.17101, 0, 0.5, 0, -0.17101, 0, 0.46985, -0.08, 0.035, -0.08)
+
+[node name="BoneB" parent="." instance=ExtResource("3")]
+transform = Transform3D(0.25, 0, -0.43301, 0, 0.5, 0, 0.43301, 0, 0.25, -0.1, 0.03, 0.1)
+
+[node name="BoneC" parent="." instance=ExtResource("2")]
+transform = Transform3D(-0.035545, 0.016575, 0.44829, 0.19018, 0.40784, 0, -0.40629, 0.18945, -0.03922, 0.16, 0.06, -0.1)

@@ -1,0 +1,75 @@
+[gd_scene format=3]
+
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.3, 0.18, 0.1, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2"]
+albedo_color = Color(0.6, 0.42, 0.18, 1)
+metallic = 0.85
+roughness = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.035, 0.4, 0.035)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.28, 0.035, 0.035)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.3, 0.03, 0.12)
+
+[sub_resource type="SphereMesh" id="SphereMesh_6"]
+material = SubResource("StandardMaterial3D_2")
+radius = 0.0294
+height = 0.0588
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_7"]
+material = SubResource("StandardMaterial3D_2")
+top_radius = 0.0294
+bottom_radius = 0.07
+height = 0.091
+radial_segments = 16
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8"]
+albedo_color = Color(0.2, 0.19, 0.21, 1)
+metallic = 0.7
+roughness = 0.5
+
+[sub_resource type="SphereMesh" id="SphereMesh_9"]
+material = SubResource("StandardMaterial3D_8")
+radius = 0.018
+height = 0.036
+
+[node name="Bell" type="Node3D"]
+
+[node name="Post0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, 0.2, 0)
+mesh = SubResource("BoxMesh_3")
+
+[node name="Post1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 0.2, 0)
+mesh = SubResource("BoxMesh_3")
+
+[node name="Bar" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3825, 0)
+mesh = SubResource("BoxMesh_4")
+
+[node name="Base" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+mesh = SubResource("BoxMesh_5")
+
+[node name="Cap" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.344, 0)
+mesh = SubResource("SphereMesh_6")
+
+[node name="Bell" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2985, 0)
+mesh = SubResource("CylinderMesh_7")
+
+[node name="Clapper" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.243, 0)
+mesh = SubResource("SphereMesh_9")

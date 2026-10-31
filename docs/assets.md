@@ -76,14 +76,46 @@
 | `CrateR1L`, `TableR1R`, `BunksR2L`, `BarrelsR2R`, `PlankR3L`, `CrateR3R`, `ShelfR4L`, `TableR4R`, `StonesRT`, `BunkYourRoom` | меблі | див. `tools/gen_dungeon.py` |
 | `Olena`, `Taras`, `Priest` | археологиня, археолог, священник (origin біля ніг) | ~0.6 × 1.7 × 0.6 |
 
+**Не називай модель `Wall`**: за першим словом вона заміниться на всі `Wall0…WallN`. Стіна для стуку бере текстуру `bricked.png`.
+
+**Вузол `On`** у моделі показується тільки в «увімкненому» стані: свічка горить (`Candle` → полум'я), дзеркало списане (`Mirror` → «ДОПОМОЖІТЬ»), доказ показано (`Shackles`, `Tally`, `Bowl` → тепле світло).
+
+**Персонажі** (`Olena`, `Taras`, `Priest`) — сцени зі скриптом `scripts/model_rig.gd`: `hidden_parts` ховає зайві частини моделі, `skin` міняє текстуру, `clips` зіставляє стани з анімаціями (`idle`, `walk`, `run`, `work`, `pray`), `head_items` / `hand_items` чіпляються до кісток. `visitor.gd` сам вмикає потрібний стан.
+
+### Що вже стоїть
+
+Сцени-обгортки лежать в `art/models/*.tscn`, джерела — в `art/models/src/`. Обгортка підганяє модель під розмір коробки. Щоб замінити модель, відкрий `.tscn` у редакторі й підстав іншу, або просто поклади `<Назва>.glb` поруч і видали `.tscn`.
+
+| Назва | Модель |
+|---|---|
+| `Candle`, `Chest`, `Jug`, `Crate`, `Table`, `Bunks`, `Bunk`, `Barrels`, `Plank`, `Shelf`, `Stones` | KayKit Dungeon Remastered |
+| `Niche` | KayKit Halloween Bits (череп, кістки) |
+| `Bowl` | Kenney Graveyard Kit |
+| `Olena`, `Taras`, `Priest` | KayKit Adventurers (Rogue, Barbarian, Mage), перефарбовані: каски з ліхтариком, хакі, чорна ряса |
+| `Memory`, `Bell`, `GateBell`, `Chains`, `DripChain`, `Grate`, `Mirror`, `Plan`, `Door`, `Shackles`, `Tally`, `Circle`, `Rubble` | зібрано з примітивів Godot + наші текстури |
+
 ## 4. Текстури
 
 `art/textures/` — тайлові PNG, можна малювати в нашій малювалці (`paint.bat`):
 - `wall.png` — усі стіни;
 - `floor.png` — підлога;
-- `ceiling.png` — стеля.
+- `ceiling.png` — стеля;
+- `bricked.png` — замурована стіна (`Rubble`) і стіна для стуку;
+- `plan.png`, `tally.png`, `circle.png` — план маєтку, подряпини-дні, коло ритуалу.
 
-## 5. Що ще на заглушках
+## 5. Звуки
+
+- `audio/sfx/<Назва>.ogg` (або `.wav`, `.mp3`) грає, коли тиснеш `E` на станції з такою назвою. Пошук такий самий, як у моделей: `Candle.ogg` іде на всі `Candle…`, `Memory.ogg` — на всі спогади. Зараз є: `Candle`, `Memory`, `Chains`, `DripChain`, `Bell`, `GateBell`, `Jug`, `Grate`, `Chest`, `Niche`, `Mirror`, `Plan`, `Door`, `Wall` (стук), `Shackles`, `Tally`, `Bowl`.
+- `audio/ambient/dungeon.ogg`, `drips.ogg`, `ghosts.ogg` — фон підземелля, крутиться по колу (гучність — `AMBIENT` у `scripts/game.gd`).
+
+## 6. Шрифти
+
+`fonts/Rubik.ttf` (текст), `fonts/RubikWetPaint.ttf` (заголовки), `fonts/Caveat.ttf` (думки привида, напис на дзеркалі). Якщо файлу немає, гра бере системний шрифт.
+
+## 7. Що ще на заглушках
 
 - Обліт камерою після прологу (див. TODO в `CLAUDE.md`).
-- Звуки світу й музика: місць під них поки немає.
+- Музика.
+- Сам привид (`scenes/player.tscn`, видно тільки на мапі).
+
+Звідки всі асети й ліцензії — `docs/credits.md`.

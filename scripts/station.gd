@@ -1,12 +1,6 @@
 @tool
 extends StaticBody3D
 
-## Interactive object; the player calls interact(player) when pressing E at it. `need` = power required ("" = none).
-## MEMORY: a glint, touching it remembers (only the next memory in order is visible). CANDLE: lit/out, visitors notice.
-## HAUNT: a noise visitors hear. MIRROR: write ДОПОМОЖІТЬ for a witness → they call the priest. PLAN: push the estate
-## plan on the archaeologists' table. DOOR: blocks people while closed. KNOCK: the bricked wall, rhythm 3–1 for a witness.
-## EVIDENCE: your things in your room, shown to a witness. CIRCLE: hold E after the ritual (game.gd).
-
 const Wall = preload("res://scripts/wall.gd")
 const UI = preload("res://scripts/ui.gd")
 const Visitor = preload("res://scripts/visitor.gd")
@@ -14,34 +8,40 @@ const Visitor = preload("res://scripts/visitor.gd")
 enum Kind { MEMORY, CANDLE, HAUNT, MIRROR, PLAN, DOOR, KNOCK, EVIDENCE, CIRCLE }
 
 const COOLDOWN := {Kind.CANDLE: 1.5, Kind.HAUNT: 4.0}
-const WITNESS_RANGE := 7.0  ## an archaeologist this close sees what you do
-const HEAR_KNOCK := 2.0  ## KNOCK: has to stand right at the wall (not in the room next door)
-const KNOCK_FAST := 0.7  ## max gap between the first three knocks
-const KNOCK_PAUSE := Vector2(0.8, 2.5)  ## the pause before the last knock
-const LAYER_STATION := 8  ## layer 4: only the player's aim sees it, the ghost floats through
-const LAYER_PEOPLE_ONLY := 64  ## a closed door blocks people (and the navmesh), not the ghost
+const WITNESS_RANGE := 7.0
+const HEAR_KNOCK := 2.0
+const KNOCK_FAST := 0.7
+const KNOCK_PAUSE := Vector2(0.8, 2.5)
+const LAYER_STATION := 8
+const LAYER_PEOPLE_ONLY := 64
 const HAUNT_LINES := ["*дзень-дзень*", "*скрип*", "*брязкіт*", "*шурхіт*"]
+const SFX_DIR := "res://audio/sfx/"
+const SFX_EXTENSIONS := ["ogg", "wav", "mp3"]
+const SFX_VOLUME_DB := -4.0
+const SFX_RANGE := 14.0
+const STATE_NODE := "On"
 
 @export var kind := Kind.HAUNT
 @export var title_text := "Кайдани"
-@export var need := ""  ## power from GameState.POWERS, "" = none
-@export var memory_id := 0  ## MEMORY: 1..5
-@export var lit := true  ## CANDLE
-@export var open := false  ## DOOR
+@export var need := ""
+@export var memory_id := 0
+@export var lit := true
+@export var open := false
 @export var size := Vector3(0.5, 0.5, 0.5):
 	set(v):
 		size = v
 		_build()
 @export var color := Color(0.6, 0.3, 1)
-@export var power := 1.0  ## HAUNT / CANDLE: how far it carries (unease per listener in old builds)
+@export var power := 1.0
 
 var cooldown := 0.0
-var shown := false  ## EVIDENCE
-var _knocks: Array[float] = []  ## KNOCK: times of the current attempt
-var _mesh: Node3D  ## placeholder box (MeshInstance3D) or the final model from art/models/<node name>
+var shown := false
+var _knocks: Array[float] = []
+var _mesh: Node3D
 var _label: Label3D
 var _light: OmniLight3D
-var _block: CollisionShape3D  ## DOOR
+var _block: CollisionShape3D
+var _sfx: AudioStreamPlayer3D
 
 
 func _ready() -> void:
@@ -62,6 +62,15 @@ func _ready() -> void:
 		_block.shape.size = size
 		b.add_child(_block)
 		add_child(b)
+	if kind == Kind.KNOCK:
+		Wall.textured(_mat(), "bricked")
+	var stream := sound(name)
+	if stream:
+		_sfx = AudioStreamPlayer3D.new()
+		_sfx.stream = stream
+		_sfx.volume_db = SFX_VOLUME_DB
+		_sfx.max_distance = SFX_RANGE
+		add_child(_sfx)
 	_refresh()
 
 
@@ -74,12 +83,23 @@ func _process(delta: float) -> void:
 		_mesh.position.y = sin(Time.get_ticks_msec() * 0.003) * 0.08
 	_label.text = title()
 	_label.visible = GameState.show_labels and visible
+	if kind == Kind.KNOCK:
+		_mesh.visible = GameState.stage < GameState.Stage.EVIDENCE
 	if kind not in [Kind.MEMORY, Kind.DOOR]:
 		if _mesh is GeometryInstance3D:
 			_mesh.transparency = 0.0 if can_use() or shown else 0.45
 
 
-## MEMORY: this is the next memory to find.
+static func sound(node_name: String) -> AudioStream:
+	var first := RegEx.create_from_string("^[A-Z][a-z]+").search(node_name)
+	for n in [node_name, first.get_string() if first else node_name]:
+		for ext in SFX_EXTENSIONS:
+			var path := "%s%s.%s" % [SFX_DIR, n, ext]
+			if ResourceLoader.exists(path):
+				return load(path)
+	return null
+
+
 func available() -> bool:
 	if memory_id in GameState.memories or GameState.memories.size() < memory_id - 1:
 		return false
@@ -128,7 +148,6 @@ func title() -> String:
 	return title_text
 
 
-## An archaeologist close enough to see it.
 func witness() -> bool:
 	var r := HEAR_KNOCK if kind == Kind.KNOCK else WITNESS_RANGE
 	for v in get_tree().get_nodes_in_group("visitor"):
@@ -137,7 +156,6 @@ func witness() -> bool:
 	return false
 
 
-## E would do something right now (the HUD shows ready / locked).
 func can_use() -> bool:
 	if (need != "" and not GameState.has_power(need)) or cooldown > 0:
 		return false
@@ -187,11 +205,11 @@ func interact(_p) -> void:
 		Kind.EVIDENCE:
 			shown = true
 			GameState.evidence += 1
-		# CIRCLE: holding E is handled by game.gd
+	if _sfx:
+		_sfx.play()
 	_refresh()
 
 
-## One knock; three quick ones, a pause, one more = the code «я тут».
 func _knock() -> void:
 	var now := Time.get_ticks_msec() / 1000.0
 	if not _knocks.is_empty():
@@ -209,6 +227,9 @@ func _knock() -> void:
 func _refresh() -> void:
 	if Engine.is_editor_hint() or not _mesh:
 		return
+	var state := _mesh.get_node_or_null(STATE_NODE) as Node3D
+	if state:
+		state.visible = {Kind.CANDLE: lit, Kind.MIRROR: GameState.mirror_written, Kind.EVIDENCE: shown}.get(kind, false)
 	match kind:
 		Kind.CANDLE:
 			_light.visible = lit
@@ -226,7 +247,6 @@ func _refresh() -> void:
 				_mat().albedo_color = UI.GOLD
 
 
-## The placeholder box's material (null when a final model replaced it).
 func _mat() -> StandardMaterial3D:
 	return (_mesh.mesh.material as StandardMaterial3D) if _mesh is MeshInstance3D else null
 
@@ -257,13 +277,13 @@ func _build() -> void:
 		add_child(_light)
 	_label = Label3D.new()
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_label.visibility_range_end = 6.0  ## first person: only nearby things are labelled
+	_label.visibility_range_end = 6.0
 	_label.font_size = 48
 	_label.outline_size = 12
 	_label.pixel_size = 0.0012
-	_label.fixed_size = true  ## same size on screen at any distance (no giant letters next to the camera)
+	_label.fixed_size = true
 	_label.position.y = size.y / 2 + 0.4
 	_label.text = title_text
-	_label.layers = 2  ## the minimap camera culls labels
+	_label.layers = 2
 	_label.modulate = {Kind.MEMORY: UI.CYAN, Kind.HAUNT: UI.ORANGE, Kind.CANDLE: UI.GOLD, Kind.EVIDENCE: UI.GOLD, Kind.CIRCLE: UI.MOM}.get(kind, UI.PAPER)
 	add_child(_label)

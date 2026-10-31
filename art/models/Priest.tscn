@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://art/models/src/kaykit/Mage.glb" id="1"]
+[ext_resource type="Texture2D" path="res://art/models/src/skins/priest.png" id="2"]
+[ext_resource type="Script" path="res://scripts/model_rig.gd" id="3"]
+
+[node name="Priest" type="Node3D"]
+script = ExtResource("3")
+hidden_parts = PackedStringArray("Spellbook_open", "1H_Wand", "2H_Staff", "Mage_Hat", "Mage_Cape")
+skin = ExtResource("2")
+clips = {"idle": "Idle", "walk": "Walking_A", "run": "Walking_A", "work": "Spellcasting", "pray": "Spellcasting"}
+
+[node name="Model" parent="." instance=ExtResource("1")]
+transform = Transform3D(-0.78, 0, 9.5522e-17, 0, 0.78, 0, -9.5522e-17, 0, -0.78, 0, 0, 0)

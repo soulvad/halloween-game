@@ -1,26 +1,19 @@
 extends CharacterBody3D
 
-## Dungeon visitor: an archaeologist (ARCH, carries a lantern) or the priest (PRIEST, holy aura).
-## Walks the navmesh (game.gd bakes it). What it does depends on GameState.stage:
-## HAUNT: archaeologists explore dig sites and go check every noise / light change in earshot.
-## PRIEST_COMING: they wait at the entrance. LURE: they work at their camp table (still check noises); once the plan
-## is pushed they head for the bricked wall (a closed door stops them). The priest follows the nearest archaeologist.
-## DIG: they take the wall apart. EVIDENCE: everyone looks around your room. RITUAL: the priest prays in the circle.
-
 const Wall = preload("res://scripts/wall.gd")
 const UI = preload("res://scripts/ui.gd")
 
 enum Kind { ARCH, PRIEST }
 
-const SPEED := [1.6, 1.4]  ## calm walk by kind
+const SPEED := [1.6, 1.4]
 const INVESTIGATE_SPEED := 2.4
-const HEAR := 12.0  ## noises farther than this are not heard
+const HEAR := 12.0
 const INVESTIGATE_TIME := 8.0
-const STAY := Vector2(5, 10)  ## seconds spent at a dig site
-const FOLLOW := 1.8  ## the priest keeps this far behind the archaeologists
-const ROOM_SPOTS := [Vector3(-1.5, 0, 1.3), Vector3(1.4, 0, 1.5), Vector3(0, 0, -1.6)]  ## around your room's centre
+const STAY := Vector2(5, 10)
+const FOLLOW := 1.8
+const ROOM_SPOTS := [Vector3(-1.5, 0, 1.3), Vector3(1.4, 0, 1.5), Vector3(0, 0, -1.6)]
 const LAYER_VISITOR := 16
-const MASK := 7 | 64  ## walls, furniture, rubble
+const MASK := 7 | 64
 const HEARD_LINES := ["Ви це чули?", "Звідки цей звук?..", "Там щось є. Ходімо подивимось.", "Знову… Це не вітер."]
 const WALL_LINES := ["На плані тут порожнеча… а кімнати немає. Ходімо глянемо.", "Дивно — коридор є, а кімнати нема."]
 
@@ -28,25 +21,26 @@ const WALL_LINES := ["На плані тут порожнеча… а кімна
 @export var title_text := "Олена"
 @export var color := Color(0.35, 0.55, 0.4)
 
-var _target := Vector3.INF  ## noise to check
+var _target := Vector3.INF
 var _investigate := 0.0
 var _stay := 0.0
 var _site := Vector3.INF
-var _talk := 0.0  ## line cooldown
-var _told := false  ## LURE: said the plan line
+var _talk := 0.0
+var _told := false
 var _agent: NavigationAgent3D
 var _label: Label3D
+var _body: Node3D
 
 
 func _ready() -> void:
 	add_to_group("visitor")
 	collision_layer = LAYER_VISITOR
 	collision_mask = MASK
-	var ps := Wall.model(name)  # art/models/<node name>, origin at the feet
-	var m: Node3D = ps.instantiate() if ps else Wall.box(Vector3(0.6, 1.7, 0.6), color)
+	var ps := Wall.model(name)
+	_body = ps.instantiate() if ps else Wall.box(Vector3(0.6, 1.7, 0.6), color)
 	if not ps:
-		m.position.y = 0.85
-	add_child(m)
+		_body.position.y = 0.85
+	add_child(_body)
 	var shape := CollisionShape3D.new()
 	shape.shape = CapsuleShape3D.new()
 	shape.shape.radius = 0.35
@@ -59,7 +53,7 @@ func _ready() -> void:
 	_label.pixel_size = 0.0013
 	_label.fixed_size = true
 	_label.position.y = 2.1
-	_label.layers = 2  ## the minimap camera culls labels
+	_label.layers = 2
 	_label.visibility_range_end = 12.0
 	_label.font = UI.font()
 	_label.modulate = UI.GOLD if kind == Kind.PRIEST else UI.PAPER
@@ -78,12 +72,11 @@ func _ready() -> void:
 		add_child(lantern)
 	else:
 		add_child(Wall.holy_glow(1.2))
-		visible = false  # arrives later (game.gd calls arrive())
+		visible = false
 		set_physics_process(false)
 	GameState.haunted.connect(_on_haunted)
 
 
-## PRIEST: walk in from the entrance.
 func arrive(at: Vector3) -> void:
 	global_position = at
 	visible = true
@@ -134,11 +127,12 @@ func _physics_process(delta: float) -> void:
 		GameState.Stage.RITUAL:
 			target = _marker("RoomCenter") + (Vector3.ZERO if kind == Kind.PRIEST else _room_spot())
 	_walk(target, speed)
+	if _body.has_method("act"):
+		_body.act(_action(speed))
 	_label.text = _label_text()
 	_label.visible = GameState.show_labels
 
 
-## HAUNT, nothing to check: walk between dig sites and stay a while at each.
 func _explore(delta: float) -> Vector3:
 	if _site == Vector3.INF or (_flat(_site) < 0.6 and _stay <= 0):
 		var sites := get_tree().get_nodes_in_group("dig_site")
@@ -151,7 +145,6 @@ func _explore(delta: float) -> Vector3:
 	return _site
 
 
-## Follow the nearest archaeologist (priest, or an archaeologist that heard nothing), keeping a little distance.
 func _behind_group() -> Vector3:
 	var best: Node3D = null
 	for v in get_tree().get_nodes_in_group("visitor"):
@@ -176,13 +169,24 @@ func _marker(n: String) -> Vector3:
 	return m.global_position if m else global_position
 
 
-## A stable spot of its own around your room's centre.
 func _room_spot() -> Vector3:
 	var i := get_tree().get_nodes_in_group("visitor").find(self)
 	return ROOM_SPOTS[i % ROOM_SPOTS.size()]
 
 
-## Step along the navmesh towards `target`.
+func _action(speed: float) -> String:
+	if velocity.length() > 0.1:
+		return "run" if speed > SPEED[kind] else "walk"
+	match GameState.stage:
+		GameState.Stage.HAUNT:
+			return "work" if _investigate <= 0 and _flat(_site) < 0.6 else "idle"
+		GameState.Stage.DIG:
+			return "pray" if kind == Kind.PRIEST else "work"
+		GameState.Stage.RITUAL:
+			return "pray" if kind == Kind.PRIEST else "idle"
+	return "idle"
+
+
 func _walk(target: Vector3, speed: float) -> void:
 	_agent.target_position = target
 	var to := _agent.get_next_path_position() - global_position

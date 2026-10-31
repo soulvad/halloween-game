@@ -29,6 +29,8 @@ Story: `docs/comic_script.md` (comic script) + the team's story doc. Тиміш,
 - `scripts/game.gd` — navmesh bake (`_bake_nav()`, `rebake_nav()`), stage transitions, comics (`comic(id)`), `_open_room()`, release hold (`at_release()`, `hold`, `_release()`).
 - `scripts/hud.gd` — all in-game UI built in code with `scripts/ui.gd` (HUD with powers row + memories counter, goal panel, map, pause, book, end screen); owns `Esc` / `M` / `J`.
 - `scenes/game.tscn` — **generated** by `python tools/gen_dungeon.py scenes/game.tscn` (rooms as 0.25 m grid rectangles + doors → wall segments, furniture, stations, lights, `Markers` (Entrance, Camp, RoomCenter, dig sites), visitors, player). Edit the generator, not the scene. Keep passages/doors ≥ 1.75 m wide or the navmesh (agent radius 0.5) closes them.
+- `scripts/model_rig.gd` — character wrapper (`art/models/Olena|Taras|Priest.tscn`): hides parts, swaps the skin, maps states `idle/walk/run/work/pray` to clips (`act(state)`, called by `visitor.gd`), attaches head/hand items to bones.
+- Assets (`docs/assets.md`, sources and licences in `docs/credits.md`): `art/models/<Name>.tscn` wrappers fit KayKit/Kenney models from `art/models/src/` to the box sizes (origin bottom centre, front −Z); a child named `On` shows only in the "on" state (lit candle, written mirror, shown evidence). Never add a model named `Wall` (it would replace every `WallN`). Station sounds `audio/sfx/<Name>.ogg` (same name lookup as models, `station.sound()`), ambience `audio/ambient/*.ogg` (`AMBIENT` in `game.gd`), fonts `fonts/*.ttf` (`UI.FONT_FILES`, system font fallback).
 - `tools/painter/` (`paint.bat`) — hand-drawn texture painter.
 - `scripts/walk_rig.gd` — legacy, unused.
 

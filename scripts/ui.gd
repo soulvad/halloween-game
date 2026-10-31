@@ -1,28 +1,24 @@
 extends RefCounted
-## Cartoon UI kit from the "ВІДПУСТИ — UI" design (board 15): ink outlines, offset shadows, flat colors, no gradients.
-## Usage: const UI = preload("res://scripts/ui.gd"); UI.panel(UI.PAPER), UI.label(...), UI.button(...).
-## Base resolution is 1920x1080 (design px = Godot px).
 
 const INK := Color("17111C")
 const PAPER := Color("FFFDF8")
 const NIGHT := Color("1E1238")
 const NIGHT2 := Color("2A1D40")
-const GOLD := Color("FFC531")  ## main action, memories
+const GOLD := Color("FFC531")
 const CHARGE := Color("B48CFF")
-const CYAN := Color("9BF6FF")  ## level 1 / fade
-const MOM := Color("FF8FB1")  ## level 3 / Mom
-const RED := Color("FF4D5E")  ## hunters
-const GREEN := Color("8BEA4E")  ## believers, done
-const ORANGE := Color("FF7A1A")  ## warnings, focus
-const LILAC := Color("EDE6FF")  ## empty slots
-const GREY := Color("D9D4E8")  ## disabled
-const MUTED := Color("4A3378")  ## secondary text on paper
-const LABEL := Color("6B4FA0")  ## small caps labels on paper
-const DIM := Color("C9C2E8")  ## secondary text on dark
-const SHADE := Color(0.09, 0.067, 0.11, 0.9)  ## dark translucent panels
+const CYAN := Color("9BF6FF")
+const MOM := Color("FF8FB1")
+const RED := Color("FF4D5E")
+const GREEN := Color("8BEA4E")
+const ORANGE := Color("FF7A1A")
+const LILAC := Color("EDE6FF")
+const GREY := Color("D9D4E8")
+const MUTED := Color("4A3378")
+const LABEL := Color("6B4FA0")
+const DIM := Color("C9C2E8")
+const SHADE := Color(0.09, 0.067, 0.11, 0.9)
 const LEVEL_COLORS := [Color.WHITE, CYAN, GOLD, MOM]
 
-## Inline stroke icons (24x24 viewBox), drawn in `color` by icon().
 const ICONS := {
 	"ghost": '<path d="M5 20V10a7 7 0 0 1 14 0v10l-2.5-2-2.3 2-2.2-2-2.2 2-2.3-2Z"/><circle cx="9.5" cy="10" r="1.2" fill="#C"/><circle cx="14.5" cy="10" r="1.2" fill="#C"/>',
 	"ghost_dashed": '<path d="M5 20V10a7 7 0 0 1 14 0v10l-2.5-2-2.3 2-2.2-2-2.2 2-2.3-2Z" stroke-dasharray="3 2.5"/>',
@@ -45,12 +41,16 @@ const ICONS := {
 	"speaker": '<path d="M4 9v6h4l5 4V5L8 9Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/>',
 }
 
+const FONT_FILES := {
+	"display": "res://fonts/RubikWetPaint.ttf",
+	"body": "res://fonts/Rubik.ttf",
+	"hand": "res://fonts/Caveat.ttf",
+}
+
 static var _fonts := {}
 static var _icons := {}
 
 
-## kind: "display" (titles, Rubik Wet Paint), "body" (Rubik), "hand" (Caveat, ghost thoughts).
-# shortcut: SystemFont falls back to Windows fonts (Segoe UI Black / Segoe Print); ship Rubik + Caveat .ttf in res://fonts for exact looks.
 static func font(kind := "body", weight := 800) -> Font:
 	var key := "%s%d" % [kind, weight]
 	if not _fonts.has(key):
@@ -58,14 +58,20 @@ static func font(kind := "body", weight := 800) -> Font:
 			"display": ["Rubik Wet Paint", "Rubik", "Segoe UI Black", "Arial Black"],
 			"hand": ["Caveat", "Segoe Print", "Comic Sans MS"],
 		}
-		var f := SystemFont.new()
-		f.font_names = PackedStringArray(names.get(kind, ["Rubik", "Segoe UI", "Arial"]))
-		f.font_weight = weight
-		_fonts[key] = f
+		var system := SystemFont.new()
+		system.font_names = PackedStringArray(names.get(kind, ["Rubik", "Segoe UI", "Arial"]))
+		system.font_weight = weight
+		_fonts[key] = system
+		var path: String = FONT_FILES.get(kind, FONT_FILES.body)
+		if ResourceLoader.exists(path):
+			var file := FontVariation.new()
+			file.base_font = load(path)
+			file.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): weight}
+			file.fallbacks = [system]
+			_fonts[key] = file
 	return _fonts[key]
 
 
-## Flat box: `shadow` = solid offset shadow to the bottom-right; `drop` = shadow straight down (buttons).
 static func style(bg: Color, radius := 26, border := 5, shadow := 0, border_color := INK, drop := 0) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = bg
@@ -100,7 +106,6 @@ static func label(text: String, size := 20, color := INK, kind := "body", weight
 	return l
 
 
-## Big painted title: white fill, thick ink outline, offset ink shadow.
 static func title(text: String, size := 110, color := PAPER) -> Label:
 	var l := label(text, size, color, "display", 900)
 	var ls := l.label_settings
@@ -112,7 +117,6 @@ static func title(text: String, size := 110, color := PAPER) -> Label:
 	return l
 
 
-## kind: "primary" (gold), "secondary" (paper), "ghost" (dark, outlined). `hint` = key chip on the right.
 static func button(text: String, kind := "primary", hint := "", icon_name := "", size := 30) -> Button:
 	var b := Button.new()
 	b.text = text.to_upper()
@@ -158,7 +162,6 @@ static func button(text: String, kind := "primary", hint := "", icon_name := "",
 	return b
 
 
-## Small key / tag chip ("Enter", "E", "Esc").
 static func chip(text: String, bg := PAPER, fg := INK, size := 16, border := 3) -> PanelContainer:
 	var p := panel(bg, 9, 0, 0, border)
 	var s := p.get_theme_stylebox("panel") as StyleBoxFlat
@@ -171,7 +174,6 @@ static func chip(text: String, bg := PAPER, fg := INK, size := 16, border := 3) 
 	return p
 
 
-## Rounded tag with optional icon ("1 · Тінь", "Мисливець · шукає").
 static func pill(text: String, bg: Color, size := 17, icon_name := "") -> PanelContainer:
 	var p := panel(bg, 999, 4, 0, 4)
 	var s := p.get_theme_stylebox("panel") as StyleBoxFlat
@@ -188,7 +190,6 @@ static func pill(text: String, bg: Color, size := 17, icon_name := "") -> PanelC
 	return p
 
 
-## Square key button from the HUD ("E", "Q"): colored tile, key badge, icon, caption under it.
 static func action_tile(key: String, icon_name: String, bg: Color, caption: String) -> VBoxContainer:
 	var col := vbox(6)
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -249,7 +250,6 @@ static func vbox(sep := 12) -> VBoxContainer:
 	return b
 
 
-## Ink divider (the design's dashed rule, drawn solid).
 static func rule(color := INK, thickness := 4) -> ColorRect:
 	var r := ColorRect.new()
 	r.color = color
@@ -258,7 +258,6 @@ static func rule(color := INK, thickness := 4) -> ColorRect:
 	return r
 
 
-## Full-rect solid background.
 static func backdrop(color := NIGHT) -> ColorRect:
 	var r := ColorRect.new()
 	r.color = color
@@ -266,7 +265,6 @@ static func backdrop(color := NIGHT) -> ColorRect:
 	return r
 
 
-## Full-rect edge glow (the design's inset box-shadow): tint at the edges, clear centre.
 static func vignette(tint: Color) -> ColorRect:
 	var r := backdrop(Color.WHITE)
 	r.mouse_filter = Control.MOUSE_FILTER_IGNORE

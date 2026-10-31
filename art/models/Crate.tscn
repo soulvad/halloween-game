@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://art/models/src/kaykit/crates_stacked.glb" id="1"]
+
+[node name="Crate" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1")]
+transform = Transform3D(-0.42011, 0, 5.1449e-17, 0, 0.42011, 0, -5.1449e-17, 0, -0.42011, -0.019078, 1.7014e-06, -0.013673)

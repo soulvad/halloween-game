@@ -1,0 +1,30 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://art/models/src/kaykit/candle_thin.glb" id="1"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(1, 0.72, 0.32, 1)
+shading_mode = 0
+roughness = 0.85
+emission_enabled = true
+emission = Color(1, 0.72, 0.32, 1)
+emission_energy_multiplier = 3
+
+[sub_resource type="SphereMesh" id="SphereMesh_2"]
+material = SubResource("StandardMaterial3D_1")
+radius = 0.016
+height = 0.05
+radial_segments = 8
+rings = 4
+
+[node name="Candle" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1")]
+transform = Transform3D(-0.34365, 0, 4.2085e-17, 0, 0.34365, 0, -4.2085e-17, 0, -0.34365, -5.1208e-09, -0, -0.0010164)
+
+[node name="On" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.315, 0)
+
+[node name="Flame" type="MeshInstance3D" parent="On"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("SphereMesh_2")

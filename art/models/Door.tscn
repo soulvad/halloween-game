@@ -1,0 +1,100 @@
+[gd_scene format=3]
+
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.3, 0.18, 0.1, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2"]
+albedo_color = Color(0.36, 0.23, 0.13, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3"]
+albedo_color = Color(0.26, 0.15, 0.09, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4"]
+albedo_color = Color(0.2, 0.19, 0.21, 1)
+metallic = 0.7
+roughness = 0.6
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.338, 2.4, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+material = SubResource("StandardMaterial3D_2")
+size = Vector3(0.338, 2.37, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+material = SubResource("StandardMaterial3D_3")
+size = Vector3(0.338, 2.4, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.338, 2.37, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+material = SubResource("StandardMaterial3D_2")
+size = Vector3(0.338, 2.4, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_10"]
+material = SubResource("StandardMaterial3D_4")
+size = Vector3(1.75, 0.09, 0.02)
+
+[sub_resource type="TorusMesh" id="TorusMesh_11"]
+material = SubResource("StandardMaterial3D_4")
+inner_radius = 0.05
+outer_radius = 0.07
+rings = 16
+ring_segments = 6
+
+[sub_resource type="BoxMesh" id="BoxMesh_12"]
+material = SubResource("StandardMaterial3D_4")
+size = Vector3(0.3, 0.22, 0.02)
+
+[node name="Door" type="Node3D"]
+
+[node name="Plank0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 1.2, 0)
+mesh = SubResource("BoxMesh_5")
+
+[node name="Plank1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 1.185, 0)
+mesh = SubResource("BoxMesh_6")
+
+[node name="Plank2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+mesh = SubResource("BoxMesh_7")
+
+[node name="Plank3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 1.185, 0)
+mesh = SubResource("BoxMesh_8")
+
+[node name="Plank4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 1.2, 0)
+mesh = SubResource("BoxMesh_9")
+
+[node name="BandF0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, -0.07)
+mesh = SubResource("BoxMesh_10")
+
+[node name="BandB0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0.07)
+mesh = SubResource("BoxMesh_10")
+
+[node name="BandF1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95, -0.07)
+mesh = SubResource("BoxMesh_10")
+
+[node name="BandB1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95, 0.07)
+mesh = SubResource("BoxMesh_10")
+
+[node name="Ring" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, 0.575, 1.1, -0.09)
+mesh = SubResource("TorusMesh_11")
+
+[node name="Grille" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, -0.072)
+mesh = SubResource("BoxMesh_12")

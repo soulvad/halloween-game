@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://art/models/src/kaykit/bottle_C_brown.glb" id="1"]
+
+[node name="Jug" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1")]
+transform = Transform3D(-0.54274, 0, 6.6466e-17, 0, 0.54274, 0, -6.6466e-17, 0, -0.54274, -1.6175e-08, -7.4e-07, 1.941e-07)

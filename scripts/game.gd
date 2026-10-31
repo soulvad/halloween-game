@@ -1,24 +1,25 @@
 extends Node3D
-## Story flow of «Підземелля старого міста» (stages in GameState.Stage):
-## HAUNT → (ДОПОМОЖІТЬ on the mirror) PRIEST_COMING → (priest walks in) LURE → (wall knocked 3–1) DIG → (wall down)
-## EVIDENCE → (3 things shown + memory 5, the name) RITUAL → (priest prayed, E held in the circle) finale comic, end.
-## Linear, no way to lose. Comics: prologue at start, one per memory, finale. All UI lives in scripts/hud.gd.
 
 const Station = preload("res://scripts/station.gd")
 const Visitor = preload("res://scripts/visitor.gd")
 const Wall = preload("res://scripts/wall.gd")
 const COMIC_SCENE := "res://scenes/comic.tscn"
-const RELEASE_TIME := 2.5  ## seconds to hold E in the circle
-const PRIEST_DELAY := 15.0  ## from the call to the priest walking in
+const RELEASE_TIME := 2.5
+const PRIEST_DELAY := 15.0
 const DIG_TIME := 12.0
-const DIG_RANGE := 3.0  ## an archaeologist this close to the bricked wall starts / keeps digging
+const DIG_RANGE := 3.0
 const RITUAL_TIME := 20.0
-const LAYER_FLOOR := 32  ## layer 6: only the navmesh baker sees it
-const NAV_MASK := 7 | 64  ## walls, furniture, bricked wall + closed doors (people-only)
+const LAYER_FLOOR := 32
+const NAV_MASK := 7 | 64
+const AMBIENT := {
+	"res://audio/ambient/dungeon.ogg": -9.0,
+	"res://audio/ambient/drips.ogg": -16.0,
+	"res://audio/ambient/ghosts.ogg": -22.0,
+}
 
-var comics_enabled := true  ## the smoke test turns comics off
-var hold := 0.0  ## seconds E has been held in the circle
-var priest_in := 0.0  ## PRIEST_COMING: seconds until he arrives
+var comics_enabled := true
+var hold := 0.0
+var priest_in := 0.0
 var _region: NavigationRegion3D
 
 @onready var player = $Player
@@ -28,6 +29,7 @@ func _ready() -> void:
 	_bake_nav()
 	Wall.textured($Level/Floor.mesh.material, "floor", 0.25)
 	Wall.textured($Level/Ceiling.mesh.material, "ceiling", 0.25)
+	_play_ambient()
 	GameState.reset()
 	GameState.memory_found.connect(_on_memory_found)
 	GameState.power_gained.connect(_on_power_gained)
@@ -39,7 +41,21 @@ func _ready() -> void:
 		comic.call_deferred("prologue")
 
 
-## Navmesh for visitors, baked from wall/furniture/bricked wall/closed door colliders + an invisible floor.
+func _play_ambient() -> void:
+	for path in AMBIENT:
+		if not ResourceLoader.exists(path):
+			continue
+		var stream: AudioStream = load(path)
+		if "loop" in stream:
+			stream.loop = true
+		var p := AudioStreamPlayer.new()
+		p.stream = stream
+		p.volume_db = AMBIENT[path]
+		p.process_mode = Node.PROCESS_MODE_ALWAYS
+		p.autoplay = true
+		add_child(p)
+
+
 func _bake_nav() -> void:
 	var floor_body := StaticBody3D.new()
 	floor_body.collision_layer = LAYER_FLOOR
@@ -51,13 +67,13 @@ func _bake_nav() -> void:
 	floor_body.add_child(shape)
 	$Level.add_child(floor_body)
 	$Level.add_to_group("nav_source")
-	$Stations.add_to_group("nav_source")  # doors
+	$Stations.add_to_group("nav_source")
 	var nm := NavigationMesh.new()
 	nm.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
 	nm.geometry_collision_mask = NAV_MASK | LAYER_FLOOR
 	nm.geometry_source_geometry_mode = NavigationMesh.SOURCE_GEOMETRY_GROUPS_WITH_CHILDREN
 	nm.geometry_source_group_name = "nav_source"
-	nm.agent_radius = 0.5  # multiples of the 0.25 cell size
+	nm.agent_radius = 0.5
 	nm.agent_height = 1.75
 	nm.agent_max_climb = 0.25
 	_region = NavigationRegion3D.new()
@@ -66,12 +82,10 @@ func _bake_nav() -> void:
 	rebake_nav()
 
 
-## A door opened/closed or the wall came down (station.gd calls this).
 func rebake_nav() -> void:
 	_region.bake_navigation_mesh(false)
 
 
-## Play a comic over the game (pauses the tree) and wait for it.
 func comic(id: String) -> void:
 	if not comics_enabled or not ResourceLoader.exists(COMIC_SCENE):
 		return
@@ -129,14 +143,12 @@ func priest() -> Node3D:
 	return null
 
 
-## An archaeologist is at the bricked wall.
 func _digger() -> bool:
 	var r := get_node_or_null("Level/Rubble") as Node3D
 	return r != null and get_tree().get_nodes_in_group("visitor").any(
 		func(v): return v.kind == Visitor.Kind.ARCH and v.global_position.distance_to(r.global_position) < DIG_RANGE)
 
 
-## The bricked wall is down: remove it, let people path into your room.
 func _open_room() -> void:
 	var r := get_node_or_null("Level/Rubble")
 	if r:
@@ -147,13 +159,11 @@ func _open_room() -> void:
 	GameState.set_stage(GameState.Stage.EVIDENCE)
 
 
-## The ghost aims at the ritual circle and may leave.
 func at_release() -> bool:
 	var s = player.target_station()
 	return s is Station and s.kind == Station.Kind.CIRCLE and GameState.release_ready()
 
 
-## Hold E in the circle for RELEASE_TIME to leave; releasing starts over.
 func _release(holding: bool, delta: float) -> void:
 	hold = hold + delta if holding and GameState.phase == GameState.Phase.PLAY else 0.0
 	if hold >= RELEASE_TIME:

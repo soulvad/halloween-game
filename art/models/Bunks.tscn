@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://art/models/src/kaykit/bed_frame.glb" id="1"]
+
+[node name="Bunks" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1")]
+transform = Transform3D(-0.66667, 0, 8.1643e-17, 0, 0.65874, 0, -9.7972e-17, 0, -0.8, -0, -4.0491e-08, -0)

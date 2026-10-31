@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://art/models/src/kaykit/rubble_half.glb" id="1"]
+
+[node name="Stones" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1")]
+transform = Transform3D(-0.30003, 0, 3.6743e-17, 0, 0.17143, 0, -4.0822e-17, 0, -0.33333, 0.6, 1.0382e-09, -0.0054345)
