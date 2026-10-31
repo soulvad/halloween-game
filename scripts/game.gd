@@ -7,9 +7,11 @@ extends Node3D
 const Station = preload("res://scripts/station.gd")
 const Visitor = preload("res://scripts/visitor.gd")
 const Wall = preload("res://scripts/wall.gd")
+const Ambient = preload("res://scripts/ambient.gd")
 const Lanterns = preload("res://scripts/lanterns.gd")
 const Decor = preload("res://scripts/decor.gd")
 const COMIC_SCENE := "res://scenes/comic.tscn"
+const Tour = preload("res://scripts/tour.gd")
 const RELEASE_TIME := 2.5  ## seconds to hold E in the circle
 const PRIEST_DELAY := 15.0  ## from the call to the priest walking in
 const DIG_TIME := 12.0
@@ -31,6 +33,9 @@ func _ready() -> void:
 	Wall.textured($Level/Floor.mesh.material, "floor", 0.25)
 	Wall.textured($Level/Ceiling.mesh.material, "ceiling", 0.25)
 	GameState.reset()
+	var ambient := Ambient.new()
+	ambient.name = "Ambient"
+	add_child(ambient)
 	GameState.memory_found.connect(_on_memory_found)
 	GameState.power_gained.connect(_on_power_gained)
 	GameState.finished.connect(_on_finished)
@@ -44,7 +49,7 @@ func _ready() -> void:
 	add_child(lanterns)
 	if not GameState.intro_seen:
 		GameState.intro_seen = true
-		comic.call_deferred("prologue")
+		_intro.call_deferred()
 
 
 ## Navmesh for visitors, baked from wall/furniture/bricked wall/closed door colliders + an invisible floor.
@@ -87,6 +92,21 @@ func comic(id: String) -> void:
 	add_child(c)
 	c.play(id)
 	await c.finished
+
+
+## First start: the prologue comic, then the 3D guide.
+func _intro() -> void:
+	await comic("prologue")
+	if comics_enabled:
+		await tour()
+
+
+## Fly the 3D guide over the dungeon (pauses the tree) and wait for it; also from the pause menu.
+func tour() -> void:
+	var t := Tour.new()
+	add_child(t)
+	t.play(self)
+	await t.finished
 
 
 func _process(delta: float) -> void:

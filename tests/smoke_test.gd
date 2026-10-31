@@ -75,6 +75,16 @@ func _ready() -> void:
 	var candle = st.call("CandleBedroom")
 	assert(not candle.can_use())
 
+	# 3D guide: pauses, shows its steps, Esc / last step dives back into the ghost and unpauses
+	g.tour()
+	var tour = g.get_children().filter(func(n): return n.has_method("go")).front()
+	assert(get_tree().paused and tour.step == 0)
+	tour.go(1)
+	assert(tour.step == 1 and tour._mark != null)
+	tour.go(tour.STEPS.size())
+	await get_tree().create_timer(1.3, true).timeout
+	assert(not is_instance_valid(tour) and not get_tree().paused and p.camera.current)
+
 	# memory 1 → breath: candles; a light change makes archaeologists in earshot come
 	mem.call(1).interact(p)
 	assert(GameState.memories == [1] and GameState.has_power("breath") and mem.call(2).can_use())
@@ -176,6 +186,15 @@ func _ready() -> void:
 	assert(GameState.phase == GameState.Phase.END and GameState.won)
 	await _frames(2)
 	assert(hud._end != null)
+	# floating through walls: inside an inner wall the veil is up; left alone the ghost drifts out
+	get_tree().paused = false
+	p.set_physics_process(true)
+	p.global_position = Vector3(1.5, 0, -2.5)  # between CorridorV and R2R
+	await _frames(2)
+	assert(p.wall_depth() < 0)
+	await get_tree().create_timer(1.5).timeout
+	assert(p.wall_depth() > 0 and p.phase < 0.5)
+	assert(hud._map_view.to_map(Vector3(-30, 0, 0)).x < 0)  # the whole-map projection is sane
 	g.queue_free()
 	await _frames(2)
 	assert(not get_tree().paused)

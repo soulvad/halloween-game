@@ -6,14 +6,15 @@ extends StaticBody3D
 ## HAUNT: a noise visitors hear. MIRROR: write ДОПОМОЖІТЬ for a witness → they call the priest. PLAN: push the estate
 ## plan on the archaeologists' table. DOOR: blocks people while closed. KNOCK: the bricked wall, rhythm 3–1 for a witness.
 ## EVIDENCE: your things in your room, shown to a witness. CIRCLE: hold E after the ritual (game.gd).
+## EGG: tells scripts/easter_eggs.gd, no effect on the story.
 
 const Wall = preload("res://scripts/wall.gd")
 const UI = preload("res://scripts/ui.gd")
 const Visitor = preload("res://scripts/visitor.gd")
 
-enum Kind { MEMORY, CANDLE, HAUNT, MIRROR, PLAN, DOOR, KNOCK, EVIDENCE, CIRCLE }
+enum Kind { MEMORY, CANDLE, HAUNT, MIRROR, PLAN, DOOR, KNOCK, EVIDENCE, CIRCLE, EGG }
 
-const COOLDOWN := {Kind.CANDLE: 1.5, Kind.HAUNT: 4.0}
+const COOLDOWN := {Kind.CANDLE: 1.5, Kind.HAUNT: 4.0, Kind.EGG: 1.0}
 const WITNESS_RANGE := 7.0  ## an archaeologist this close sees what you do
 const HEAR_KNOCK := 2.0  ## KNOCK: has to stand right at the wall (not in the room next door)
 const KNOCK_FAST := 0.7  ## max gap between the first three knocks
@@ -41,6 +42,8 @@ var _knocks: Array[float] = []  ## KNOCK: times of the current attempt
 var _mesh: Node3D  ## placeholder box (MeshInstance3D) or the final model from art/models/<node name>
 var _label: Label3D
 var _light: OmniLight3D
+var _flame: MeshInstance3D  ## CANDLE with a final model: there's no box to glow, so this shows it's lit
+var _writing: Label3D  ## MIRROR with a final model: no box to redden, the word itself
 var _block: CollisionShape3D  ## DOOR
 
 
@@ -144,7 +147,7 @@ func can_use() -> bool:
 	match kind:
 		Kind.MEMORY:
 			return available()
-		Kind.CANDLE, Kind.HAUNT, Kind.DOOR:
+		Kind.CANDLE, Kind.HAUNT, Kind.DOOR, Kind.EGG:
 			return true
 		Kind.MIRROR:
 			return not GameState.mirror_written and GameState.stage == GameState.Stage.HAUNT and witness()
@@ -187,6 +190,8 @@ func interact(_p) -> void:
 		Kind.EVIDENCE:
 			shown = true
 			GameState.evidence += 1
+		Kind.EGG:
+			get_tree().call_group("easter_eggs", "touched", name)
 		# CIRCLE: holding E is handled by game.gd
 	_refresh()
 
@@ -212,6 +217,8 @@ func _refresh() -> void:
 	match kind:
 		Kind.CANDLE:
 			_light.visible = lit
+			if _flame:
+				_flame.visible = lit
 			if _mat():
 				_mat().emission_enabled = lit
 		Kind.DOOR:
@@ -221,6 +228,16 @@ func _refresh() -> void:
 		Kind.MIRROR:
 			if GameState.mirror_written and _mat():
 				_mat().albedo_color = Color(0.55, 0.1, 0.1)
+			elif GameState.mirror_written and not _writing:
+				_writing = Label3D.new()
+				_writing.text = "ДОПОМОЖІТЬ"
+				_writing.font = UI.font()
+				_writing.font_size = 64
+				_writing.pixel_size = 0.002
+				_writing.modulate = Color(0.75, 0.08, 0.08)
+				_writing.position.x = -size.x / 2 - 0.02  # the side facing the room
+				_writing.rotation.y = -PI / 2
+				add_child(_writing)
 		Kind.EVIDENCE:
 			if shown and _mat():
 				_mat().albedo_color = UI.GOLD
@@ -255,6 +272,18 @@ func _build() -> void:
 		_light.light_energy = 1.2
 		_light.position.y = size.y / 2 + 0.1
 		add_child(_light)
+		if kind == Kind.CANDLE and not m:
+			var mat := StandardMaterial3D.new()
+			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			mat.albedo_color = color
+			var drop := SphereMesh.new()
+			drop.radius = 0.03
+			drop.height = 0.1
+			drop.material = mat
+			_flame = MeshInstance3D.new()
+			_flame.mesh = drop
+			_flame.position.y = size.y / 2 + 0.04
+			add_child(_flame)
 	_label = Label3D.new()
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_label.visibility_range_end = 6.0  ## first person: only nearby things are labelled

@@ -36,6 +36,7 @@ var _talk := 0.0  ## line cooldown
 var _told := false  ## LURE: said the plan line
 var _agent: NavigationAgent3D
 var _label: Label3D
+var _anim: AnimationPlayer  ## the final model's `walk` and `idle`
 
 
 func _ready() -> void:
@@ -47,6 +48,12 @@ func _ready() -> void:
 	if not ps:
 		m.position.y = 0.85
 	add_child(m)
+	var players := m.find_children("*", "AnimationPlayer", true, false)
+	if not players.is_empty():
+		_anim = players[0]
+		for clip in ["walk", "idle"]:
+			_anim.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
+		_anim.play("idle")
 	var shape := CollisionShape3D.new()
 	shape.shape = CapsuleShape3D.new()
 	shape.shape.radius = 0.35
@@ -192,6 +199,9 @@ func _walk(target: Vector3, speed: float) -> void:
 	move_and_slide()
 	if velocity.length() > 0.1:
 		rotation.y = lerp_angle(rotation.y, atan2(-velocity.x, -velocity.z), 0.15)
+	if _anim:
+		_anim.play("walk" if velocity.length() > 0.1 else "idle", 0.2)
+		_anim.speed_scale = velocity.length() / SPEED[0] if velocity.length() > 0.1 else 1.0
 
 
 func _line(text: String, force := false) -> void:
