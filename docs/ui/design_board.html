@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Відпусти — дизайн-система «Стара олія»</title>
+<style>
+@font-face { font-family: "Old Standard"; src: url("../../fonts/OldStandard-Regular.ttf"); font-weight: 400; }
+@font-face { font-family: "Old Standard"; src: url("../../fonts/OldStandard-Bold.ttf"); font-weight: 700; }
+@font-face { font-family: "Oranienbaum"; src: url("../../fonts/Oranienbaum.ttf"); }
+@font-face { font-family: "Bad Script"; src: url("../../fonts/BadScript.ttf"); }
+
+:root {
+  --ink: #140B0C;
+  --night: #1B1116;
+  --night-2: #2A1A20;
+  --card-hi: #3A2629;
+  --brass: #A07A3C;
+  --gold: #E0B060;
+  --ember: #D2782A;
+  --rose: #D26A9E;
+  --parchment: #EBDDC3;
+  --muted: #BFA88A;
+  --label: #A88F6E;
+  --ghost: #A8DCD8;
+  --moss: #A8C070;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  color: var(--parchment);
+  font: 400 19px/1.6 "Old Standard", Georgia, serif;
+  background: var(--ink) url("../../art/ui/leather.jpg");
+  background-size: 512px;
+}
+img { display: block; max-width: 100%; }
+code { font-family: inherit; color: var(--gold); }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 5px; }
+
+.hero { position: relative; min-height: min(92vh, 900px); display: grid; align-items: end; overflow: hidden; isolation: isolate; }
+.hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 60% 50%; z-index: -2; }
+.hero::after {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(20, 11, 12, 0.9) 0%, rgba(20, 11, 12, 0.45) 40%, transparent 65%),
+    linear-gradient(0deg, var(--ink) 0%, transparent 28%);
+}
+.hero-copy { padding: 0 6vw 9vh; max-width: 900px; }
+.display {
+  font-family: "Oranienbaum", Georgia, serif;
+  font-weight: 400;
+  line-height: 0.95;
+  margin: 0;
+  color: var(--parchment);
+  text-shadow: 0 2px 0 var(--ink), 0 0 26px rgba(224, 176, 96, 0.35);
+}
+.hero h1 { font-size: clamp(76px, 12vw, 180px); }
+.hero .sub { font-size: clamp(30px, 4vw, 56px); color: var(--gold); margin: 0.25em 0 0.35em; }
+.voice { font: 400 clamp(24px, 2.5vw, 36px)/1.25 "Bad Script", cursive; color: var(--ghost); margin: 0; }
+.lede { max-width: 58ch; color: var(--muted); margin: 1.4em 0 0; }
+
+main { max-width: 1200px; margin: 0 auto; padding: 0 24px 120px; }
+section { padding-top: 96px; }
+h2 { font-size: clamp(42px, 5vw, 64px); margin: 0 0 8px; }
+.intro { color: var(--muted); max-width: 62ch; margin: 0 0 36px; }
+
+.framed {
+  border: 27px solid transparent;
+  border-image: url("../../art/ui/card9.png") 27 stretch;
+  background: url("../../art/ui/leather.jpg") center / 256px;
+  background-clip: padding-box;
+  padding: 14px 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 18px; }
+.swatch { padding: 88px 14px 12px; border: 1px solid rgba(160, 122, 60, 0.6); }
+.swatch b { display: block; font-weight: 700; }
+.swatch span { font-size: 15px; opacity: 0.85; }
+.swatch.lite { color: var(--ink); }
+
+.type-row { display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: baseline; padding: 24px 0; border-bottom: 1px solid rgba(160, 122, 60, 0.5); }
+.type-row .meta { color: var(--label); font-size: 15px; }
+.type-row .meta strong { color: var(--parchment); display: block; font-size: 17px; }
+@media (max-width: 720px) { .type-row { grid-template-columns: 1fr; gap: 6px; } }
+
+.kit { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; align-items: start; }
+.kit h3 { margin: 0 0 16px; font-weight: 700; font-size: 19px; color: var(--gold); }
+
+.btn {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  font: 700 22px/1 "Old Standard", Georgia, serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0 10px;
+  min-height: 62px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  border: 18px solid transparent;
+  border-left-width: 24px; border-right-width: 24px;
+  border-image: url("../../art/ui/plank9.png") 18 24 fill stretch;
+  background: none;
+  color: var(--gold);
+  text-shadow: 0 1px 0 var(--ink);
+  transition: filter 0.12s;
+}
+.btn.secondary { color: var(--parchment); filter: brightness(0.7) saturate(0.85); }
+.btn:hover { filter: brightness(1.25); }
+.btn.secondary:hover { filter: brightness(0.95); }
+.btn:active { filter: brightness(0.75); transform: translateY(2px); }
+.btn.ghost { border: 2px solid rgba(160, 122, 60, 0.8); border-image: none; background: rgba(20, 11, 12, 0.35); color: var(--parchment); padding: 18px 22px; }
+.btn .key { margin-left: auto; font-size: 13px; text-transform: none; letter-spacing: 0; color: var(--ink); background: var(--parchment); padding: 2px 8px; border-radius: 4px; text-shadow: none; }
+@media (prefers-reduced-motion: reduce) { .btn { transition: none; } .btn:active { transform: none; } }
+
+.head { display: flex; align-items: center; color: var(--gold); font-weight: 700; font-size: 20px; }
+.head .count { margin-left: auto; color: var(--parchment); }
+.rule { border: 0; height: 1px; background: rgba(160, 122, 60, 0.7); margin: 10px 0; }
+.power { display: flex; gap: 12px; align-items: center; margin-top: 10px; }
+.power .tile { width: 40px; height: 40px; display: grid; place-items: center; border: 2px solid var(--brass); background: #3A2C2C; }
+.power.on .tile { background: var(--gold); color: var(--ink); }
+.power b { display: block; }
+.power small { color: var(--muted); font-size: 14px; }
+.power.off b { color: var(--label); }
+
+.prompt { display: flex; gap: 14px; align-items: center; }
+.prompt .e { width: 52px; height: 52px; flex: none; display: grid; place-items: center; background: var(--ember); color: var(--ink); font-weight: 700; font-size: 26px; border-bottom: 4px solid #6B3410; }
+.prompt strong { display: block; text-transform: uppercase; letter-spacing: 0.04em; }
+.prompt span { color: var(--muted); font-size: 15px; }
+
+.note-paper {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 14px 20px;
+  background: url("../../art/ui/parchment.jpg") center / cover;
+  color: var(--ink);
+  font: 400 28px/1.2 "Bad Script", cursive;
+  transform: rotate(-3deg);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+.art { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; }
+figure { margin: 0; }
+figure img.painting { border: 18px solid transparent; border-image: url("../../art/ui/card9.png") 27 stretch; }
+figcaption { margin-top: 10px; color: var(--muted); font-size: 16px; }
+figcaption strong { color: var(--parchment); }
+.pieces { display: flex; flex-wrap: wrap; gap: 24px; align-items: end; margin-top: 28px; }
+.pieces figure img { max-height: 140px; }
+
+.compare { display: grid; gap: 36px; }
+.trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 860px) { .trio { grid-template-columns: 1fr; } }
+
+footer { color: var(--label); font-size: 15px; padding-top: 72px; max-width: 70ch; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <img src="../../art/ui/menu.jpg" alt="Олійний живопис: зруйнований маєток графа на пагорбі над старим містом, місяць крізь хмари, рожеві вікна, гарбуз-ліхтар на кам'яному мурі">
+  <div class="hero-copy">
+    <h1 class="display">Відпусти</h1>
+    <p class="display sub">Стара олія</p>
+    <p class="voice">Граф давно помер. А ти досі тут.</p>
+    <p class="lede">Інтерфейс «Підземелля старого міста» у дусі 1840-х: олійний живопис замість мультяшної графіки, шкіра в позолочених рамах, дубові дошки з латунню, пергамент і книжковий шрифт. Кожне зображення згенероване в ComfyUI, жодної векторної графіки.</p>
+  </div>
+</header>
+
+<main>
+
+<section aria-labelledby="palette">
+  <h2 id="palette" class="display">Палітра</h2>
+  <p class="intro">Кольори взяті з самих картин: потемніла слива ночі, позолота рам, жар свічки. Рожеве світіння лишилося тільки для привида й вікон маєтку.</p>
+  <div class="palette">
+    <div class="swatch" style="background:#1B1116"><b>Ніч</b><span>#1B1116 · фон</span></div>
+    <div class="swatch" style="background:#3A2629"><b>Шкіра</b><span>#3A2629 · картки</span></div>
+    <div class="swatch" style="background:#A07A3C"><b>Латунь</b><span>#A07A3C · рамки</span></div>
+    <div class="swatch lite" style="background:#E0B060"><b>Позолота</b><span>#E0B060 · заголовки, головна дія</span></div>
+    <div class="swatch lite" style="background:#D2782A"><b>Жар</b><span>#D2782A · клавіша E</span></div>
+    <div class="swatch lite" style="background:#D26A9E"><b>Привид</b><span>#D26A9E · ритуал, вікна</span></div>
+    <div class="swatch lite" style="background:#EBDDC3"><b>Пергамент</b><span>#EBDDC3 · текст</span></div>
+    <div class="swatch lite" style="background:#A8DCD8"><b>Спогад</b><span>#A8DCD8 · думки привида</span></div>
+  </div>
+</section>
+
+<section aria-labelledby="type">
+  <h2 id="type" class="display">Шрифти</h2>
+  <p class="intro">Три шрифти з кирилицею, усі під ліцензією OFL і лежать у <code>fonts/</code>.</p>
+  <div class="type-row"><div class="meta"><strong>Oranienbaum</strong>назви екранів, контраст як на афішах XIX століття</div><p class="display" style="font-size:clamp(48px,7vw,92px)">Ти вільний</p></div>
+  <div class="type-row"><div class="meta"><strong>Old Standard TT</strong>текст і кнопки, книжковий шрифт тієї доби</div><p style="margin:0;font-weight:700;font-size:30px">Нова сила: Подих</p></div>
+  <div class="type-row"><div class="meta"><strong>Old Standard TT</strong>підказки й цілі</div><p style="margin:0;color:var(--muted)">Люди йдуть на звук і на світло, що змінилося. Священник ходить за археологами.</p></div>
+  <div class="type-row"><div class="meta"><strong>Bad Script</strong>голос привида, напис на дзеркалі</div><p class="voice">Двісті років у цій темряві… Тепер я можу піти.</p></div>
+</section>
+
+<section aria-labelledby="kit">
+  <h2 id="kit" class="display">Компоненти</h2>
+  <p class="intro">Рамка, дошка й пергамент — шматки згенерованих зображень, нарізані на 9 частин, тож розтягуються на будь-який розмір без спотворення кутів.</p>
+  <div class="kit">
+    <div>
+      <h3>Кнопки меню</h3>
+      <button class="btn">▶ Грати <span class="key">Enter</span></button>
+      <button class="btn secondary">Як грати</button>
+      <button class="btn secondary">Налаштування</button>
+      <button class="btn ghost">Вихід</button>
+    </div>
+    <div>
+      <h3>Сили</h3>
+      <div class="framed">
+        <div class="head">Сили <span class="count">1 / 4</span></div>
+        <hr class="rule">
+        <div class="power on"><div class="tile">≋</div><div><b>Подих</b><small>гасити й запалювати свічки</small></div></div>
+        <div class="power off"><div class="tile">♪</div><div><b>???</b><small>ще не згадав</small></div></div>
+        <div class="power off"><div class="tile">✎</div><div><b>???</b><small>ще не згадав</small></div></div>
+      </div>
+    </div>
+    <div>
+      <h3>Підказка над предметом</h3>
+      <div class="framed prompt">
+        <div class="e">E</div>
+        <div><strong>Свічка · загасити</strong><span>люди підуть на світло, що змінилося</span></div>
+      </div>
+      <p class="note-paper">Випустіть мене…</p>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="art">
+  <h2 id="art" class="display">Картини й матеріали</h2>
+  <p class="intro">Згенеровано локально в ComfyUI (Z-Image Turbo): романтичний олійний живопис XIX століття, лак, кракелюр. Файли в <code>art/ui/</code>.</p>
+  <div class="art">
+    <figure><img class="painting" src="../../art/ui/menu.jpg" alt="Маєток графа вночі"><figcaption><strong>menu.jpg</strong> — головне меню.</figcaption></figure>
+    <figure><img class="painting" src="../../art/ui/crypt.jpg" alt="Склепінчасте підземелля зі свічками, ланцюгами й світлом крізь замуровану стіну"><figcaption><strong>crypt.jpg</strong> — пауза, «Як грати», налаштування. Світло крізь замуровану стіну веде до кімнати Тимоша.</figcaption></figure>
+    <figure><img class="painting" src="../../art/ui/dawn.jpg" alt="Світанок, біла хата під стріхою, соняшники, хлопчик босоніж іде додому"><figcaption><strong>dawn.jpg</strong> — фінал: Тиміш нарешті вдома.</figcaption></figure>
+  </div>
+  <div class="pieces">
+    <figure><img src="../../art/ui/card9.png" alt="Позолочена рама з темною шкірою"><figcaption>card9.png — картки</figcaption></figure>
+    <figure><img src="../../art/ui/plank9.png" alt="Дубова дошка з латунними кутиками"><figcaption>plank9.png — кнопки</figcaption></figure>
+    <figure><img src="../../art/ui/parchment.jpg" alt="Пергамент" style="width:140px"><figcaption>parchment.jpg — записки</figcaption></figure>
+    <figure><img src="../../art/ui/leather.jpg" alt="Стара шкіра" style="width:140px"><figcaption>leather.jpg — тло</figcaption></figure>
+  </div>
+</section>
+
+<section aria-labelledby="screens">
+  <h2 id="screens" class="display">Три версії</h2>
+  <p class="intro">Скриншоти з Godot: перший стиль, мультяшна ніч і нинішня «Стара олія».</p>
+  <div class="compare">
+    <div class="trio"><figure><img src="before/menu.png" alt="Перша версія меню"><figcaption>Меню, перша версія</figcaption></figure><figure><img src="after_cartoon/menu.png" alt="Мультяшна версія меню"><figcaption>Мультяшна ніч</figcaption></figure><figure><img src="after/menu.png" alt="Олійна версія меню"><figcaption>Стара олія</figcaption></figure></div>
+    <div class="trio"><figure><img src="before/pause.png" alt="Перша версія паузи"><figcaption>Пауза, перша версія</figcaption></figure><figure><img src="after_cartoon/pause.png" alt="Мультяшна пауза"><figcaption>Мультяшна ніч</figcaption></figure><figure><img src="after/pause.png" alt="Олійна пауза"><figcaption>Стара олія</figcaption></figure></div>
+    <div class="trio"><figure><img src="before/book.png" alt="Перша версія книги"><figcaption>Книга, перша версія</figcaption></figure><figure><img src="after_cartoon/book.png" alt="Мультяшна книга"><figcaption>Мультяшна ніч</figcaption></figure><figure><img src="after/book.png" alt="Олійна книга"><figcaption>Стара олія</figcaption></figure></div>
+    <div class="trio"><figure><img src="before/end.png" alt="Перша версія фіналу"><figcaption>Фінал, перша версія</figcaption></figure><figure><img src="after_cartoon/end.png" alt="Мультяшний фінал"><figcaption>Мультяшна ніч</figcaption></figure><figure><img src="after/end.png" alt="Олійний фінал"><figcaption>Стара олія</figcaption></figure></div>
+  </div>
+</section>
+
+<footer>Токени й правила — <code>docs/ui_style.md</code>. Оновити скриншоти — <code>tools/ui_shots/ui_shots.tscn</code>. Мультяшні ілюстрації збережено в <code>docs/ui/concepts/</code>.</footer>
+
+</main>
+</body>
+</html>

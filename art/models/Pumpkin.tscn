@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://art/models/src/kaykit/pumpkin_orange_jackolantern.gltf" id="1"]
+
+[node name="Pumpkin" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1")]
+transform = Transform3D(-0.33333, 0, 4.0822e-17, 0, 0.33333, 0, -4.0822e-17, 0, -0.33333, 9.9341e-09, 0.0012239, -0.0001365)
+
+[node name="Light" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, -0.1)
+light_color = Color(1, 0.55, 0.15, 1)
+light_energy = 1.1
+omni_range = 2.6
