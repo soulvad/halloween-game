@@ -28,6 +28,7 @@ const WALL_INNER := -8.5  ## x of that wall's face on the R3L side
 const ROOM_H := 3.0
 const ROOM_NEAR := 4.0
 const TURTLE_MASKS := [Color("D8352A"), Color("2A63D8"), Color("E8842A"), Color("8A3AC8")]
+const TURTLE_MASK_Y := 1.16  ## eye level of art/models/Turtle
 const PHONE_NEAR := 9.0
 
 var found: Array[String] = []
@@ -36,6 +37,7 @@ var dancing := 0.0  ## seconds of the skeleton's dance left
 var rat_i := 0  ## ROUTE point the rat runs to / sits at
 var _rat_running := false
 var _rat: Node3D
+var _rat_anim: AnimationPlayer
 var _rat_sound: AudioStreamPlayer3D
 var cat_wait := -1.0  ## seconds until the cat spins, < 0 = not counting
 var cat_spin := 0.0  ## seconds of spinning left (the track's length)
@@ -260,6 +262,11 @@ func _build_rat() -> void:
 		_part(_rat, Vector3(0.14, 0.12, 0.3), fur, Vector3(0, 0.08, 0))
 		_part(_rat, Vector3(0.09, 0.09, 0.12), fur, Vector3(0, 0.09, -0.19))
 		_part(_rat, Vector3(0.025, 0.025, 0.3), Color(0.75, 0.55, 0.55), Vector3(0, 0.05, 0.3))
+	var players := _rat.find_children("*", "AnimationPlayer", true, false)
+	if not players.is_empty():
+		_rat_anim = players[0]
+		for clip in ["run", "idle"]:
+			_rat_anim.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
 	_rat_sound = _sound(_rat, "rat", 12.0)
 
 
@@ -275,6 +282,8 @@ func _run_rat(ghost: Vector3, delta: float) -> void:
 		rat_i += 1
 		_rat_running = true
 		_rat_sound.play()
+	if _rat_anim:
+		_rat_anim.play("run" if _rat_running else "idle", 0.1)
 	if _rat.position.x < ROOM.end.x:  # past the hole it lives in the room
 		_rat.visible = _room.visible
 
@@ -324,7 +333,9 @@ func _build_room() -> void:
 		room.add_child(holder)
 		holder.add_child(seat)
 		_turtles.append(seat)
-		if not _final_art(seat, "Turtle"):
+		if _final_art(seat, "Turtle"):
+			_part(seat, Vector3(0.21, 0.05, 0.2), TURTLE_MASKS[i], Vector3(0, TURTLE_MASK_Y, -0.1))  # one model, four masks
+		else:
 			_build_turtle(seat, TURTLE_MASKS[i])
 	var light := _glow(room, Color(1, 0.72, 0.42), 6.5, 1.5)
 	light.position = _room_center + Vector3(0, 2.3, 0)
