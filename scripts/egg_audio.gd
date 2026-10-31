@@ -9,6 +9,7 @@ const REST := 0.0
 const TUNE := [[440.0, 1], [523.25, 1], [659.25, 1], [523.25, 1], [587.33, 1], [698.46, 1], [659.25, 2],
 	[440.0, 1], [392.0, 1], [440.0, 1], [523.25, 1], [493.88, 2], [329.63, 2]]
 const BEAT := 0.2
+const BAR := BEAT * 16.0  ## one pass of TUNE = one loop of the skeleton's dance; a dropped-in track needs its own BEAT
 
 
 static func stream(sound: String) -> AudioStream:

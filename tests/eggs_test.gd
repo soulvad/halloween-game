@@ -66,6 +66,15 @@ func _ready() -> void:
 	await _frames(1)
 	assert("skeleton" in eggs.found and eggs._skeleton.visible and eggs._music.playing)
 	assert(not bones.visible and bones.collision_layer == 0)
+	var skel: Skeleton3D = eggs._skeleton.find_children("*", "Skeleton3D", true, false)[0]  # the rigged model, feet down
+	var hand := skel.find_bone("HAND.L")
+	assert(eggs._dance_anim != null and hand >= 0)
+	var low: Vector3 = skel.get_bone_global_pose(hand).origin
+	await _until(func(): return eggs.dancing < Eggs.DANCE_TIME - 0.4, 2)
+	await _frames(2)
+	assert(skel.get_bone_global_pose(hand).origin.distance_to(low) > 0.05)
+	var head_y: float = (skel.global_transform * skel.get_bone_global_pose(skel.find_bone("HEAD")).origin).y
+	assert(head_y > 1.2 and head_y < 2.0)
 	await _until(func(): return eggs.dancing <= 0, Eggs.DANCE_TIME + 2)
 	assert(not eggs._skeleton.visible and not eggs._music.playing and bones.visible and bones.collision_layer == bones.LAYER_STATION)
 

@@ -6,6 +6,7 @@ extends Node3D
 ## Тарас's phone once. Stations of Kind.EGG call touched(). Everything is on visual layer 2, so the minimap and the
 ## guide tour don't give the eggs away.
 ## Art drops in by name: art/models/Pedestal, Cat, Rat, Skeleton, Bones, Turtle, Pizza; sound: audio/eggs (egg_audio.gd).
+## Skeleton.glb is built by tools/make_skeleton.py and carries its own dance.
 
 const Wall = preload("res://scripts/wall.gd")
 const UI = preload("res://scripts/ui.gd")
@@ -45,6 +46,7 @@ var _cat_cover: Node3D
 var _cat_sound: AudioStreamPlayer3D
 var _skeleton: Node3D
 var _limbs: Array[Node3D] = []  ## arm, arm, leg, leg pivots (a final model has none: it wiggles whole)
+var _dance_anim: AnimationPlayer  ## the model's own dance, if it has one: one loop = EggAudio.BAR
 var _music: AudioStreamPlayer3D
 var _bones: Node3D  ## the station
 var _turtles: Array[Node3D] = []
@@ -184,6 +186,10 @@ func _build_skeleton() -> void:
 			_limb(Vector3(0.26 * side, 1.3, 0), 0.55)
 		for side in [-1, 1]:
 			_limb(Vector3(0.12 * side, 0.74, 0), 0.72)
+	var players := _skeleton.find_children("*", "AnimationPlayer", true, false)
+	if not players.is_empty():
+		_dance_anim = players[0]
+		_dance_anim.assigned_animation = _dance_anim.get_animation_list()[0]
 	var glow := _glow(self, Color(0.7, 0.4, 1), 4.5, 1.2)  # not on the skeleton: stays on while the bones lie still
 	glow.position = _skeleton.position + Vector3(0, 1.7, 0)
 	_music = _sound(self, "skeleton", 18.0)
@@ -226,12 +232,16 @@ func _dance(delta: float) -> void:
 	if dancing <= 0:
 		return
 	dancing -= delta
-	var beat := _t * TAU / (EggAudio.BEAT * 2.0)
-	_skeleton.rotation.y = sin(beat * 0.5) * 0.7
-	_skeleton.rotation.z = sin(beat) * 0.1
-	for i in _limbs.size():
-		var swing := sin(beat + PI * i)
-		_limbs[i].rotation.z = swing * (1.8 if i < 2 else 0.4)
+	if _dance_anim:  # driven by the time since the music started, so it can't drift off the beat
+		var loop := fmod(DANCE_TIME - dancing, EggAudio.BAR) / EggAudio.BAR
+		_dance_anim.seek(loop * _dance_anim.get_animation(_dance_anim.assigned_animation).length, true)
+	else:
+		var beat := _t * TAU / (EggAudio.BEAT * 2.0)
+		_skeleton.rotation.y = sin(beat * 0.5) * 0.7
+		_skeleton.rotation.z = sin(beat) * 0.1
+		for i in _limbs.size():
+			var swing := sin(beat + PI * i)
+			_limbs[i].rotation.z = swing * (1.8 if i < 2 else 0.4)
 	if dancing <= 0:
 		_music.stop()
 		_skeleton.visible = false
