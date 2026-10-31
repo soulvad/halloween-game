@@ -94,7 +94,7 @@ furniture = [
 ]
 wall_nodes += [(n, p, s, 3, FURN) for n, p, s in furniture]
 
-MEMORY, CANDLE, HAUNT, MIRROR, PLAN, DOOR, KNOCK, EVIDENCE, CIRCLE = range(9)
+MEMORY, CANDLE, HAUNT, MIRROR, PLAN, DOOR, KNOCK, EVIDENCE, CIRCLE, EGG = range(10)
 CYAN = (0.6, 0.95, 1); ORANGE = (1, 0.48, 0.1); DULL = (0.45, 0.4, 0.38); FLAME = (1, 0.75, 0.35)
 GLINT = (0.18, 0.18, 0.18); CANDLE_SIZE = (0.12, 0.3, 0.12)
 # Rooms in the story: R1L servants' bedroom, CorridorH corridor with shackles, R3R kitchen, R2R mirror room,
@@ -128,6 +128,9 @@ stations = [
     ("Plan", (8.0, 5.2), PLAN, "План маєтку", "sound", (0.9, 0.04, 0.6), (0.85, 0.75, 0.55), {"y": 0.8}),
     ("Door", (11.125, -7.0), DOOR, "Двері", "hands", (1.75, 2.4, 0.15), (0.35, 0.22, 0.12), {}),
     ("Wall", (13.95, -10.875), KNOCK, "Цегляна стіна", "hands", (0.1, 2.0, 1.5), (0.5, 0.3, 0.25), {"y": 0.2}),
+    # easter eggs, the rest of them in scripts/easter_eggs.gd; the pedestal has no text on purpose
+    ("Bones", (12.5, 1.5), EGG, "Купа кісток: вселитися", "", (0.9, 0.25, 0.7), (0.88, 0.85, 0.72), {}),
+    ("Pedestal", (20.5, -5.5), EGG, "", "", (0.7, 0.8, 0.7), (0.36, 0.33, 0.34), {}),
 ]
 dig_sites = [(-5, -9), (5.5, -9), (-5, -2.8), (5.5, -2.6), (-5, 1.5), (5.5, 2), (-5, 7), (6, 7),
              (-13, -6), (14.4, -6), (0, 3), (0, -5.9)]
@@ -144,6 +147,7 @@ o = ["""[gd_scene format=3]
 [ext_resource type="Script" path="res://scripts/visitor.gd" id="4_visitor"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="5_player"]
 [ext_resource type="Script" path="res://scripts/hud.gd" id="6_hud"]
+[ext_resource type="Script" path="res://scripts/easter_eggs.gd" id="7_eggs"]
 
 [sub_resource type="Environment" id="Environment_dungeon"]
 background_mode = 1
@@ -247,6 +251,7 @@ kind = {kind}
 title_text = "{title}"
 color = {col(c)}
 """)
+o.append('[node name="Eggs" type="Node3D" parent="."]\nscript = ExtResource("7_eggs")\n')
 o.append(f"""[node name="Player" parent="." instance=ExtResource("5_player")]
 transform = {t(20, 0, -9.6, rot_y=True)}
 
