@@ -1,7 +1,8 @@
 extends CanvasLayer
 ## Comic player over the game. Two pages (scripts/comic_data.gd), drawn by scripts/comic_page.gd:
-##   "prologue"  — prologue page, panels A..F appear one by one
-##   "memory_N"  — memories page: found memories (GameState.memories) shown, others locked, panel N (A..E) reveals
+##   "prologue"  — two prologue pages, panels A..F appear one by one on each
+##   "memory_N"  — that memory's own page, panel by panel; with no such page yet, the memories sheet: found memories
+##                 (GameState.memories) shown, others locked, panel N (A..E) reveals
 ##   "finale"    — memories page, A..E shown, F reveals
 ## Usage: var c = preload("res://scenes/comic.tscn").instantiate(); add_child(c); c.play("memory_2"); await c.finished
 ## E / Space / Enter / click = next panel (finish after the last one), Esc = skip all.
@@ -62,10 +63,9 @@ func play(id: String) -> void:
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	var n := id.trim_prefix("memory_").to_int() if id.begins_with("memory_") else 0
-	if id == "prologue":
-		page.setup("prologue")
+	if id == "prologue" or Data.PAGES.has(id):
 		page.show_locked = false
-		_order.assign(Data.PAGES.prologue.panels.keys())
+		_open(id)
 	elif n >= 1 and n <= MEMORY_LETTERS.length() or id == "finale":
 		page.setup("memories")
 		for i in MEMORY_LETTERS.length():
@@ -111,8 +111,18 @@ func advance() -> void:
 		return
 	if _step < _order.size() - 1:
 		_show(_step + 1)
+	elif Data.PAGES[page.page_id].has("next"):
+		_open(Data.PAGES[page.page_id].next)
+		_show(0)
 	else:
 		_finish()
+
+
+## Turn to a page that plays all its panels.
+func _open(id: String) -> void:
+	page.setup(id)
+	_order.assign(Data.PAGES[id].panels.keys())
+	_step = -1
 
 
 func _show(i: int) -> void:

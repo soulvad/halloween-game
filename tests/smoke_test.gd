@@ -43,6 +43,11 @@ func _ready() -> void:
 	var mem = func(i): return st.call("Memory%d" % i)
 	await _frames(2)
 
+	# nothing shows the ghost in play; the mirror reflects the room, but never its body
+	assert(not p.body.visible)
+	var glass = st.call("Mirror").get_child(-1)
+	assert(glass.get_script().resource_path.ends_with("mirror.gd") and glass.CULL & p.LAYER_SELF == 0)
+
 	# corridor dressing: all of it placed, nothing to bump into
 	var decor = g.get_node("Decor")
 	assert(decor.get_child_count() == decor.ON_WALLS.size() + decor.ON_FLOOR.size() + decor.WEBS.size())
