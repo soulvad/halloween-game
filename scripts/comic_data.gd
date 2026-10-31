@@ -13,14 +13,15 @@ extends RefCounted
 ## Panel shapes: LAYOUTS below, normalized 0..1 of the page; edit here to match the artist's final frame.
 
 ## Artist's 6-panel page: A top-left, B tall right (diagonal edge), C under A, bottom row D E F. aspect = width / height.
+## Measured from the artist's frame (ibisPaint layout, page with margins; panel A matches art/comic/prologue/A.png).
 const LAYOUTS := {
-	"page6": {"aspect": 0.72, "shapes": {
-		"A": [Vector2(0, 0), Vector2(0.405, 0), Vector2(0.508, 0.32), Vector2(0, 0.32)],
-		"B": [Vector2(0.435, 0), Vector2(1, 0), Vector2(1, 0.68), Vector2(0.655, 0.68)],
-		"C": [Vector2(0, 0.34), Vector2(0.515, 0.34), Vector2(0.625, 0.68), Vector2(0, 0.68)],
-		"D": [Vector2(0, 0.7), Vector2(0.3, 0.7), Vector2(0.3, 1), Vector2(0, 1)],
-		"E": [Vector2(0.32, 0.7), Vector2(0.68, 0.7), Vector2(0.68, 1), Vector2(0.32, 1)],
-		"F": [Vector2(0.7, 0.7), Vector2(1, 0.7), Vector2(1, 1), Vector2(0.7, 1)],
+	"page6": {"aspect": 0.713, "shapes": {
+		"A": [Vector2(0.039, 0.026), Vector2(0.317, 0.026), Vector2(0.487, 0.36), Vector2(0.039, 0.36)],
+		"B": [Vector2(0.351, 0.029), Vector2(0.962, 0.029), Vector2(0.962, 0.688), Vector2(0.688, 0.688)],
+		"C": [Vector2(0.039, 0.377), Vector2(0.498, 0.377), Vector2(0.659, 0.691), Vector2(0.039, 0.691)],
+		"D": [Vector2(0.039, 0.712), Vector2(0.296, 0.712), Vector2(0.296, 0.956), Vector2(0.039, 0.956)],
+		"E": [Vector2(0.329, 0.712), Vector2(0.666, 0.712), Vector2(0.666, 0.956), Vector2(0.329, 0.956)],
+		"F": [Vector2(0.695, 0.712), Vector2(0.962, 0.712), Vector2(0.962, 0.956), Vector2(0.695, 0.956)],
 	}},
 }
 

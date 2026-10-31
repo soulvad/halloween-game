@@ -56,7 +56,8 @@ func _ready() -> void:
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_label.font_size = 48
 	_label.outline_size = 12
-	_label.pixel_size = 0.005
+	_label.pixel_size = 0.0013
+	_label.fixed_size = true
 	_label.position.y = 2.1
 	_label.layers = 2  ## the minimap camera culls labels
 	_label.visibility_range_end = 12.0

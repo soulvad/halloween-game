@@ -121,32 +121,34 @@ func set_stage(s: Stage) -> void:
 	hint(["haunt", "priest", "lure", "dig", "evidence", "ritual"][s])
 
 
-## Goal line for the HUD goal panel and the book.
+## The whole story as goal steps, in order: [{text, done}]. The first not-done step is the active one;
+## the book shows done + active and locks the rest.
+func goal_steps() -> Array[Dictionary]:
+	var steps: Array[Dictionary] = []
+	for st in [
+		["Ти нічого не пам'ятаєш. Знайди мерехтіння в темряві й торкнися його", memories.size() >= 1],
+		["Шукай ще спогади. Свічки й шум приводять археологів", has_power("write")],
+		["Приведи археолога до дзеркала й напиши на ньому", mirror_written],
+		["Археологи кличуть священника — зачекай", stage > Stage.PRIEST_COMING],
+		["Зсунь план на столі археологів — покажи, де твоя кімната", plan_moved],
+		["Двері зачинені. Знайди ще один спогад", has_power("hands")],
+		["Відчини двері й простукай стіну: три удари, пауза, один", wall_knocked],
+		["Археологи розбирають стіну до твоєї кімнати", stage > Stage.DIG],
+		["Покажи їм свої речі (%d/%d)" % [evidence, EVIDENCE_NEEDED], evidence >= EVIDENCE_NEEDED],
+		["Торкнися напису на стіні", name_known()],
+		["Священник проводить ритуал", ritual >= 1.0],
+		["Стань у коло й утримуй E — час іти", won],
+	]:
+		steps.append({"text": st[0], "done": st[1]})
+	return steps
+
+
+## The active goal line.
 func goal() -> String:
-	match stage:
-		Stage.HAUNT:
-			if powers.is_empty():
-				return "Ти нічого не пам'ятаєш. Знайди мерехтіння в темряві й торкнися його"
-			if not has_power("write"):
-				return "Шуми й гаси свічки — веди археологів. Шукай ще спогади"
-			return "Приведи археолога до дзеркала й напиши на ньому"
-		Stage.PRIEST_COMING:
-			return "Археологи кличуть священника — зачекай"
-		Stage.LURE:
-			if not plan_moved:
-				return "Зсунь план на столі археологів — покажи, де твоя кімната"
-			if not has_power("hands"):
-				return "Двері зачинені. Знайди ще один спогад"
-			return "Відчини двері й простукай стіну: три удари, пауза, один"
-		Stage.DIG:
-			return "Археологи розбирають стіну до твоєї кімнати"
-		Stage.EVIDENCE:
-			if evidence < EVIDENCE_NEEDED:
-				return "Покажи їм свої речі (%d/%d)" % [evidence, EVIDENCE_NEEDED]
-			return "Торкнися напису на стіні"
-	if ritual < 1.0:
-		return "Священник проводить ритуал"
-	return "Стань у коло й утримуй E — час іти"
+	for st in goal_steps():
+		if not st.done:
+			return st.text
+	return "Ти вільний"
 
 
 ## A noise or light change at `pos`; visitors in earshot react (visitor.gd).

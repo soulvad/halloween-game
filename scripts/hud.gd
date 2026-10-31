@@ -21,21 +21,14 @@ const POWER_ICON := {
 	"hands": "hand",
 }
 const STAGE_NAMES := ["Помітьте мене", "Священник", "Знайдіть мою кімнату", "Розкопки", "Твоя кімната", "Ритуал"]  ## by GameState.Stage
-const STAGE_SHORT := ["Помітьте", "Священник", "Кімната", "Розкопки", "Речі", "Ритуал"]  ## goal-panel steps
 const ROOM := Rect2(17.5, -12.5, 6, 4.7)  ## your sealed room (x, z), from the level layout
 const RUBBLE_POS := Vector3(17.5, 0, -10)  ## shortcut: map marker spot if the level has no "Rubble" node; use the node once it exists
 
 var game  ## game.gd (untyped: its methods are not known statically)
 var end_title: Label  ## set when the end screen is up (tests read it)
 var _hud: Control  ## everything shown while playing
-var _mem_count: Label
+var _pow_count: Label
 var _powers := {}  ## power -> {sb, icon, name, help}
-var _goal_text: Label
-var _steps: Array[Dictionary] = []
-var _stage_name: Label
-var _stage_val: Label
-var _stage_fill: Panel
-var _priest_line: Label
 var _mini_cam: Camera3D
 var _room: Label
 var _tiles := {}  ## "E" -> {col, sb, icon, cap, badge}
@@ -65,10 +58,11 @@ var _sub_frame := -1
 var _end: Control
 var _book: PanelContainer
 var _book_badge: PanelContainer
-var _book_goal: Dictionary  ## current stage step on the «Цілі» page
-var _book_goal_sub: Label
+var _book_stage: Label  ## «Етап n/6 · …» on the «Цілі» page
+var _goal_rows: Array[Dictionary] = []  ## one per GameState.goal_steps()
+var _goal_now := 0  ## active goal index; a change lights the badge
+var _goal_seen := 0  ## active goal when the book was last closed
 var _quest_priest: Label
-var _book_mem: Array[Label] = []  ## memories 1..5 on the «Цілі» page
 var _comic_view: Control  ## «Комікс» page (comic_page.gd)
 var _mem_seen := 0  ## memories already seen in the open book (unread badge)
 var _hint_list: VBoxContainer
@@ -88,7 +82,6 @@ func _ready() -> void:
 	_hud = _full()
 	add_child(_hud)
 	_build_powers()
-	_build_goal()
 	_build_right()
 	_build_bottom()
 	_build_prompt()
@@ -148,7 +141,9 @@ func _process(delta: float) -> void:
 	if not t is Station:
 		t = null  # visitors are not aim targets
 	_update_powers()
-	_update_goal()
+	if _active_goal() != _goal_now:  # a new goal lights the book badge
+		_goal_now = _active_goal()
+		_rebuild_hints()
 	_update_right()
 	_update_bottom(t)
 	var letting: bool = game.at_release()
@@ -332,12 +327,11 @@ func _build_powers() -> void:
 	card.add_child(col)
 	var head := UI.hbox(12)
 	col.add_child(head)
-	head.add_child(UI.icon("heart", 28))
-	head.add_child(UI.label("Спогади", 22, UI.INK, "body", 900, true))
-	_mem_count = UI.label("", 28, UI.INK, "body", 900)
-	head.add_child(_expand(_mem_count))
+	head.add_child(UI.icon("bolt", 28))
+	head.add_child(UI.label("Сили", 22, UI.INK, "body", 900, true))
+	_pow_count = UI.label("", 28, UI.INK, "body", 900)
+	head.add_child(_expand(_pow_count))
 	col.add_child(UI.rule())
-	col.add_child(UI.label("Сили", 14, UI.LABEL, "body", 900, true))
 	for p in GameState.POWERS:
 		var row := UI.hbox(12)
 		col.add_child(row)
@@ -356,7 +350,7 @@ func _build_powers() -> void:
 
 
 func _update_powers() -> void:
-	_mem_count.text = "%d / %d" % [GameState.memories.size(), GameState.MEMORY_COUNT]
+	_pow_count.text = "%d / %d" % [GameState.powers.size(), GameState.POWERS.size()]
 	for p in _powers:
 		var d: Dictionary = _powers[p]
 		var has := GameState.has_power(p)
@@ -380,55 +374,9 @@ func _power_icon(p: String, size: int) -> TextureRect:
 	return _svg_icon(ic, size) if ic.begins_with("<") else UI.icon(ic, size)
 
 
-func _build_goal() -> void:
-	var g := UI.panel(UI.SHADE, 22, 0, 18, 4, UI.GOLD)
-	g.custom_minimum_size.x = 740
-	_pin(g, Control.PRESET_CENTER_TOP)
-	var col := UI.vbox(10)
-	g.add_child(col)
-	var row := UI.hbox(12)
-	col.add_child(row)
-	row.add_child(UI.chip("ЦІЛЬ", UI.GOLD, UI.INK, 16, 0))
-	_goal_text = UI.label("", 21, UI.PAPER, "body", 700)
-	_goal_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	row.add_child(_expand(_goal_text, HORIZONTAL_ALIGNMENT_LEFT))
-	var steps := UI.hbox(14)
-	col.add_child(steps)
-	for i in STAGE_SHORT.size():
-		_steps.append(_step(steps, 15))
-
-
-func _update_goal() -> void:
-	_goal_text.text = GameState.goal()
-	for i in _steps.size():
-		_set_step(_steps[i], STAGE_SHORT[i], _stage_state(i))
-
-
 func _build_right() -> void:
 	var col := UI.vbox(12)
 	_pin(col, Control.PRESET_TOP_RIGHT)
-	var c := UI.panel(UI.INK, 18, 0, 12, 4, UI.GOLD)
-	_sb(c).content_margin_right = 20  # bold glyphs overhang the measured width
-	c.custom_minimum_size.x = 300
-	var cv := UI.vbox(6)
-	c.add_child(cv)
-	cv.add_child(UI.label("Етап", 13, UI.DIM, "body", 900, true))
-	var row := UI.hbox(10)
-	cv.add_child(row)
-	_stage_name = UI.label("", 26, UI.PAPER, "body", 900)
-	row.add_child(_stage_name)
-	_stage_val = UI.label("", 18, UI.GOLD, "body", 900)
-	row.add_child(_expand(_stage_val))
-	var bar := Panel.new()
-	bar.custom_minimum_size.y = 18
-	bar.add_theme_stylebox_override("panel", UI.style(UI.LILAC, 999, 3))
-	_stage_fill = Panel.new()
-	_stage_fill.position = Vector2(3, 3)
-	_stage_fill.add_theme_stylebox_override("panel", UI.style(UI.GOLD, 999, 0))
-	bar.add_child(_stage_fill)
-	cv.add_child(bar)
-	_priest_line = UI.label("", 16, UI.DIM, "body", 700)
-	cv.add_child(_priest_line)
 	var mm := UI.panel(UI.INK, 26, 0, 12, 5, UI.PAPER)
 	var mv := UI.vbox(8)
 	mm.add_child(mv)
@@ -443,18 +391,12 @@ func _build_right() -> void:
 	_room = UI.label("", 15, UI.PAPER, "body", 700)
 	foot.add_child(_expand(_room, HORIZONTAL_ALIGNMENT_LEFT))
 	foot.add_child(UI.chip("M", UI.PAPER, UI.INK, 14, 2))
-	for p in [_book_tile(), c, mm]:
+	for p in [_book_tile(), mm]:
 		p.size_flags_horizontal = Control.SIZE_SHRINK_END
 		col.add_child(p)
 
 
 func _update_right() -> void:
-	_stage_name.text = STAGE_NAMES[GameState.stage]
-	var pr := _stage_progress()
-	_stage_val.text = pr[1]
-	_stage_fill.get_parent().visible = pr[0] >= 0
-	_stage_fill.size = Vector2((_stage_fill.get_parent().size.x - 6) * clampf(pr[0], 0, 1), 12)
-	_priest_line.text = _priest_status()
 	var p: Vector3 = game.player.global_position
 	_mini_cam.global_position = Vector3(p.x, 30, p.z)
 	_room.text = _room_at(p)
@@ -805,20 +747,26 @@ func _build_book() -> void:
 		return v
 	var left: VBoxContainer = page.call("Цілі", UI.GOLD, UI.PAPER)
 	left.get_child(0).add_child(_expand(_hand("J / Esc — закрити", 22)))
-	var row := UI.panel(Color(UI.GOLD, 0.85), 12, 0, 8, 0)
-	var rv := UI.vbox(2)
-	row.add_child(rv)
-	_book_goal = _step(rv, 20)
-	_book_goal_sub = _wrap(UI.label("", 17, UI.INK, "body", 700), 430)
-	rv.add_child(_book_goal_sub)
-	left.add_child(row)
-	_quest_priest = UI.label("", 18, UI.INK, "body", 900)
+	_book_stage = UI.label("", 20, UI.INK, "body", 900)
+	left.add_child(_book_stage)
+	_quest_priest = UI.label("", 16, UI.MUTED, "body", 700)
 	left.add_child(_quest_priest)
-	left.add_child(UI.rule())
-	left.add_child(UI.label("Спогади", 22, UI.INK, "body", 900, true))
-	for i in GameState.MEMORY_COUNT:
-		_book_mem.append(UI.label("", 18, UI.LABEL, "body", 800))
-		left.add_child(_book_mem[i])
+	var goals := UI.vbox(2)
+	left.add_child(goals)
+	for i in GameState.goal_steps().size():
+		var row := UI.panel(Color(0, 0, 0, 0), 10, 0, 8, 0)
+		_sb(row).content_margin_top = 2
+		_sb(row).content_margin_bottom = 2
+		var rh := UI.hbox(8)
+		row.add_child(rh)
+		var d := {panel = row, check = UI.icon("check", 16, UI.GREEN), lock = UI.icon("lock", 16, UI.LABEL), ring = _ring(UI.INK, 14)}
+		for k in ["check", "lock", "ring"]:
+			d[k].size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+			rh.add_child(d[k])
+		d.label = _expand(_wrap(UI.label("", 15, UI.INK, "body", 700), 380), HORIZONTAL_ALIGNMENT_LEFT)
+		rh.add_child(d.label)
+		goals.add_child(row)
+		_goal_rows.append(d)
 	left.add_child(UI.rule())
 	left.add_child(UI.label("Підказки", 22, UI.INK, "body", 900, true))
 	var scroll := ScrollContainer.new()
@@ -828,7 +776,7 @@ func _build_book() -> void:
 	_hint_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_hint_list)
 	left.add_child(scroll)
-	var right: VBoxContainer = page.call("Комікс", UI.CHARGE, Color("FFF6E0"))
+	var right: VBoxContainer = page.call("Спогади", UI.CHARGE, Color("FFF6E0"))
 	_comic_view = ComicPage.new()
 	_comic_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_comic_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -845,6 +793,7 @@ func toggle_book() -> void:
 		for id in GameState.hints:
 			_read[id] = true
 		_mem_seen = GameState.memories.size()
+		_goal_seen = _active_goal()
 		_book.hide()
 	else:
 		_map.hide()
@@ -856,18 +805,38 @@ func toggle_book() -> void:
 	_rebuild_hints()
 
 
-## «Цілі»: the current stage with its live goal and progress, the priest, found memories.
+## Index of the first goal not done yet (= goal_steps().size() once free).
+func _active_goal() -> int:
+	var steps := GameState.goal_steps()
+	for i in steps.size():
+		if not steps[i].done:
+			return i
+	return steps.size()
+
+
+## «Цілі»: every story goal; done ones checked, the active one highlighted, later ones locked.
 func _update_book() -> void:
 	var i := clampi(GameState.stage, 0, STAGE_NAMES.size() - 1)
-	var pr := _stage_progress()
-	_set_step(_book_goal, "Етап %d/%d · %s" % [i + 1, STAGE_NAMES.size(), STAGE_NAMES[i]], 1)
-	_book_goal_sub.text = GameState.goal() + (" · " + pr[1] if pr[1] != "" else "")
+	_book_stage.text = "Етап %d/%d · %s" % [i + 1, STAGE_NAMES.size(), STAGE_NAMES[i]]
 	_quest_priest.text = _priest_status()
-	for m in _book_mem.size():
-		_set_memory_row(_book_mem[m], m + 1)
+	var steps := GameState.goal_steps()
+	var now := _active_goal()
+	var pr := _stage_progress()
+	for k in _goal_rows.size():
+		var d: Dictionary = _goal_rows[k]
+		var state := 2 if k < now else (1 if k == now else 0)  # 0 locked, 1 active, 2 done
+		d.check.visible = state == 2
+		d.lock.visible = state == 0
+		d.ring.visible = state == 1
+		d.label.text = "???" if state == 0 else steps[k].text + (" · " + pr[1] if state == 1 and pr[1] != "" and not "/" in steps[k].text else "")
+		d.label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if state == 1 else TextServer.AUTOWRAP_OFF
+		d.label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING if state == 1 else TextServer.OVERRUN_TRIM_ELLIPSIS  # trimming + autowrap collapses the label
+		d.label.clip_text = state != 1
+		_set_color(d.label, [UI.LABEL, UI.INK, DARK_GREEN][state])
+		_sb(d.panel).bg_color = Color(UI.GOLD, 0.85) if state == 1 else Color(0, 0, 0, 0)
 
 
-## «Комікс»: panels A–E open with their memory, F after the finale; the rest stay dark with «?».
+## «Спогади» (comic page): panels A–E open with their memory, F after the finale; the rest stay dark with «?».
 func _update_comic() -> void:
 	for k in COMIC_LETTERS.size():
 		_comic_view.set_panel_state(COMIC_LETTERS[k], GameState.won if k == 5 else (k + 1) in GameState.memories)
@@ -893,7 +862,7 @@ func _rebuild_hints() -> void:
 		_hint_list.add_child(p)
 	if GameState.hints.is_empty():
 		_hint_list.add_child(_hand("Поки порожньо…", 26))
-	unread += maxi(GameState.memories.size() - _mem_seen, 0)
+	unread += maxi(GameState.memories.size() - _mem_seen, 0) + int(_goal_now > _goal_seen)
 	_book_badge.visible = unread > 0
 	_book_badge.get_child(0).text = str(unread)
 
