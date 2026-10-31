@@ -2,15 +2,16 @@ extends Node3D
 ## Easter eggs, none of them touch the story. Hidden in the rock between rooms, where only a ghost can go; a coloured
 ## light leaking through the wall is the clue. Cat: E on the pedestal (no text on purpose), the cat rises, spins until
 ## its track ends, freezes; E again, it spins again. Skeleton: E on the bones, it dances. Rat: runs from you along ROUTE, through a hole in a
-## wall; the turtles' pizza room behind it exists only if you pass through that wall. Phone: an air-raid alert on
-## Тарас's phone once. Stations of Kind.EGG call touched(). Everything is on visual layer 2, so the minimap and the
-## guide tour don't give the eggs away.
+## wall; the turtles' pizza room behind it exists only if you pass through that wall. Phone: Тарас's phone lies on the
+## camp table (air_raid_phone.gd), the air-raid alert goes off on it once. Stations of Kind.EGG call touched().
+## Everything is on visual layer 2, so the minimap and the guide tour don't give the eggs away.
 ## Art drops in by name: art/models/Pedestal, Cat, Rat, Skeleton, Bones, Turtle, Pizza; sound: audio/eggs (egg_audio.gd).
 ## Skeleton.glb is built by tools/make_skeleton.py and carries its own dance.
 
 const Wall = preload("res://scripts/wall.gd")
 const UI = preload("res://scripts/ui.gd")
 const EggAudio = preload("res://scripts/egg_audio.gd")
+const AirRaidPhone = preload("res://scripts/air_raid_phone.gd")
 
 const EGGS := ["cat", "skeleton", "phone", "turtles"]
 const LAYER_HIDDEN := 2  ## the first-person camera sees it, the minimap and the tour cull it
@@ -56,6 +57,7 @@ var _turtles: Array[Node3D] = []
 var _room: Node3D
 var _room_center: Vector3
 var _ghost_x := INF  ## last frame's x, to tell how the ghost got into the room
+var _phone: Node3D
 var _t := 0.0
 
 
@@ -67,6 +69,9 @@ func _ready() -> void:
 	_build_skeleton()
 	_build_rat()
 	_build_room()
+	_phone = AirRaidPhone.new()
+	_phone.lay_on(get_parent().get_node("Level/TableR4R"))
+	add_child(_phone)
 	_hide_from_map(self)
 	if Wall.model("Bones") == null:
 		_build_pile()
@@ -365,10 +370,10 @@ func _build_turtle(root: Node3D, mask: Color) -> void:
 func _ring_phone(ghost: Vector3) -> void:
 	if "phone" in found or GameState.elapsed < phone_at or GameState.stage not in [GameState.Stage.HAUNT, GameState.Stage.LURE]:
 		return
-	var taras := get_parent().get_node_or_null("Visitors/Taras") as Node3D
-	if taras == null or _flat(ghost, taras.global_position) > PHONE_NEAR:
+	if _flat(ghost, _phone.global_position) > PHONE_NEAR:
 		return
-	_sound(taras, "phone", 12.0).play()
+	_sound(_phone, "phone", 12.0).play()
+	_phone.alert()
 	_found("phone", [["Телефон Тараса", "Повітряна тривога. Прямуйте до найближчого укриття.", UI.ORANGE],
 		["Тарас", "Олено, нам кудись іти?", ARCH_COLOR],
 		["Олена", "Тарасе. Ми в підземеллі.", ARCH_COLOR],
