@@ -43,6 +43,7 @@ var _mesh: Node3D  ## placeholder box (MeshInstance3D) or the final model from a
 var _label: Label3D
 var _light: OmniLight3D
 var _flame: MeshInstance3D  ## CANDLE with a final model: there's no box to glow, so this shows it's lit
+var _writing: Label3D  ## MIRROR with a final model: no box to redden, the word itself
 var _block: CollisionShape3D  ## DOOR
 
 
@@ -227,6 +228,16 @@ func _refresh() -> void:
 		Kind.MIRROR:
 			if GameState.mirror_written and _mat():
 				_mat().albedo_color = Color(0.55, 0.1, 0.1)
+			elif GameState.mirror_written and not _writing:
+				_writing = Label3D.new()
+				_writing.text = "ДОПОМОЖІТЬ"
+				_writing.font = UI.font()
+				_writing.font_size = 64
+				_writing.pixel_size = 0.002
+				_writing.modulate = Color(0.75, 0.08, 0.08)
+				_writing.position.x = -size.x / 2 - 0.02  # the side facing the room
+				_writing.rotation.y = -PI / 2
+				add_child(_writing)
 		Kind.EVIDENCE:
 			if shown and _mat():
 				_mat().albedo_color = UI.GOLD

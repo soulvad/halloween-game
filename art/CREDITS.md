@@ -7,8 +7,14 @@
 | Меблі й предмети | `art/models`: `Crate*`, `Table*`, `Bunk*`, `Barrels*`, `Plank*`, `Shelf*`, `Stones*`, `Chest`, `Jug`, `Grate`, `Candle`, `Pedestal` | Kay Lousberg, [KayKit Dungeon Remastered](https://github.com/KayKit-Game-Assets/KayKit-Dungeon-Remastered-1.0) |
 | Скелет, купи кісток | `art/models`: `Skeleton`, `Bones`, `Niche` | Gord Goodwin, [Skeleton with rig](https://opengameart.org/content/skeleton-with-rig); танець наш |
 | Кіт | `art/models/Cat.glb` | [Simple Cat](https://opengameart.org/content/simple-cat) |
+| Олена, Тарас, священник (перефарбований Тарас) | `art/models`: `Olena`, `Taras`, `Priest` | Quaternius, Adventurer: [жінка](https://poly.pizza/m/ZwF0K7WBmu), [чоловік](https://poly.pizza/m/5EGWBMpuXq) |
+| Щур | `art/models/Rat.glb` | Quaternius, [Rat](https://poly.pizza/m/iltq5bVNaV) |
+| Піца | `art/models/Pizza.glb` | Quaternius, [Pizza](https://poly.pizza/m/XmmG0uImLL) |
+| Дзвін | `art/models/Bell.glb` | Quaternius, [Bell](https://poly.pizza/m/cILuaO115Y) |
+| Дзеркало | `art/models/Mirror.glb` | Isa Lousberg, [Mirror](https://poly.pizza/m/2WQIUVj5qr) |
+| Черепаха (опущені руки наші) | `art/models/Turtle.glb` | Polygonal Mind, [Turtle Character](https://poly.pizza/m/xmwfRzGvPv) |
 | Стіни | `art/textures/wall.png` | [Poly Haven, Medieval Blocks 03](https://polyhaven.com/a/medieval_blocks_03) |
 | Підлога | `art/textures/floor.png` | [Poly Haven, T Brick Floor 002](https://polyhaven.com/a/t_brick_floor_002) |
 | Стеля | `art/textures/ceiling.png` | [Poly Haven, Rock Wall 12](https://polyhaven.com/a/rock_wall_12) |
 
-Моделі збирають `tools/make_props.py` і `tools/make_skeleton.py`.
+Моделі збирають `tools/make_props.py`, `tools/make_people.py` і `tools/make_skeleton.py`.
