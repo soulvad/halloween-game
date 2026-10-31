@@ -6,14 +6,15 @@ extends StaticBody3D
 ## HAUNT: a noise visitors hear. MIRROR: write ДОПОМОЖІТЬ for a witness → they call the priest. PLAN: push the estate
 ## plan on the archaeologists' table. DOOR: blocks people while closed. KNOCK: the bricked wall, rhythm 3–1 for a witness.
 ## EVIDENCE: your things in your room, shown to a witness. CIRCLE: hold E after the ritual (game.gd).
+## EGG: tells scripts/easter_eggs.gd, no effect on the story.
 
 const Wall = preload("res://scripts/wall.gd")
 const UI = preload("res://scripts/ui.gd")
 const Visitor = preload("res://scripts/visitor.gd")
 
-enum Kind { MEMORY, CANDLE, HAUNT, MIRROR, PLAN, DOOR, KNOCK, EVIDENCE, CIRCLE }
+enum Kind { MEMORY, CANDLE, HAUNT, MIRROR, PLAN, DOOR, KNOCK, EVIDENCE, CIRCLE, EGG }
 
-const COOLDOWN := {Kind.CANDLE: 1.5, Kind.HAUNT: 4.0}
+const COOLDOWN := {Kind.CANDLE: 1.5, Kind.HAUNT: 4.0, Kind.EGG: 1.0}
 const WITNESS_RANGE := 7.0  ## an archaeologist this close sees what you do
 const HEAR_KNOCK := 2.0  ## KNOCK: has to stand right at the wall (not in the room next door)
 const KNOCK_FAST := 0.7  ## max gap between the first three knocks
@@ -144,7 +145,7 @@ func can_use() -> bool:
 	match kind:
 		Kind.MEMORY:
 			return available()
-		Kind.CANDLE, Kind.HAUNT, Kind.DOOR:
+		Kind.CANDLE, Kind.HAUNT, Kind.DOOR, Kind.EGG:
 			return true
 		Kind.MIRROR:
 			return not GameState.mirror_written and GameState.stage == GameState.Stage.HAUNT and witness()
@@ -187,6 +188,8 @@ func interact(_p) -> void:
 		Kind.EVIDENCE:
 			shown = true
 			GameState.evidence += 1
+		Kind.EGG:
+			get_tree().call_group("easter_eggs", "touched", name)
 		# CIRCLE: holding E is handled by game.gd
 	_refresh()
 
