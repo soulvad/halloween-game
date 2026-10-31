@@ -75,6 +75,20 @@ func _ready() -> void:
 	var m1 = mem.call(1)
 	assert(m1.global_position.y + m1.size.y / 2 + hud.PROMPT_OVER < 1.8)
 
+	# world labels: full size up close, smaller further off
+	var cam: Camera3D = p.camera
+	var lbl: Label3D = m1._label
+	var near_pos := lbl.global_position + Vector3(0, 0, 1.0)
+	var far_pos := lbl.global_position + Vector3(0, 0, 5.0)
+	var cam_from := cam.global_transform
+	cam.global_position = near_pos
+	UI.world_label(lbl, m1.LABEL_PX)
+	assert(is_equal_approx(lbl.pixel_size, m1.LABEL_PX))
+	cam.global_position = far_pos
+	UI.world_label(lbl, m1.LABEL_PX)
+	assert(lbl.pixel_size < m1.LABEL_PX * 0.5)
+	cam.global_transform = cam_from
+
 	# 3D guide: pauses, shows its steps, Esc / last step dives back into the ghost and unpauses
 	g.tour()
 	var tour = g.get_children().filter(func(n): return n.has_method("go")).front()

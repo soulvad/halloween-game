@@ -21,6 +21,7 @@ const KNOCK_FAST := 0.7  ## max gap between the first three knocks
 const KNOCK_PAUSE := Vector2(0.8, 2.5)  ## the pause before the last knock
 const LAYER_STATION := 8  ## layer 4: only the player's aim sees it, the ghost floats through
 const LAYER_PEOPLE_ONLY := 64  ## a closed door blocks people (and the navmesh), not the ghost
+const LABEL_PX := 0.0012  ## label size up close (UI.world_label)
 const HAUNT_LINES := ["*дзень-дзень*", "*скрип*", "*брязкіт*", "*шурхіт*"]
 
 @export var kind := Kind.HAUNT
@@ -77,6 +78,8 @@ func _process(delta: float) -> void:
 		_mesh.position.y = sin(Time.get_ticks_msec() * 0.003) * 0.08
 	_label.text = title()
 	_label.visible = GameState.show_labels and visible
+	if _label.visible:
+		UI.world_label(_label, LABEL_PX)
 	if kind not in [Kind.MEMORY, Kind.DOOR]:
 		if _mesh is GeometryInstance3D:
 			_mesh.transparency = 0.0 if can_use() or shown else 0.45
@@ -289,8 +292,8 @@ func _build() -> void:
 	_label.visibility_range_end = 6.0  ## first person: only nearby things are labelled
 	_label.font_size = 48
 	_label.outline_size = 12
-	_label.pixel_size = 0.0012
-	_label.fixed_size = true  ## same size on screen at any distance (no giant letters next to the camera)
+	_label.pixel_size = LABEL_PX
+	_label.fixed_size = true  ## no giant letters next to the camera; UI.world_label shrinks it further off
 	_label.position.y = size.y / 2 + 0.4
 	_label.text = title_text
 	_label.layers = 2  ## the minimap camera culls labels
