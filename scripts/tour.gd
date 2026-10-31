@@ -64,6 +64,7 @@ func play(g: Node3D) -> void:
 	var hud := g.get_node_or_null("HUD") as CanvasLayer
 	if hud:
 		hud.visible = false
+	g.get_node("Player").show_body(true)
 	_cam = Camera3D.new()
 	_cam.fov = 55
 	_cam.far = 120
@@ -318,6 +319,7 @@ func close() -> void:
 
 
 func _finish() -> void:
+	game.get_node("Player").show_body(false)
 	game.get_node("Player").camera.current = true
 	_cam.queue_free()
 	_light.queue_free()

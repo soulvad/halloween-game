@@ -11,6 +11,7 @@ extends StaticBody3D
 const Wall = preload("res://scripts/wall.gd")
 const UI = preload("res://scripts/ui.gd")
 const Visitor = preload("res://scripts/visitor.gd")
+const MirrorGlass = preload("res://scripts/mirror.gd")
 
 enum Kind { MEMORY, CANDLE, HAUNT, MIRROR, PLAN, DOOR, KNOCK, EVIDENCE, CIRCLE, EGG }
 
@@ -66,6 +67,8 @@ func _ready() -> void:
 		_block.shape.size = size
 		b.add_child(_block)
 		add_child(b)
+	if kind == Kind.MIRROR:
+		add_child(MirrorGlass.new(size))
 	_refresh()
 
 

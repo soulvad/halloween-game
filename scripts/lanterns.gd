@@ -11,7 +11,6 @@ const NEAR_START := 3.5  ## the first one floats this far in front of the ghost,
 const MODEL_SIZE := Vector3(1.5, 1.3, 1.5)  ## art/models/Lantern.glb as authored, also the box if it's missing
 const SCALE := 0.2  ## about 30 cm wide
 const GLOW := Color(1.0, 0.5, 0.12)
-const LAYER_HIDDEN_ON_MAP := 2  ## visual layer 2: the minimap culls it
 
 
 func _ready() -> void:
@@ -76,19 +75,23 @@ class Lantern extends Node3D:
 		_light.omni_range = LIGHT_RANGE
 		add_child(_light)
 
-	## The pumpkin glows from within: tinted orange and emissive, off the minimap.
+	## The pumpkin glows from within: tinted orange and emissive.
 	func _glow(root: Node3D) -> void:
 		var meshes: Array = root.find_children("*", "MeshInstance3D", true, false)
 		if root is MeshInstance3D:
 			meshes.append(root)
 		for m: MeshInstance3D in meshes:
-			m.layers = LAYER_HIDDEN_ON_MAP
-			var mat := m.mesh.surface_get_material(0).duplicate() as StandardMaterial3D
-			mat.albedo_color = Color(1.0, 0.62, 0.3)
-			mat.emission_enabled = true
-			mat.emission = GLOW
-			mat.emission_energy_multiplier = 0.55
-			m.material_override = mat
+			for s in m.mesh.get_surface_count():
+				var mat := m.mesh.surface_get_material(s).duplicate() as StandardMaterial3D
+				if mat.resource_name == "Carved":  # the eyes and mouth stay black, whatever the light
+					mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+					mat.albedo_color = Color.BLACK
+				else:
+					mat.albedo_color = Color(1.0, 0.62, 0.3)
+					mat.emission_enabled = true
+					mat.emission = GLOW
+					mat.emission_energy_multiplier = 0.55
+				m.set_surface_override_material(s, mat)
 
 	func _process(delta: float) -> void:
 		_t += delta

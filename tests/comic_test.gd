@@ -13,9 +13,8 @@ func _ready() -> void:
 		for id: String in IDS:
 			_found(id)
 			var c := _start(id)
-			for i in 5:
-				if id == "prologue":
-					c.advance()
+			for i in 11 if id == "prologue" else c._order.size() - 1:
+				c.advance()
 			await get_tree().create_timer(1.0).timeout
 			get_viewport().get_texture().get_image().save_png("%s/%s.png" % [shot[0], id])
 			c._finish()
@@ -28,13 +27,16 @@ func _ready() -> void:
 		var state := {"done": false}
 		c.finished.connect(func(): state.done = true)
 		assert(get_tree().paused, "%s: tree not paused" % id)
-		var presses := 6 if id == "prologue" else 1
-		if id.begins_with("memory_"):
+		var presses: int = 12 if id == "prologue" else c._order.size()
+		if id == "memory_4":  # no art yet: still on the sheet
+			assert(c.page.page_id == "memories")
 			var n := id.to_int()
 			for i in 5:
 				var shown: bool = c.page.is_shown("ABCDE"[i])
 				assert(shown == (i + 1 < n), "%s: panel %s shown=%s" % [id, "ABCDE"[i], shown])
 			assert(not c.page.is_shown("F"))
+		elif id.begins_with("memory_"):
+			assert(c.page.page_id == id, "%s: not on its own page" % id)
 		if id == "finale":
 			for l in "ABCDE":
 				assert(c.page.is_shown(l), "finale: %s locked" % l)
@@ -45,6 +47,8 @@ func _ready() -> void:
 			assert(not state.done, "%s: finished early at press %d" % [id, i])
 			_key(KEY_E if i % 2 == 0 else KEY_SPACE)
 			await get_tree().process_frame
+			if id == "prologue" and i == 5:
+				assert(c.page.page_id == "prologue2", "prologue: did not turn the page")
 		assert(state.done, "%s: not finished after %d presses" % [id, presses])
 		assert(not get_tree().paused, "%s: tree still paused" % id)
 		print("  %s ok" % id)
