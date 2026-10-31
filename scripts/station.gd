@@ -14,6 +14,7 @@ const Wall = preload("res://scripts/wall.gd")
 const UI = preload("res://scripts/ui.gd")
 const Visitor = preload("res://scripts/visitor.gd")
 const MirrorGlass = preload("res://scripts/mirror.gd")
+const Fx = preload("res://scripts/fx.gd")
 
 enum Kind { MEMORY, CANDLE, HAUNT, MIRROR, PLAN, KNOCK, EVIDENCE, CIRCLE, EGG }
 
@@ -28,6 +29,9 @@ const KNOCK_PAUSE := Vector2(0.8, 2.5)  ## the pause before the last knock
 const LAYER_STATION := 8  ## layer 4: only the player's aim sees it, the ghost floats through
 const LABEL_PX := 0.0012  ## label size up close (UI.world_label)
 const HAUNT_LINES := ["*дзень-дзень*", "*скрип*", "*брязкіт*", "*шурхіт*"]
+const HAUNT_SFX := {"Chains": "clank", "DripChain": "clank", "Grate": "clank", "Bell": "bell", "GateBell": "bell", "Jug": "jug"}  ## else clank
+const LIGHT_ENERGY := 1.2
+const SMOKE := Color(0.55, 0.55, 0.58, 0.7)
 
 @export var kind := Kind.HAUNT
 @export var title_text := "Кайдани"
@@ -50,7 +54,10 @@ var _mesh: Node3D  ## placeholder box (MeshInstance3D) or the final model from a
 var _label: Label3D
 var _light: OmniLight3D
 var _flame: MeshInstance3D  ## CANDLE with a final model: there's no box to glow, so this shows it's lit
-var _writing: Label3D  ## MIRROR with a final model: no box to redden, the word itself
+var _writing: Label3D  ## MIRROR: ДОПОМОЖІТЬ on the glass (the placeholder box also reddens); HAUNT "write": ТУТ in the dust
+var _denied := false  ## the ghost already said why E does nothing here (once until it works)
+var _gone := 0.0  ## MEMORY 2–4: just found, the glint stays a moment to pop
+var _fade: Tween  ## CANDLE: flame going out / flaring up
 
 
 func _ready() -> void:
@@ -62,6 +69,8 @@ func _ready() -> void:
 	_label.font = UI.font()
 	if kind == Kind.EVIDENCE:
 		add_to_group("evidence")
+	if kind == Kind.CANDLE:
+		add_to_group("candle")  # visitors read `lit` to say what they saw
 	if kind == Kind.MIRROR:
 		add_child(MirrorGlass.new(size))
 	_refresh()
@@ -72,7 +81,8 @@ func _process(delta: float) -> void:
 		return
 	cooldown = maxf(cooldown - delta, 0)
 	if kind == Kind.MEMORY:
-		visible = available()
+		_gone = maxf(_gone - delta, 0)
+		visible = available() or _gone > 0
 		_mesh.position.y = sin(Time.get_ticks_msec() * 0.003) * 0.08
 		_examine(delta)
 	if kind == Kind.CIRCLE:  # appears with the ritual
@@ -102,7 +112,7 @@ func finder() -> Node3D:
 
 ## MEMORY 2–4: a lured archaeologist notices it, walks up, looks a while, then finds it.
 func _examine(delta: float) -> void:
-	var v := finder() if visible and memory_id > 1 else null
+	var v := finder() if available() and memory_id > 1 else null
 	if not v:
 		_exam = 0.0
 		_noticed = false
@@ -113,6 +123,9 @@ func _examine(delta: float) -> void:
 	if _exam >= EXAMINE_TIME:
 		v.found()
 		GameState.remember(memory_id)
+		_gone = 0.35
+		Fx.pop(_mesh, 1.6, 0.35)
+		Fx.sound(self, "memory")
 
 
 func _flat(n: Node3D) -> float:
@@ -180,7 +193,9 @@ func can_use() -> bool:
 
 func interact(_p) -> void:
 	if not can_use():
+		_deny()
 		return
+	_denied = false
 	cooldown = COOLDOWN.get(kind, 0.0)
 	match kind:
 		Kind.MEMORY:
@@ -199,6 +214,102 @@ func interact(_p) -> void:
 			get_tree().call_group("easter_eggs", "touched", name)
 		# CIRCLE: holding E is handled by game.gd
 	_refresh()
+	_feedback()
+
+
+## E on something that can't be used yet: a dull tone, and once the ghost's thought why.
+func _deny() -> void:
+	Fx.sound_ui(get_tree(), "deny")
+	if _denied:
+		return
+	if need != "" and not GameState.has_power(need):
+		GameState.think("Я ще не пам'ятаю, як це…")
+	elif _unseen():
+		GameState.think("Ніхто не побачить…")
+	else:
+		return
+	_denied = true
+
+
+## MIRROR / KNOCK: everything is ready but nobody is near to see it.
+func _unseen() -> bool:
+	if witness():
+		return false
+	if kind == Kind.MIRROR:
+		return not GameState.mirror_written and GameState.stage == GameState.Stage.HAUNT
+	return kind == Kind.KNOCK and not GameState.wall_knocked and GameState.stage == GameState.Stage.EVIDENCE and GameState.name_known()
+
+
+## Right after a use: the sound and what the thing itself does.
+func _feedback() -> void:
+	match kind:
+		Kind.CANDLE:
+			_flicker()
+		Kind.HAUNT:
+			if need == "write":
+				Fx.sound(self, "write")
+				_letters("ТУТ", 0.9)
+			else:
+				Fx.sound(self, HAUNT_SFX.get(String(name), "clank"))
+				Fx.shake(_mesh)
+				Fx.puff(self, global_position + Vector3.UP * size.y / 2)
+		Kind.MIRROR:
+			Fx.sound(self, "write")
+			_letters("ДОПОМОЖІТЬ", 1.6)
+		Kind.KNOCK:
+			Fx.sound(self, "knock")
+			var cam: Camera3D = GameState.player.get("camera") if GameState.player else null
+			var at := global_position
+			if cam:  # dust on the side you knock from
+				var to := cam.global_position - at
+				at += Vector3(to.x, 0, to.z).normalized() * 0.15
+				Fx.kick(cam)
+			Fx.puff(self, at, Color(0.75, 0.68, 0.58, 0.8), 10, 0.2)
+			if GameState.wall_knocked:
+				Fx.flash(get_tree(), Color(0.6, 0.95, 1.0, 0.25), 0.8)
+				Fx.sound(self, "chime")
+
+
+## CANDLE: blown out = the flame shrinks and leans, a wisp of smoke; lit = the light swells in 0.3 s.
+func _flicker() -> void:
+	if _fade:
+		_fade.kill()
+	var top := global_position + Vector3.UP * (size.y / 2 + 0.06)
+	_light.visible = true
+	if _flame:
+		_flame.visible = true
+	_fade = create_tween().set_parallel()
+	if lit:
+		Fx.sound(self, "ignite")
+		_light.light_energy = 0.0
+		_fade.tween_property(_light, "light_energy", LIGHT_ENERGY, 0.3).set_ease(Tween.EASE_OUT)
+		if _flame:
+			_flame.scale = Vector3.ONE * 0.2
+			_flame.rotation.z = 0.0
+			_fade.tween_property(_flame, "scale", Vector3.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	else:
+		Fx.sound(self, "breath")
+		Fx.puff(self, top, SMOKE, 10, 0.05)
+		_fade.tween_property(_light, "light_energy", 0.0, 0.25)
+		if _flame:
+			_fade.tween_property(_flame, "scale", Vector3.ONE * 0.1, 0.25)
+			_fade.tween_property(_flame, "rotation:z", 0.6, 0.25)
+		_fade.chain().tween_callback(_refresh)  # hides light and flame (unless lit again since)
+
+
+## Writing appears letter by letter (the word was put up by _refresh / here).
+func _letters(text: String, time: float) -> void:
+	if not _writing:  # HAUNT "write": lying in the dust
+		_writing = Label3D.new()
+		_writing.font = UI.font()
+		_writing.font_size = 96
+		_writing.pixel_size = 0.003
+		_writing.modulate = Color(0.85, 0.8, 0.7, 0.85)
+		_writing.position.y = size.y / 2 + 0.005
+		_writing.rotation.x = -PI / 2
+		add_child(_writing)
+	var w := _writing  # Label3D has no visible_ratio: grow the text itself
+	create_tween().tween_method(func(n: int): w.text = text.left(n), 0, text.length(), time)
 
 
 ## EVIDENCE: the archaeologists have looked it over (game.gd).
@@ -231,12 +342,14 @@ func _refresh() -> void:
 			_light.visible = lit
 			if _flame:
 				_flame.visible = lit
+				_flame.scale = Vector3.ONE
+				_flame.rotation.z = 0.0
 			if _mat():
 				_mat().emission_enabled = lit
 		Kind.MIRROR:
 			if GameState.mirror_written and _mat():
 				_mat().albedo_color = Color(0.55, 0.1, 0.1)
-			elif GameState.mirror_written and not _writing:
+			if GameState.mirror_written and not _writing:
 				_writing = Label3D.new()
 				_writing.text = "ДОПОМОЖІТЬ"
 				_writing.font = UI.font()
@@ -277,7 +390,7 @@ func _build() -> void:
 		_light = OmniLight3D.new()
 		_light.light_color = color
 		_light.omni_range = 3.0 if kind == Kind.CANDLE else 2.0
-		_light.light_energy = 1.2
+		_light.light_energy = LIGHT_ENERGY
 		_light.position.y = size.y / 2 + 0.1
 		add_child(_light)
 		if kind == Kind.CANDLE and not m:

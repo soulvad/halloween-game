@@ -23,6 +23,10 @@ const LABEL_PX := 0.0013  ## name label size up close (UI.world_label)
 const MASK := 7 | 64  ## walls, furniture, rubble
 const HEARD_LINES := ["Ви це чули?", "Звідки цей звук?..", "Там щось є. Ходімо подивимось.", "Знову… Це не вітер."]
 const NOTICE_LINES := ["Стривайте… там щось є.", "А це що таке?", "Ось звідки… Ходімо глянемо."]
+const CANDLE_LINES := ["Хто запалив свічку?", "Свічка сама згасла?!"]  ## by lit / out
+const WRITE_LINE := "ТУТ?.. Хто це написав?"
+const STARTLE := 0.5  ## on hearing: stands and turns to the noise this long before walking
+const LANTERN_REST := Vector3(0.4, 1.2, -0.3)
 const FOUND_LINES := ["Гляньте, яка стара річ…", "Хтось це беріг. Дуже давно.", "Це тут лежить, певно, років двісті."]
 
 @export var kind := Kind.ARCH
@@ -39,6 +43,10 @@ var _talk := 0.0  ## line cooldown
 var _agent: NavigationAgent3D
 var _label: Label3D
 var _anim: AnimationPlayer  ## the final model's `walk` and `idle`
+var _startle := 0.0
+var _lantern: OmniLight3D
+var _mark: Label3D  ## «?» heard something, «!» noticed / found a memory
+var _mark_tween: Tween
 
 
 func _ready() -> void:
@@ -79,12 +87,22 @@ func _ready() -> void:
 	_agent.radius = 0.35
 	add_child(_agent)
 	if kind == Kind.ARCH:
-		var lantern := OmniLight3D.new()
-		lantern.light_color = Color(1, 0.78, 0.45)
-		lantern.omni_range = 5.0
-		lantern.light_energy = 1.3
-		lantern.position = Vector3(0.4, 1.2, -0.3)
-		add_child(lantern)
+		_lantern = OmniLight3D.new()
+		_lantern.light_color = Color(1, 0.78, 0.45)
+		_lantern.omni_range = 5.0
+		_lantern.light_energy = 1.3
+		_lantern.position = LANTERN_REST
+		add_child(_lantern)
+		_mark = Label3D.new()
+		_mark.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		_mark.font = UI.font()
+		_mark.font_size = 96
+		_mark.outline_size = 16
+		_mark.pixel_size = 0.004
+		_mark.position.y = 2.45
+		_mark.layers = 2  ## the minimap camera culls labels
+		_mark.visible = false
+		add_child(_mark)
 	else:
 		add_child(Wall.holy_glow(1.2))
 		visible = false  # arrives later (game.gd calls arrive())
@@ -105,7 +123,35 @@ func _on_haunted(pos: Vector3, power: float, by: String) -> void:
 	_target = pos
 	_by = by
 	_investigate = INVESTIGATE_TIME
-	_line(HEARD_LINES.pick_random())
+	_startle = STARTLE
+	_show_mark("?", UI.PAPER)
+	_line(_heard_line(pos, by))
+
+
+## What it says about a noise: a candle that went out / lit itself, writing, else something heard.
+func _heard_line(pos: Vector3, by: String) -> String:
+	if by == "write":
+		return WRITE_LINE
+	if by == "breath":
+		for c in get_tree().get_nodes_in_group("candle"):
+			if c.global_position.distance_to(pos) < 0.1:
+				return CANDLE_LINES[0 if c.lit else 1]
+	return HEARD_LINES.pick_random()
+
+
+## Pop a «?» / «!» over the head, fade it out after a while.
+func _show_mark(text: String, col: Color) -> void:
+	if _mark_tween:
+		_mark_tween.kill()
+	_mark.text = text
+	_mark.modulate = col
+	_mark.scale = Vector3.ONE * 0.2
+	_mark.visible = true
+	_mark_tween = create_tween()
+	_mark_tween.tween_property(_mark, "scale", Vector3.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_mark_tween.tween_interval(1.6)
+	_mark_tween.tween_property(_mark, "modulate:a", 0.0, 0.5)
+	_mark_tween.tween_callback(_mark.hide)
 
 
 ## The power of the noise it is checking right now ("" = none).
@@ -118,12 +164,14 @@ func inspect(pos: Vector3, notice: bool) -> void:
 	_target = pos
 	_investigate = maxf(_investigate, 1.0)
 	if notice:
+		_show_mark("!", UI.CYAN)
 		_line(NOTICE_LINES.pick_random(), true)
 
 
 ## Found a memory where it was lured: says so and goes back to exploring.
 func found() -> void:
 	_investigate = 0.0
+	_show_mark("!", UI.CYAN)
 	_line(FOUND_LINES.pick_random(), true)
 
 
@@ -131,12 +179,16 @@ func _physics_process(delta: float) -> void:
 	UI.world_label(_label, LABEL_PX)
 	_talk = maxf(_talk - delta, 0)
 	_investigate = maxf(_investigate - delta, 0)
+	_startle = maxf(_startle - delta, 0)
 	var target := global_position
 	var speed: float = SPEED[kind]
 	var stage := GameState.stage
 	match stage:
 		GameState.Stage.HAUNT:
-			if _investigate > 0:
+			if _investigate > 0 and _startle > 0:  # freeze, turn to the noise
+				var to := _target - global_position
+				rotation.y = lerp_angle(rotation.y, atan2(-to.x, -to.z), 0.2)
+			elif _investigate > 0:
 				target = _target
 				speed = INVESTIGATE_SPEED
 			else:
@@ -149,8 +201,22 @@ func _physics_process(delta: float) -> void:
 		GameState.Stage.RITUAL:
 			target = _marker("RoomCenter") + (Vector3.ZERO if kind == Kind.PRIEST else _room_spot())
 	_walk(target, speed)
+	_swing_lantern(stage == GameState.Stage.HAUNT and _investigate > 0)
 	_label.text = _label_text()
 	_label.visible = GameState.show_labels
+
+
+## The lantern is held out towards the noise while checking it, back at the side otherwise.
+func _swing_lantern(at_noise: bool) -> void:
+	if not _lantern:
+		return
+	var rest := LANTERN_REST
+	if at_noise:
+		var to := to_local(_target)
+		to.y = 0
+		if to.length() > 0.1:
+			rest = to.normalized() * 0.6 + Vector3.UP * 1.45
+	_lantern.position = _lantern.position.lerp(rest, 0.1)
 
 
 ## HAUNT, nothing to check: walk between dig sites and stay a while at each.
