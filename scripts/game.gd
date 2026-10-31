@@ -7,6 +7,7 @@ extends Node3D
 const Station = preload("res://scripts/station.gd")
 const Visitor = preload("res://scripts/visitor.gd")
 const Wall = preload("res://scripts/wall.gd")
+const Ambient = preload("res://scripts/ambient.gd")
 const COMIC_SCENE := "res://scenes/comic.tscn"
 const RELEASE_TIME := 2.5  ## seconds to hold E in the circle
 const PRIEST_DELAY := 15.0  ## from the call to the priest walking in
@@ -29,6 +30,9 @@ func _ready() -> void:
 	Wall.textured($Level/Floor.mesh.material, "floor", 0.25)
 	Wall.textured($Level/Ceiling.mesh.material, "ceiling", 0.25)
 	GameState.reset()
+	var ambient := Ambient.new()
+	ambient.name = "Ambient"
+	add_child(ambient)
 	GameState.memory_found.connect(_on_memory_found)
 	GameState.power_gained.connect(_on_power_gained)
 	GameState.finished.connect(_on_finished)
