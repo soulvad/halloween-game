@@ -8,8 +8,10 @@ const UI = preload("res://scripts/ui.gd")
 const Station = preload("res://scripts/station.gd")
 const ComicPage = preload("res://scripts/comic_page.gd")
 const MapView = preload("res://scripts/map_view.gd")
-const SCREENS := "res://scripts/screens.gd"  ## how-to / settings, written by the menu side
+const SCREENS := "res://scripts/screens.gd"  ## settings, written by the menu side
 
+const PROMPT_OVER := 0.4  ## m over the target's top where the E card sits (= a station's label height)
+const PROMPT_GAP := 34.0  ## px between that point and the card's bottom: clears the label
 const LINE_TIME := 4.5  ## seconds a subtitle stays
 const TOAST_TIME := 3.5  ## seconds the «Нова сила» banner stays (counts only while the game runs)
 const DARK_GREEN := Color("3E8E1E")
@@ -482,6 +484,7 @@ func _build_prompt() -> void:
 	col.add_child(_prompt_title)
 	col.add_child(_prompt_sub)
 	_hud.add_child(_prompt)
+	_prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE  # only shows: never catches the captured mouse mid-screen
 	_prompt.hide()
 
 
@@ -510,10 +513,11 @@ func _prompt_hint(t) -> String:
 	return ""
 
 
-## E card floating above the target in the world.
+## E card floating above the target in the world: over its own label (station.gd), not a fixed height over its
+## centre, so a thing up on a shelf or a memory near the ceiling doesn't push the card into the ceiling.
 func _update_prompt(t) -> void:
 	var cam := get_viewport().get_camera_3d()
-	var top: Vector3 = t.global_position + Vector3.UP * 1.6 if t else Vector3.ZERO
+	var top: Vector3 = t.global_position + Vector3.UP * (t.size.y / 2 + PROMPT_OVER) if t else Vector3.ZERO
 	_prompt.visible = t != null and cam and not cam.is_position_behind(top)
 	if not _prompt.visible:
 		return
@@ -521,7 +525,7 @@ func _update_prompt(t) -> void:
 	_prompt_sub.text = _prompt_hint(t)
 	_prompt_key.bg_color = UI.GOLD if t.can_use() else UI.GREY
 	_prompt.size = Vector2.ZERO  # shrink to the new text
-	_prompt.position = cam.unproject_position(top) - Vector2(_prompt.size.x / 2, _prompt.size.y + 20)
+	_prompt.position = cam.unproject_position(top) - Vector2(_prompt.size.x / 2, _prompt.size.y + PROMPT_GAP)
 
 
 # --- «Нова сила» toast ---

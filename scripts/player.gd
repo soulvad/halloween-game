@@ -140,11 +140,16 @@ func _process(delta: float) -> void:
 	camera.fov = FOV + PHASE_FOV * phase
 
 
-func _unhandled_input(event: InputEvent) -> void:
+## Mouse look before the GUI: with the mouse captured the cursor sits mid-screen, and a HUD control under it
+## (the E card over a station) would swallow the motion and freeze the view.
+func _input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		rotation.y -= event.relative.x * MOUSE_SENS
 		head.rotation.x = clampf(head.rotation.x - event.relative.y * MOUSE_SENS, -1.3, 1.3)
-	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not get_tree().paused:
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not get_tree().paused:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED  # click back into the game (e.g. after alt-tab)
 	elif event.is_action_pressed("interact"):
 		var s = target_station()
