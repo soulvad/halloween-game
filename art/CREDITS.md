@@ -19,3 +19,5 @@
 | Стеля | `art/textures/ceiling.png` | [Poly Haven, Rock Wall 12](https://polyhaven.com/a/rock_wall_12) |
 
 Моделі збирають `tools/make_props.py`, `tools/make_people.py`, `tools/make_priest.py` і `tools/make_skeleton.py`.
+
+Портрети в `art/paintings/` (Шевченко, Бандера, відео й маска з Франком) дала команда, це не CC0: джерело і права треба уточнити перед публікацією.
