@@ -22,3 +22,8 @@
 - `ambient/creak.ogg`: "SFX2 - rocking chair creak" by JK129645, https://freesound.org/s/547466/
 - `ambient/rumble.ogg`: "Cracking Earthquake" by uagadugu, https://freesound.org/s/222521/
 - `ambient/stones.ogg`: "Stone small - Scraping" by Vrymaa, https://freesound.org/s/802690/
+
+## Memory calls (placeholders)
+
+`audio/memory/` is empty for now: `scripts/ambient.gd` (`MEMORY_FALLBACK`) plays pitched ambient files above instead.
+Drop `memory/memory_<id>.ogg|wav` (1 whistle, 2 tag on shackles, 3 paper rustle, 4 keys) and credit it here.
