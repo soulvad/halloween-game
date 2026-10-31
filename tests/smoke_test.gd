@@ -70,6 +70,11 @@ func _ready() -> void:
 	var candle = st.call("CandleBedroom")
 	assert(not candle.can_use())
 
+	# the E card over a station never takes the mouse (it would freeze the view), and sits over the thing, not the ceiling
+	assert(hud._prompt.mouse_filter == Control.MOUSE_FILTER_IGNORE)
+	var m1 = mem.call(1)
+	assert(m1.global_position.y + m1.size.y / 2 + hud.PROMPT_OVER < 1.8)
+
 	# 3D guide: pauses, shows its steps, Esc / last step dives back into the ghost and unpauses
 	g.tour()
 	var tour = g.get_children().filter(func(n): return n.has_method("go")).front()
