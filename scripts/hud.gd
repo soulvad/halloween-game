@@ -879,19 +879,16 @@ func open_pause() -> void:
 	var has_screens := ResourceLoader.exists(SCREENS)
 	_resume_btn = UI.button("Продовжити", "primary", "Esc", "play")
 	_resume_btn.pressed.connect(resume)
-	var how := UI.button("Як грати", "secondary", "", "search")
-	how.pressed.connect(_open_screen.bind("how_to"))
 	var guide := UI.button("Гайд по підземеллю", "secondary", "", "map")
 	guide.pressed.connect(func(): resume(); game.tour())
 	var settings := UI.button("Налаштування", "secondary", "", "sliders")
-	settings.pressed.connect(_open_screen.bind("settings"))
-	how.disabled = not has_screens
+	settings.pressed.connect(_open_settings)
 	settings.disabled = not has_screens
 	var again := UI.button("Почати знову", "ghost", "", "restart")
 	again.pressed.connect(_restart)
 	var menu := UI.button("У меню", "ghost", "", "exit")
 	menu.pressed.connect(_to_menu)
-	for b in [_resume_btn, guide, how, settings, again, menu]:
+	for b in [_resume_btn, guide, settings, again, menu]:
 		btns.add_child(b)
 	btns.add_child(UI.label("прогрес не збережеться", 15, UI.DIM, "body", 600))
 	_resume_btn.grab_focus.call_deferred()
@@ -933,9 +930,9 @@ func resume() -> void:
 	get_tree().paused = false
 
 
-func _open_screen(fn: String) -> void:
+func _open_settings() -> void:
 	var S = load(SCREENS)
-	_sub = S.how_to(_close_screen) if fn == "how_to" else S.settings(_close_screen)
+	_sub = S.settings(_close_screen)
 	add_child(_sub)
 
 
