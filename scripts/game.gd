@@ -10,6 +10,7 @@ const Wall = preload("res://scripts/wall.gd")
 const Ambient = preload("res://scripts/ambient.gd")
 const Lanterns = preload("res://scripts/lanterns.gd")
 const Decor = preload("res://scripts/decor.gd")
+const Paintings = preload("res://scripts/paintings.gd")
 const COMIC_SCENE := "res://scenes/comic.tscn"
 const Tour = preload("res://scripts/tour.gd")
 const RELEASE_TIME := 2.5  ## seconds to hold E in the circle
@@ -44,6 +45,9 @@ func _ready() -> void:
 	var decor := Decor.new()
 	decor.name = "Decor"
 	add_child(decor)
+	var paintings := Paintings.new()
+	paintings.name = "Paintings"
+	add_child(paintings)
 	var lanterns := Lanterns.new()
 	lanterns.name = "Lanterns"
 	add_child(lanterns)
