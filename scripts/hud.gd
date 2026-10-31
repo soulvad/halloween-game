@@ -23,7 +23,7 @@ const POWER_ICON := {
 	"write": '<path d="M4 20l1.2-4.8L16 4.4l3.6 3.6L8.8 18.8Z"/><path d="M14 6.5l3.5 3.5"/>',
 	"hands": "hand",
 }
-const STAGE_NAMES := ["Помітьте мене", "Священник", "Знайдіть мою кімнату", "Розкопки", "Твоя кімната", "Ритуал"]  ## by GameState.Stage
+const STAGE_NAMES := ["Помітьте мене", "Священник", "Пошуки", "Твоя кімната", "Ритуал"]  ## by GameState.Stage
 const ROOM := Rect2(17.5, -12.5, 6, 4.7)  ## your sealed room (x, z), from the level layout
 const ROOM_BANNER_TIME := 1.8  ## seconds the room name shows after you float into a room
 const RUBBLE_POS := Vector3(17.5, 0, -10)  ## shortcut: map marker spot if the level has no "Rubble" node; use the node once it exists
@@ -258,10 +258,6 @@ func _kind(n) -> String:
 ## Current stage progress: [0..1 or -1 for none, text].
 func _stage_progress() -> Array:
 	match GameState.stage:
-		GameState.Stage.DIG:
-			return [GameState.dig, "%d%%" % int(100 * GameState.dig)]
-		GameState.Stage.EVIDENCE:
-			return [float(GameState.evidence) / GameState.EVIDENCE_NEEDED, "%d / %d" % [GameState.evidence, GameState.EVIDENCE_NEEDED]]
 		GameState.Stage.RITUAL:
 			return [GameState.ritual, "%d%%" % int(100 * GameState.ritual)]
 	return [-1.0, ""]
@@ -494,7 +490,9 @@ func _prompt_hint(t) -> String:
 		return "потрібна сила: %s" % GameState.POWER_NAMES.get(need, need)
 	match _kind(t):
 		"MEMORY":
-			return "торкнися — повернеться спогад"
+			if t.memory_id == 1:
+				return "торкнися — повернеться спогад"
+			return "приведи сюди археолога: %s" % GameState.POWER_NAMES.get(t.need, t.need)
 		"CANDLE":
 			return "люди підуть на світло, що змінилося"
 		"HAUNT":
@@ -502,12 +500,10 @@ func _prompt_hint(t) -> String:
 			return "ще %d с тиші" % ceili(cd) if cd is float and cd > 0 else "люди поруч підуть на звук"
 		"MIRROR":
 			return "напис уже є" if GameState.mirror_written else "напиши на склі · археолог має бути поруч"
-		"PLAN":
-			return "план уже зсунуто" if GameState.plan_moved else "покажи, де на плані бракує кімнати"
 		"KNOCK":
-			return "три удари, пауза, один · хтось має бути поруч"
+			return "три удари, пауза, один · хтось має бути в кімнаті"
 		"EVIDENCE":
-			return "вже показано" if t.get("shown") else "покажи, коли люди поруч"
+			return "вони вже бачили" if t.get("shown") else "хай роздивляться люди"
 		"CIRCLE":
 			return "ритуал завершено · утримуй E" if GameState.release_ready() else "чекай, поки священник завершить ритуал"
 	return ""
@@ -679,7 +675,7 @@ func _update_map() -> void:
 		var n = m[0]
 		var pill: Control = m[1]
 		var at: bool = n is Vector3 or (is_instance_valid(n) and n.is_visible_in_tree())
-		pill.visible = at and not (m[2] and GameState.stage > GameState.Stage.DIG)
+		pill.visible = at and not (m[2] and GameState.stage > GameState.Stage.SEARCH)
 		if pill.visible:
 			pill.position = _map_view.to_map(n if n is Vector3 else n.global_position) - Vector2(pill.size.x / 2, pill.size.y + 10)
 	for i in _map_mem.size():

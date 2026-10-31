@@ -363,7 +363,7 @@ func _build_turtle(root: Node3D, mask: Color) -> void:
 # --- air-raid alert: only a phone notification, a real siren in a game isn't funny here ---
 
 func _ring_phone(ghost: Vector3) -> void:
-	if "phone" in found or GameState.elapsed < phone_at or GameState.stage not in [GameState.Stage.HAUNT, GameState.Stage.LURE]:
+	if "phone" in found or GameState.elapsed < phone_at or GameState.stage not in [GameState.Stage.HAUNT, GameState.Stage.PRIEST_COMING]:
 		return
 	var taras := get_parent().get_node_or_null("Visitors/Taras") as Node3D
 	if taras == null or _flat(ghost, taras.global_position) > PHONE_NEAR:

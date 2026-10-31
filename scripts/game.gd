@@ -1,7 +1,8 @@
 extends Node3D
 ## Story flow of «Підземелля старого міста» (stages in GameState.Stage):
-## HAUNT → (ДОПОМОЖІТЬ on the mirror) PRIEST_COMING → (priest walks in) LURE → (wall knocked 3–1) DIG → (wall down)
-## EVIDENCE → (3 things shown + memory 5, the name) RITUAL → (priest prayed, E held in the circle) finale comic, end.
+## HAUNT (memories 1–4) → (ДОПОМОЖІТЬ on the mirror) PRIEST_COMING → (priest walks in) SEARCH (time-lapse cutscene,
+## the collapsed wall is cleared) → EVIDENCE (they look over your things and read your name = memory 5; you knock 3–1)
+## → RITUAL → (priest prayed, E held in the circle) finale comic, end.
 ## Linear, no way to lose. Comics: prologue at start, one per memory, finale. All UI lives in scripts/hud.gd.
 
 const Station = preload("res://scripts/station.gd")
@@ -14,16 +15,38 @@ const Look = preload("res://scripts/look.gd")
 const COMIC_SCENE := "res://scenes/comic.tscn"
 const Tour = preload("res://scripts/tour.gd")
 const RELEASE_TIME := 2.5  ## seconds to hold E in the circle
+const TIMELAPSE := "res://scripts/timelapse.gd"
 const PRIEST_DELAY := 15.0  ## from the call to the priest walking in
-const DIG_TIME := 12.0
-const DIG_RANGE := 3.0  ## an archaeologist this close to the bricked wall starts / keeps digging
 const RITUAL_TIME := 20.0
+const LOOK_NEAR := 1.8  ## EVIDENCE: an archaeologist this close to a thing is looking at it
+const LOOK_TIME := 2.5  ## ...for this long
+const LOOK_GIVE_UP := 15.0  ## can't get close (navmesh): counts as seen anyway
+## EVIDENCE: what they look at, in order, and what they say. The last one is your name on the wall (memory 5).
+const LOOKS := [
+	["Shackles", "Олена", "Кайдани… Такі малі. На дитячу руку."],
+	["Tally", "Тарас", "Подряпини, рядами по сім. Він рахував дні."],
+	["Bowl", "Олена", "Миска. Сюди йому подавали їжу… а потім перестали."],
+	["Memory5", "Тарас", "Тут щось надряпано… Ти… міш? Тиміш!"],
+]
+const WAIT_LINES := [  ## PRIEST_COMING: [seconds left, who, line]
+	[10.0, "Тарас", "У книзі обліку прислуги є хлопець без імені, «Сімнадцятий». Записано: «втік»."],
+	[5.0, "Олена", "Втік… з підземелля, де на кожних дверях засув?"],
+]
+const RITUAL_LINES := [  ## RITUAL: [progress, line of the priest]
+	[0.3, "Двісті років тебе вважали втікачем. Тепер усі знатимуть правду."],
+	[0.65, "Господи, прийми душу раба Твого Тимоша. Він довго чекав."],
+]
+const ARCH_COLOR := Color("8BEA4E")
+const PRIEST_COLOR := Color("FFC531")
 const LAYER_FLOOR := 32  ## layer 6: only the navmesh baker sees it
-const NAV_MASK := 7 | 64  ## walls, furniture, bricked wall + closed doors (people-only)
+const NAV_MASK := 7 | 64  ## walls, furniture, the collapsed wall (people-only)
 
 var comics_enabled := true  ## the smoke test turns comics off
 var hold := 0.0  ## seconds E has been held in the circle
 var priest_in := 0.0  ## PRIEST_COMING: seconds until he arrives
+var looked := 0  ## EVIDENCE: index into LOOKS (things seen)
+var _look_t := 0.0  ## EVIDENCE: seconds near the current thing
+var _look_all := 0.0  ## EVIDENCE: seconds on the current thing
 var _region: NavigationRegion3D
 
 @onready var player = $Player
@@ -57,7 +80,7 @@ func _ready() -> void:
 		_intro.call_deferred()
 
 
-## Navmesh for visitors, baked from wall/furniture/bricked wall/closed door colliders + an invisible floor.
+## Navmesh for visitors, baked from wall/furniture/collapsed wall colliders + an invisible floor.
 func _bake_nav() -> void:
 	var floor_body := StaticBody3D.new()
 	floor_body.collision_layer = LAYER_FLOOR
@@ -120,38 +143,35 @@ func _process(delta: float) -> void:
 	match GameState.stage:
 		GameState.Stage.HAUNT:
 			if GameState.mirror_written:
-				GameState.say("Олена", "«ДОПОМОЖІТЬ»… Тарасе, це не жарт. Я дзвоню отцю Василю.", Color("8BEA4E"))
+				GameState.say("Олена", "«ДОПОМОЖІТЬ»… Тарасе, це не жарт. Я дзвоню отцю Василю.", ARCH_COLOR)
 				priest_in = PRIEST_DELAY
 				GameState.set_stage(GameState.Stage.PRIEST_COMING)
 		GameState.Stage.PRIEST_COMING:
+			for l in WAIT_LINES:
+				if priest_in > l[0] and priest_in - delta <= l[0]:
+					GameState.say(l[1], l[2], ARCH_COLOR)
 			priest_in -= delta
 			if priest_in <= 0:
 				priest().arrive($Markers/Entrance.global_position)
-				GameState.say("Отець Василь", "Душа просить допомоги — значить, її тут тримає щось незавершене.", Color("FFC531"))
-				GameState.set_stage(GameState.Stage.LURE)
-		GameState.Stage.LURE:
-			if GameState.plan_moved:
-				GameState.hint("door")
-				if GameState.has_power("hands"):
-					GameState.hint("knock")
-			if GameState.wall_knocked:
-				GameState.say("Тарас", "Чули? Хтось стукає… А за стіною — порожнеча. Розбираймо!", Color("8BEA4E"))
-				GameState.set_stage(GameState.Stage.DIG)
-		GameState.Stage.DIG:
-			if _digger():
-				GameState.dig = minf(GameState.dig + delta / DIG_TIME, 1.0)
-			if GameState.dig >= 1.0:
-				_open_room()
+				GameState.say("Отець Василь", "Душа просить допомоги — значить, її тут тримає щось незавершене. Шукаймо.", PRIEST_COLOR)
+				GameState.set_stage(GameState.Stage.SEARCH)
+				_search()
 		GameState.Stage.EVIDENCE:
-			if GameState.evidence >= GameState.EVIDENCE_NEEDED and GameState.name_known():
-				GameState.say("Отець Василь", "Тиміш Ковальчук. Тебе не забули, сину. Я відпущу тебе.", Color("FFC531"))
+			if looked < LOOKS.size():
+				_look_over(delta)
+			elif GameState.wall_knocked:
+				GameState.say("Отець Василь", "Чули? Три і один… Він тут. Тиміш Ковальчук, тебе не забули, сину. Я відпущу тебе.", PRIEST_COLOR)
 				GameState.set_stage(GameState.Stage.RITUAL)
 		GameState.Stage.RITUAL:
 			var p := priest()
 			if GameState.ritual < 1.0 and p.global_position.distance_to($Markers/RoomCenter.global_position) < 1.5:
+				var was := GameState.ritual
 				GameState.ritual = minf(GameState.ritual + delta / RITUAL_TIME, 1.0)
+				for l in RITUAL_LINES:
+					if was < l[0] and GameState.ritual >= l[0]:
+						GameState.say("Отець Василь", l[1], PRIEST_COLOR)
 				if GameState.ritual >= 1.0:
-					GameState.say("Отець Василь", "Іди з миром, Тимоше. Тебе більше ніщо тут не тримає.", Color("FFC531"))
+					GameState.say("Отець Василь", "Іди з миром, Тимоше. Тебе більше ніщо тут не тримає.", PRIEST_COLOR)
 	_release(Input.is_action_pressed("interact") and at_release(), delta)
 
 
@@ -162,22 +182,54 @@ func priest() -> Node3D:
 	return null
 
 
-## An archaeologist is at the bricked wall.
-func _digger() -> bool:
-	var r := get_node_or_null("Level/Rubble") as Node3D
-	return r != null and get_tree().get_nodes_in_group("visitor").any(
-		func(v): return v.kind == Visitor.Kind.ARCH and v.global_position.distance_to(r.global_position) < DIG_RANGE)
+## SEARCH: the time-lapse (search the rooms, find the plan, clear the collapsed wall), then your room is open.
+## The smoke test (comics off) skips the cutscene.
+func _search() -> void:
+	if comics_enabled:
+		var t = load(TIMELAPSE).new()
+		add_child(t)
+		t.play(self)
+		await t.finished
+	_open_room()
 
 
-## The bricked wall is down: remove it, let people path into your room.
+## The collapsed wall is cleared: remove it, let people path into your room.
 func _open_room() -> void:
 	var r := get_node_or_null("Level/Rubble")
 	if r:
 		r.free()
 	rebake_nav()
-	GameState.say("Олена", "Боже… тут хтось жив. Ланцюги, миска… подряпини на стіні.", Color("8BEA4E"))
-	GameState.say("Тарас", "А в книзі обліку біля Сімнадцятого написано «втік». Не втік він…", Color("8BEA4E"))
+	GameState.say("Олена", "Боже… тут хтось жив.", ARCH_COLOR)
+	looked = 0
+	_look_t = 0.0
+	_look_all = 0.0
 	GameState.set_stage(GameState.Stage.EVIDENCE)
+
+
+## EVIDENCE: the archaeologists look at LOOKS one by one; the name on the wall last, which is memory 5.
+func _look_over(delta: float) -> void:
+	var thing := $Stations.get_node(LOOKS[looked][0]) as Node3D
+	var archs := get_tree().get_nodes_in_group("visitor").filter(func(v): return v.kind == Visitor.Kind.ARCH)
+	var near := false
+	for v in archs:
+		v.focus = thing.global_position
+		near = near or Vector2(v.global_position.x - thing.global_position.x, v.global_position.z - thing.global_position.z).length() < LOOK_NEAR
+	_look_all += delta
+	_look_t = _look_t + delta if near else 0.0
+	if _look_t < LOOK_TIME and _look_all < LOOK_GIVE_UP:
+		return
+	GameState.say(LOOKS[looked][1], LOOKS[looked][2], ARCH_COLOR)
+	if thing.kind == Station.Kind.EVIDENCE:
+		thing.see()
+	else:
+		GameState.remember(5)
+		GameState.hint("knock")
+	looked += 1
+	_look_t = 0.0
+	_look_all = 0.0
+	if looked == LOOKS.size():
+		for v in archs:
+			v.focus = Vector3.INF
 
 
 ## The ghost aims at the ritual circle and may leave.

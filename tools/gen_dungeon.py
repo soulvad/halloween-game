@@ -94,17 +94,18 @@ furniture = [  # sizes match art/models/<name>.glb, the box is only the fallback
 ]
 wall_nodes += [(n, p, s, 3, FURN) for n, p, s in furniture]
 
-MEMORY, CANDLE, HAUNT, MIRROR, PLAN, DOOR, KNOCK, EVIDENCE, CIRCLE, EGG = range(10)
+MEMORY, CANDLE, HAUNT, MIRROR, PLAN, KNOCK, EVIDENCE, CIRCLE, EGG = range(9)
 CYAN = (0.6, 0.95, 1); ORANGE = (1, 0.48, 0.1); DULL = (0.45, 0.4, 0.38); FLAME = (1, 0.75, 0.35)
 GLINT = (0.18, 0.18, 0.18); CANDLE_SIZE = (0.12, 0.3, 0.12)
 # Rooms in the story: R1L servants' bedroom, CorridorH corridor with shackles, R3R kitchen, R2R mirror room,
-# R4R archaeologists' camp, FarLeft steward's closet, PassageUp/Top behind the door, YourRoom behind the bricked wall.
+# R4R archaeologists' camp, FarLeft steward's closet, PassageUp/Top to your room, YourRoom behind the collapsed wall.
+# Memories 2-4: `need` = the power that lures an archaeologist there (a station with that power stands next to it).
 # name, (x, z), kind, title, need, size, color, extra exports (y = height of the base)
 stations = [
     ("Memory1", (-7.5, -9.6), MEMORY, "Свистулька-пташка", "", GLINT, CYAN, {"memory_id": 1, "y": 0.9}),
-    ("Memory2", (-9.5, -6.7), MEMORY, "Бляха «17»", "", GLINT, CYAN, {"memory_id": 2, "y": 0.6}),
-    ("Memory3", (8.5, 3.0), MEMORY, "Лист від матері", "", GLINT, CYAN, {"memory_id": 3, "y": 0.9}),
-    ("Memory4", (-13.2, -9.0), MEMORY, "Ключ від хвіртки", "", GLINT, CYAN, {"memory_id": 4, "y": 0.6}),
+    ("Memory2", (-9.5, -6.7), MEMORY, "Бляха «17»", "breath", GLINT, CYAN, {"memory_id": 2, "y": 0.6}),
+    ("Memory3", (8.5, 3.0), MEMORY, "Лист від матері", "sound", GLINT, CYAN, {"memory_id": 3, "y": 0.9}),
+    ("Memory4", (-13.2, -9.0), MEMORY, "Ключ від хвіртки", "write", GLINT, CYAN, {"memory_id": 4, "y": 0.6}),
     ("Memory5", (23.3, -11.6), MEMORY, "Ім'я на стіні", "", GLINT, CYAN, {"memory_id": 5, "y": 1.1}),
     ("Circle", (20.5, -10.0), CIRCLE, "Коло ритуалу", "", (2.4, 0.06, 2.4), (1, 0.56, 0.69), {}),
     ("Shackles", (18.2, -12.35), EVIDENCE, "Кайдани", "", (0.7, 0.4, 0.3), DULL, {}),
@@ -116,6 +117,7 @@ stations = [
     ("CandleKitchen", (8.5, 1.0), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.8}),
     ("CandleCorridor", (-0.9, -6.8), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.8}),
     ("CandleBedroom", (-5.0, -9.9), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "false", "y": 0.8}),
+    ("CandleShackles", (-8.3, -5.2), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "false", "y": 0.8}),
     ("Chains", (-10.5, -6.85), HAUNT, "Кайдани на стіні", "sound", (0.4, 0.9, 0.2), ORANGE, {"power": 1}),
     ("Bell", (-6.0, -6.7), HAUNT, "Дзвоник слуг", "sound", (0.3, 0.4, 0.3), ORANGE, {"power": 1}),
     ("Jug", (6.0, 2.0), HAUNT, "Глиняний глек", "sound", (0.4, 0.5, 0.4), ORANGE, {"power": 1}),
@@ -124,10 +126,10 @@ stations = [
     ("Niche", (15.2, -4.2), HAUNT, "Кістки в ніші", "sound", (0.5, 0.4, 0.4), ORANGE, {"power": 1}),
     ("GateBell", (0.85, 10.0), HAUNT, "Дзвін біля входу", "sound", (0.3, 0.5, 0.3), ORANGE, {"power": 1}),
     ("DripChain", (11.6, -8.6), HAUNT, "Ланцюг у проході", "sound", (0.2, 0.9, 0.2), ORANGE, {"power": 1}),
+    ("Dust", (-12.7, -8.0), HAUNT, "Пил на підлозі", "write", (0.7, 0.03, 0.7), (0.55, 0.5, 0.45), {"power": 1}),
     ("Mirror", (9.45, -2.6), MIRROR, "Запилене дзеркало", "write", (0.1, 1.4, 0.9), (0.6, 0.65, 0.7), {"y": 0.3}),
-    ("Plan", (8.0, 5.2), PLAN, "План маєтку", "sound", (0.9, 0.04, 0.6), (0.85, 0.75, 0.55), {"y": 0.8}),
-    ("Door", (11.125, -7.0), DOOR, "Двері", "hands", (1.75, 2.4, 0.15), (0.35, 0.22, 0.12), {}),
-    ("Wall", (13.95, -10.875), KNOCK, "Цегляна стіна", "hands", (0.1, 2.0, 1.5), (0.5, 0.3, 0.25), {"y": 0.2}),
+    ("Plan", (8.0, 5.2), PLAN, "План маєтку", "", (0.9, 0.04, 0.6), (0.85, 0.75, 0.55), {"y": 0.8}),
+    ("Wall", (20.5, -12.45), KNOCK, "Стіна сусідньої камери", "hands", (1.5, 2.0, 0.1), (0.5, 0.3, 0.25), {"y": 0.2}),
     # easter eggs, the rest of them in scripts/easter_eggs.gd; the pedestal has no text on purpose
     ("Bones", (12.5, 1.5), EGG, "Купа кісток: вселитися", "", (0.9, 0.25, 0.7), (0.88, 0.85, 0.72), {}),
     ("Pedestal", (20.5, -5.5), EGG, "", "", (0.7, 0.8, 0.7), (0.36, 0.33, 0.34), {}),

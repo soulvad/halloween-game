@@ -76,7 +76,7 @@ func _ready() -> void:
 
 	# start: no powers, only the first memory glints, the ghost floats through inner walls
 	assert(GameState.stage == GameState.Stage.HAUNT and GameState.powers.is_empty() and p.collision_mask == 1)
-	assert(not priest.visible and mem.call(1).can_use() and not mem.call(2).can_use() and not mem.call(5).can_use())
+	assert(not priest.visible and mem.call(1).can_use() and not mem.call(2).visible and not mem.call(5).visible)
 	var candle = st.call("CandleBedroom")
 	assert(not candle.can_use())
 
@@ -109,23 +109,44 @@ func _ready() -> void:
 	await get_tree().create_timer(1.3, true).timeout
 	assert(not is_instance_valid(tour) and not get_tree().paused and p.camera.current)
 
-	# memory 1 → breath: candles; a light change makes archaeologists in earshot come
+	# memory 1 → breath. Memory 2 glints but can't be touched: an archaeologist lured there with a candle finds it
+	var near = func(n, dx := 3.0): return Vector3(n.global_position.x + dx, 0, n.global_position.z)
 	mem.call(1).interact(p)
-	assert(GameState.memories == [1] and GameState.has_power("breath") and mem.call(2).can_use())
-	olena.global_position = Vector3(candle.global_position.x + 3, 0, candle.global_position.z + 2)
-	var was_lit: bool = candle.lit
-	candle.interact(p)
-	assert(candle.lit != was_lit and olena._investigate > 0 and GameState.haunts == 1)
+	assert(GameState.memories == [1] and GameState.has_power("breath") and candle.can_use())
+	assert(mem.call(2).available() and not mem.call(2).can_use())
+	var c2 = st.call("CandleShackles")
+	olena.global_position = near.call(c2)
+	c2.interact(p)
+	assert(olena._investigate > 0 and olena.lured_by() == "breath" and GameState.haunts == 1)
+	var t := await _until(func(): return 2 in GameState.memories, 30)
+	print("Memory 2 found after %.1f s" % t)
+	assert(GameState.has_power("sound") and mem.call(3).available())
 
-	# memory 2 → sound: noises; memory 3 → write: the mirror, but only with a witness
-	mem.call(2).interact(p)
-	st.call("Chains").interact(p)
-	assert(GameState.has_power("sound") and GameState.haunts == 2)
+	# memory 3 wants a noise: a candle right next to it brings Олена, but she finds nothing
+	var ck = st.call("CandleKitchen")
+	olena.global_position = near.call(ck, -3.0)
+	ck.interact(p)
+	await _until(func(): return false, 10)
+	assert(3 not in GameState.memories)
+	st.call("Jug").interact(p)
+	t = await _until(func(): return 3 in GameState.memories, 30)
+	print("Memory 3 found after %.1f s" % t)
+	assert(GameState.has_power("write"))
+
+	# memory 4: writing in the dust of the steward's closet
+	var dust = st.call("Dust")
+	olena.global_position = Vector3(-13, 0, -4)
+	dust.interact(p)
+	t = await _until(func(): return 4 in GameState.memories, 30)
+	print("Memory 4 found after %.1f s" % t)
+	assert(GameState.has_power("hands") and not mem.call(5).available())
+
+	# the mirror, only with a witness
 	var mirror = st.call("Mirror")
-	assert(not mirror.can_use())
-	mem.call(3).interact(p)
-	assert(GameState.has_power("write") and not mirror.can_use())  # nobody near the mirror
-	olena.global_position = Vector3(mirror.global_position.x - 2, 0, mirror.global_position.z)
+	st.call("Taras").global_position = entrance
+	olena.global_position = near.call(mirror, -10.0)
+	assert(not mirror.can_use())  # nobody near the mirror
+	olena.global_position = near.call(mirror, -2.0)
 	assert(mirror.can_use())
 	mirror.interact(p)
 	await _frames(2)
@@ -146,29 +167,19 @@ func _ready() -> void:
 	hud.resume()
 	assert(not get_tree().paused)
 
-	# the priest walks in; archaeologists go back to their camp table
+	# the priest walks in; the search (cutscene, skipped here) clears the collapsed wall
 	g.priest_in = 0.01
 	await _frames(3)
-	assert(GameState.stage == GameState.Stage.LURE and priest.visible)
-	var plan = st.call("Plan")
-	var wall = st.call("Wall")
-	var door = st.call("Door")
-	assert(not wall.can_use())
-	var t := await _until(func(): return plan.witness(), 30)
-	print("Archaeologists at the camp after %.1f s" % t)
-	plan.interact(p)
-	assert(GameState.plan_moved)
+	assert(priest.visible and GameState.stage == GameState.Stage.EVIDENCE and g.get_node_or_null("Level/Rubble") == null)
 
-	# they head for the bricked wall, but the closed door stops them
-	await _until(func(): return false, 15)
-	assert(not wall.witness() and GameState.stage == GameState.Stage.LURE)
-	assert(not door.can_use())
-	mem.call(4).interact(p)
-	assert(GameState.has_power("hands") and door.can_use())
-	door.interact(p)
-	assert(door.open)
+	# your room: they look over your things, then read your name (memory 5); knocking only works after that
+	var wall = st.call("Wall")
+	assert(not wall.can_use())
+	t = await _until(func(): return GameState.name_known(), 120)
+	print("Things seen and name read after %.1f s" % t)
+	assert(GameState.evidence == 3 and GameState.name_known())
+	assert(["Shackles", "Tally", "Bowl"].all(func(n): return st.call(n).shown))
 	t = await _until(func(): return wall.witness(), 30)
-	print("At the wall after %.1f s" % t)
 	assert(wall.can_use())
 
 	# knock: four quick knocks are wrong, three quick + pause + one is the code
@@ -180,24 +191,7 @@ func _ready() -> void:
 	wall.interact(p)
 	assert(GameState.wall_knocked)
 	await _frames(2)
-	assert(GameState.stage == GameState.Stage.DIG)
-	t = await _until(func(): return GameState.stage == GameState.Stage.EVIDENCE, 30)
-	print("Wall taken down in %.1f s" % t)
-	assert(GameState.stage == GameState.Stage.EVIDENCE and g.get_node_or_null("Level/Rubble") == null)
-
-	# your room: show three things to a witness, then the name on the wall
-	var ev := ["Shackles", "Tally", "Bowl"].map(func(n): return st.call(n))
-	t = await _until(func(): return ev.all(func(e): return e.witness()), 40)
-	print("Archaeologists in your room after %.1f s" % t)
-	assert(not mem.call(5).can_use())
-	for e in ev:
-		assert(e.can_use())
-		e.interact(p)
-		assert(e.shown and not e.can_use())
-	assert(GameState.evidence == 3 and mem.call(5).can_use())
-	mem.call(5).interact(p)
-	await _frames(2)
-	assert(GameState.name_known() and GameState.stage == GameState.Stage.RITUAL)
+	assert(GameState.stage == GameState.Stage.RITUAL)
 
 	# ritual, then hold E in the circle; releasing starts over
 	t = await _until(func(): return GameState.ritual >= 1.0, 60)

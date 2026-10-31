@@ -2,10 +2,12 @@
 extends StaticBody3D
 
 ## Interactive object; the player calls interact(player) when pressing E at it. `need` = power required ("" = none).
-## MEMORY: a glint, touching it remembers (only the next memory in order is visible). CANDLE: lit/out, visitors notice.
-## HAUNT: a noise visitors hear. MIRROR: write ДОПОМОЖІТЬ for a witness → they call the priest. PLAN: push the estate
-## plan on the archaeologists' table. DOOR: blocks people while closed. KNOCK: the bricked wall, rhythm 3–1 for a witness.
-## EVIDENCE: your things in your room, shown to a witness. CIRCLE: hold E after the ritual (game.gd).
+## MEMORY: a glint, only the next memory in order is visible. Memory 1 you touch; 2–4 an archaeologist finds, when lured
+## there with the power in `need` (candle, noise, writing in the dust); 5 is never shown (game.gd: they read your name).
+## CANDLE: lit/out, visitors notice. HAUNT: a noise (or, with need "write", writing in the dust) visitors notice.
+## MIRROR: write ДОПОМОЖІТЬ for a witness → they call the priest. PLAN: the estate plan on the camp table (decor; the
+## time-lapse finds it). KNOCK: your room's wall, rhythm 3–1 for someone in the room after they read your name.
+## EVIDENCE: your things, game.gd has the archaeologists look them over (see()). CIRCLE: hold E after the ritual (game.gd).
 ## EGG: tells scripts/easter_eggs.gd, no effect on the story.
 
 const Wall = preload("res://scripts/wall.gd")
@@ -13,15 +15,15 @@ const UI = preload("res://scripts/ui.gd")
 const Visitor = preload("res://scripts/visitor.gd")
 const MirrorGlass = preload("res://scripts/mirror.gd")
 
-enum Kind { MEMORY, CANDLE, HAUNT, MIRROR, PLAN, DOOR, KNOCK, EVIDENCE, CIRCLE, EGG }
+enum Kind { MEMORY, CANDLE, HAUNT, MIRROR, PLAN, KNOCK, EVIDENCE, CIRCLE, EGG }
 
 const COOLDOWN := {Kind.CANDLE: 1.5, Kind.HAUNT: 4.0, Kind.EGG: 1.0}
 const WITNESS_RANGE := 7.0  ## an archaeologist this close sees what you do
-const HEAR_KNOCK := 2.0  ## KNOCK: has to stand right at the wall (not in the room next door)
+const HEAR_KNOCK := 4.0  ## KNOCK: has to be in your room (not the passage outside)
+const FIND_RANGE := 3.0  ## MEMORY 2–4: a lured archaeologist this close finds it
 const KNOCK_FAST := 0.7  ## max gap between the first three knocks
 const KNOCK_PAUSE := Vector2(0.8, 2.5)  ## the pause before the last knock
 const LAYER_STATION := 8  ## layer 4: only the player's aim sees it, the ghost floats through
-const LAYER_PEOPLE_ONLY := 64  ## a closed door blocks people (and the navmesh), not the ghost
 const LABEL_PX := 0.0012  ## label size up close (UI.world_label)
 const HAUNT_LINES := ["*дзень-дзень*", "*скрип*", "*брязкіт*", "*шурхіт*"]
 
@@ -30,7 +32,6 @@ const HAUNT_LINES := ["*дзень-дзень*", "*скрип*", "*брязкі�
 @export var need := ""  ## power from GameState.POWERS, "" = none
 @export var memory_id := 0  ## MEMORY: 1..5
 @export var lit := true  ## CANDLE
-@export var open := false  ## DOOR
 @export var size := Vector3(0.5, 0.5, 0.5):
 	set(v):
 		size = v
@@ -46,7 +47,6 @@ var _label: Label3D
 var _light: OmniLight3D
 var _flame: MeshInstance3D  ## CANDLE with a final model: there's no box to glow, so this shows it's lit
 var _writing: Label3D  ## MIRROR with a final model: no box to redden, the word itself
-var _block: CollisionShape3D  ## DOOR
 
 
 func _ready() -> void:
@@ -58,15 +58,6 @@ func _ready() -> void:
 	_label.font = UI.font()
 	if kind == Kind.EVIDENCE:
 		add_to_group("evidence")
-	if kind == Kind.DOOR:
-		var b := StaticBody3D.new()
-		b.collision_layer = LAYER_PEOPLE_ONLY
-		b.collision_mask = 0
-		_block = CollisionShape3D.new()
-		_block.shape = BoxShape3D.new()
-		_block.shape.size = size
-		b.add_child(_block)
-		add_child(b)
 	if kind == Kind.MIRROR:
 		add_child(MirrorGlass.new(size))
 	_refresh()
@@ -79,20 +70,34 @@ func _process(delta: float) -> void:
 	if kind == Kind.MEMORY:
 		visible = available()
 		_mesh.position.y = sin(Time.get_ticks_msec() * 0.003) * 0.08
+		var v := finder() if visible and memory_id > 1 else null
+		if v:
+			v.found()
+			GameState.remember(memory_id)
 	_label.text = title()
 	_label.visible = GameState.show_labels and visible
 	if _label.visible:
 		UI.world_label(_label, LABEL_PX)
-	if kind not in [Kind.MEMORY, Kind.DOOR]:
+	if kind not in [Kind.MEMORY, Kind.PLAN, Kind.EVIDENCE]:  # ready = solid, not yet = see-through
 		if _mesh is GeometryInstance3D:
 			_mesh.transparency = 0.0 if can_use() or shown else 0.45
 
 
-## MEMORY: this is the next memory to find.
+## MEMORY: this is the next memory to find (5 is never a glint: the archaeologists read your name).
 func available() -> bool:
-	if memory_id in GameState.memories or GameState.memories.size() < memory_id - 1:
-		return false
-	return memory_id != 5 or (GameState.stage == GameState.Stage.EVIDENCE and GameState.evidence >= GameState.EVIDENCE_NEEDED)
+	return memory_id != 5 and memory_id not in GameState.memories and GameState.memories.size() >= memory_id - 1
+
+
+## MEMORY 2–4: an archaeologist lured here with the right power, close enough to find it.
+func finder() -> Node3D:
+	for v in get_tree().get_nodes_in_group("visitor"):
+		if v.kind == Visitor.Kind.ARCH and v.lured_by() == need and _flat(v) < FIND_RANGE:
+			return v
+	return null
+
+
+func _flat(n: Node3D) -> float:
+	return Vector2(n.global_position.x - global_position.x, n.global_position.z - global_position.z).length()
 
 
 func title() -> String:
@@ -100,7 +105,9 @@ func title() -> String:
 		return title_text + " (ще не вмієш)"
 	match kind:
 		Kind.MEMORY:
-			return "Спогад: торкнутися"
+			if memory_id == 1:
+				return "Спогад: торкнутися"
+			return "Щось моє… хай знайдуть живі (%s)" % GameState.POWER_NAMES.get(need, need)
 		Kind.CANDLE:
 			return "%s: %s" % [title_text, "загасити" if lit else "запалити"]
 		Kind.HAUNT:
@@ -109,25 +116,13 @@ func title() -> String:
 			if GameState.mirror_written:
 				return "ДОПОМОЖІТЬ"
 			return title_text + (": написати" if witness() else " (ніхто не побачить)")
-		Kind.PLAN:
-			if GameState.plan_moved:
-				return title_text + " (зсунуто)"
-			if GameState.stage != GameState.Stage.LURE:
-				return title_text
-			return title_text + (": зсунути" if witness() else " (ніхто не побачить)")
-		Kind.DOOR:
-			return "%s: %s" % [title_text, "зачинити" if open else "відчинити"]
 		Kind.KNOCK:
-			if GameState.stage != GameState.Stage.LURE or not GameState.plan_moved:
+			if GameState.wall_knocked or GameState.stage != GameState.Stage.EVIDENCE or not GameState.name_known():
 				return title_text
 			var dots := "●".repeat(_knocks.size()) + "○".repeat(4 - _knocks.size())
 			return "%s: тук-тук-тук … тук  %s%s" % [title_text, dots, "" if witness() else " (поруч нікого)"]
 		Kind.EVIDENCE:
-			if shown:
-				return title_text + " (побачили)"
-			if GameState.stage != GameState.Stage.EVIDENCE:
-				return title_text
-			return title_text + (": показати" if witness() else " (поруч нікого)")
+			return title_text + (" (побачили)" if shown else "")
 		Kind.CIRCLE:
 			if GameState.stage != GameState.Stage.RITUAL:
 				return title_text
@@ -141,7 +136,7 @@ func title() -> String:
 func witness() -> bool:
 	var r := HEAR_KNOCK if kind == Kind.KNOCK else WITNESS_RANGE
 	for v in get_tree().get_nodes_in_group("visitor"):
-		if v.visible and v.kind == Visitor.Kind.ARCH and v.global_position.distance_to(global_position) < r:
+		if v.visible and v.kind == Visitor.Kind.ARCH and _flat(v) < r:
 			return true
 	return false
 
@@ -152,17 +147,13 @@ func can_use() -> bool:
 		return false
 	match kind:
 		Kind.MEMORY:
-			return available()
-		Kind.CANDLE, Kind.HAUNT, Kind.DOOR, Kind.EGG:
+			return available() and memory_id == 1
+		Kind.CANDLE, Kind.HAUNT, Kind.EGG:
 			return true
 		Kind.MIRROR:
 			return not GameState.mirror_written and GameState.stage == GameState.Stage.HAUNT and witness()
-		Kind.PLAN:
-			return not GameState.plan_moved and GameState.stage == GameState.Stage.LURE and witness()
 		Kind.KNOCK:
-			return not GameState.wall_knocked and GameState.stage == GameState.Stage.LURE and GameState.plan_moved and witness()
-		Kind.EVIDENCE:
-			return not shown and GameState.stage == GameState.Stage.EVIDENCE and witness()
+			return not GameState.wall_knocked and GameState.stage == GameState.Stage.EVIDENCE and GameState.name_known() and witness()
 		Kind.CIRCLE:
 			return GameState.release_ready()
 	return false
@@ -177,28 +168,24 @@ func interact(_p) -> void:
 			GameState.remember(memory_id)
 		Kind.CANDLE:
 			lit = not lit
-			GameState.haunt(global_position, power)
+			GameState.haunt(global_position, power, "breath")
 		Kind.HAUNT:
-			GameState.say(title_text, HAUNT_LINES.pick_random(), UI.ORANGE)
-			GameState.haunt(global_position, power)
+			GameState.say(title_text, "*у пилу проступають літери: ТУТ*" if need == "write" else HAUNT_LINES.pick_random(), UI.ORANGE)
+			GameState.haunt(global_position, power, need)
 		Kind.MIRROR:
 			GameState.mirror_written = true
-		Kind.PLAN:
-			GameState.plan_moved = true
-			position.x += 0.15
-		Kind.DOOR:
-			open = not open
-			GameState.haunt(global_position, power)
-			if owner and owner.has_method("rebake_nav"):
-				owner.rebake_nav.call_deferred()
 		Kind.KNOCK:
 			_knock()
-		Kind.EVIDENCE:
-			shown = true
-			GameState.evidence += 1
 		Kind.EGG:
 			get_tree().call_group("easter_eggs", "touched", name)
 		# CIRCLE: holding E is handled by game.gd
+	_refresh()
+
+
+## EVIDENCE: the archaeologists have looked it over (game.gd).
+func see() -> void:
+	shown = true
+	GameState.evidence += 1
 	_refresh()
 
 
@@ -227,12 +214,6 @@ func _refresh() -> void:
 				_flame.visible = lit
 			if _mat():
 				_mat().emission_enabled = lit
-		Kind.DOOR:
-			_block.disabled = open
-			var a := 1.5 if open else 0.0  # swings into the passage (-Z), hinged on its -X edge
-			_mesh.rotation.y = a
-			_mesh.position.x = size.x / 2 * (cos(a) - 1)
-			_mesh.position.z = -size.x / 2 * sin(a)
 		Kind.MIRROR:
 			if GameState.mirror_written and _mat():
 				_mat().albedo_color = Color(0.55, 0.1, 0.1)

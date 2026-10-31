@@ -1,6 +1,6 @@
 extends Control
 ## Flat drawn map of the dungeon (HUD minimap and the M map): carved floor from the generator's `rooms` / `doors`
-## metadata on the game root, furniture, the bricked wall, doors, lit candles, the next memory, people and you.
+## metadata on the game root, furniture, the collapsed wall, lit candles, the next memory, people and you.
 ## `follow` set = minimap (centred on it at `px_per_m`), else the whole dungeon fits the control.
 
 const Station = preload("res://scripts/station.gd")
@@ -113,10 +113,6 @@ func _draw() -> void:
 	for st in _stations:
 		var p := to_map(st.global_position)
 		match st.kind:
-			Station.Kind.DOOR:
-				if not st.open:
-					var half := Vector2(st.size.x, st.size.z) * s / 2
-					draw_rect(Rect2(p - half, half * 2).grow(1.5), Color("C08A4A"))
 			Station.Kind.CANDLE:
 				if st.lit:
 					draw_circle(p, maxf(2.0, s * 0.18), UI.GOLD)
