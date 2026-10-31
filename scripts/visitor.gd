@@ -2,9 +2,10 @@ extends CharacterBody3D
 
 ## Dungeon visitor: an archaeologist (ARCH, carries a lantern) or the priest (PRIEST, holy aura).
 ## Walks the navmesh (game.gd bakes it). What it does depends on GameState.stage:
-## HAUNT: archaeologists explore dig sites, go check every noise in earshot (each adds unease), a sighting adds more.
-## PRIEST_COMING: they wait at the entrance. LURE: they walk to the last noise they heard, the priest follows them.
-## DIG: they dig at the rubble. EVIDENCE: everyone looks around your room. RITUAL: the priest prays in the circle.
+## HAUNT: archaeologists explore dig sites and go check every noise / light change in earshot.
+## PRIEST_COMING: they wait at the entrance. LURE: they work at their camp table (still check noises); once the plan
+## is pushed they head for the bricked wall (a closed door stops them). The priest follows the nearest archaeologist.
+## DIG: they take the wall apart. EVIDENCE: everyone looks around your room. RITUAL: the priest prays in the circle.
 
 const Wall = preload("res://scripts/wall.gd")
 const UI = preload("res://scripts/ui.gd")
@@ -14,28 +15,25 @@ enum Kind { ARCH, PRIEST }
 const SPEED := [1.6, 1.4]  ## calm walk by kind
 const INVESTIGATE_SPEED := 2.4
 const HEAR := 12.0  ## noises farther than this are not heard
-const SIGHT := 7.0
-const SEEN_UNEASE := 2.0  ## an archaeologist spotting the ghost (level 2+), once per level
 const INVESTIGATE_TIME := 8.0
 const STAY := Vector2(5, 10)  ## seconds spent at a dig site
-const AURA := 1.8  ## priest's holy ground (off during the ritual)
 const FOLLOW := 1.8  ## the priest keeps this far behind the archaeologists
 const ROOM_SPOTS := [Vector3(-1.5, 0, 1.3), Vector3(1.4, 0, 1.5), Vector3(0, 0, -1.6)]  ## around your room's centre
 const LAYER_VISITOR := 16
 const MASK := 7 | 64  ## walls, furniture, rubble
 const HEARD_LINES := ["Ви це чули?", "Звідки цей звук?..", "Там щось є. Ходімо подивимось.", "Знову… Це не вітер."]
-const SEEN_LINES := ["Там… постать! Ти бачив?", "Господи, воно світиться!", "Тут хтось є. Хтось… не живий."]
+const WALL_LINES := ["На плані тут порожнеча… а кімнати немає. Ходімо глянемо.", "Дивно — коридор є, а кімнати нема."]
 
 @export var kind := Kind.ARCH
 @export var title_text := "Олена"
 @export var color := Color(0.35, 0.55, 0.4)
 
-var seen_at := 0  ## highest ghost level this archaeologist has already been scared by
-var _target := Vector3.INF  ## noise to check (HAUNT) / walk to (LURE)
+var _target := Vector3.INF  ## noise to check
 var _investigate := 0.0
 var _stay := 0.0
 var _site := Vector3.INF
 var _talk := 0.0  ## line cooldown
+var _told := false  ## LURE: said the plan line
 var _agent: NavigationAgent3D
 var _label: Label3D
 
@@ -44,8 +42,10 @@ func _ready() -> void:
 	add_to_group("visitor")
 	collision_layer = LAYER_VISITOR
 	collision_mask = MASK
-	var m := Wall.box(Vector3(0.6, 1.7, 0.6), color)
-	m.position.y = 0.85
+	var ps := Wall.model(name)  # art/models/<node name>, origin at the feet
+	var m: Node3D = ps.instantiate() if ps else Wall.box(Vector3(0.6, 1.7, 0.6), color)
+	if not ps:
+		m.position.y = 0.85
 	add_child(m)
 	var shape := CollisionShape3D.new()
 	shape.shape = CapsuleShape3D.new()
@@ -76,7 +76,7 @@ func _ready() -> void:
 		lantern.position = Vector3(0.4, 1.2, -0.3)
 		add_child(lantern)
 	else:
-		add_child(Wall.holy_glow(AURA))
+		add_child(Wall.holy_glow(1.2))
 		visible = false  # arrives later (game.gd calls arrive())
 		set_physics_process(false)
 	GameState.haunted.connect(_on_haunted)
@@ -90,17 +90,12 @@ func arrive(at: Vector3) -> void:
 
 
 func _on_haunted(pos: Vector3, power: float) -> void:
-	if kind != Kind.ARCH or _flat(pos) > HEAR:
+	if kind != Kind.ARCH or _flat(pos) > HEAR * power:
 		return
-	match GameState.stage:
-		GameState.Stage.HAUNT:
-			GameState.unease += power
-			_target = pos
-			_investigate = INVESTIGATE_TIME
-			_line(HEARD_LINES.pick_random())
-		GameState.Stage.LURE:
-			_target = pos
-			_line(HEARD_LINES.pick_random())
+	if GameState.stage == GameState.Stage.HAUNT or (GameState.stage == GameState.Stage.LURE and not GameState.plan_moved):
+		_target = pos
+		_investigate = INVESTIGATE_TIME
+		_line(HEARD_LINES.pick_random())
 
 
 func _physics_process(delta: float) -> void:
@@ -109,8 +104,6 @@ func _physics_process(delta: float) -> void:
 	var target := global_position
 	var speed: float = SPEED[kind]
 	var stage := GameState.stage
-	if kind == Kind.ARCH and stage == GameState.Stage.HAUNT:
-		_spot_ghost()
 	match stage:
 		GameState.Stage.HAUNT:
 			if _investigate > 0:
@@ -123,11 +116,16 @@ func _physics_process(delta: float) -> void:
 		GameState.Stage.LURE:
 			if kind == Kind.PRIEST:
 				target = _behind_group()
-			elif _target != Vector3.INF:
+			elif GameState.plan_moved:
+				if not _told:
+					_told = true
+					_line(WALL_LINES.pick_random(), true)
+				target = _dig_spot()
+			elif _investigate > 0:
 				target = _target
 				speed = INVESTIGATE_SPEED
 			else:
-				target = _behind_group()
+				target = _marker("Camp") + _room_spot() * 0.6
 		GameState.Stage.DIG:
 			target = _behind_group() if kind == Kind.PRIEST else _dig_spot()
 		GameState.Stage.EVIDENCE:
@@ -135,19 +133,8 @@ func _physics_process(delta: float) -> void:
 		GameState.Stage.RITUAL:
 			target = _marker("RoomCenter") + (Vector3.ZERO if kind == Kind.PRIEST else _room_spot())
 	_walk(target, speed)
-	if kind == Kind.PRIEST and stage != GameState.Stage.RITUAL:
-		GameState.burn_near(global_position, AURA, delta)
 	_label.text = _label_text()
 	_label.visible = GameState.show_labels
-
-
-## An archaeologist sees the ghost at level 2+: a fright, once per level.
-func _spot_ghost() -> void:
-	var p := GameState.player
-	if p and GameState.visible_to(2) and GameState.level > seen_at and _flat(p.global_position) < SIGHT:
-		seen_at = GameState.level
-		GameState.unease += SEEN_UNEASE
-		_line(SEEN_LINES.pick_random(), true)
 
 
 ## HAUNT, nothing to check: walk between dig sites and stay a while at each.
@@ -218,7 +205,7 @@ func _label_text() -> String:
 		GameState.Stage.HAUNT:
 			return title_text + (": що це було?" if _investigate > 0 else (": досліджує" if _flat(_site) < 0.6 else ""))
 		GameState.Stage.DIG:
-			return title_text + (": молиться" if kind == Kind.PRIEST else ": розкопує")
+			return title_text + (": молиться" if kind == Kind.PRIEST else ": розбирає стіну")
 		GameState.Stage.RITUAL:
 			return title_text + (": ритуал %d%%" % int(GameState.ritual * 100) if kind == Kind.PRIEST else "")
 	return title_text

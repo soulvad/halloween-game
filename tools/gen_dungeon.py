@@ -27,13 +27,13 @@ rooms = {
     "PassageTop": (10.25, -11.75, 17.5, -10.0),
     "YourRoom": (17.5, -12.5, 23.5, -7.75),
 }
-doors = [
-    (-12, -6.75, -11.5, -5.25),  # far left
-    (-3.5, -7.5, -2, -7.0), (2.5, -7.5, 4, -7.0),  # row 1
-    (-3.5, -4.75, -2, -4.25), (2.5, -4.75, 4, -4.25),  # row 2
-    (-1.75, 0.5, -1.25, 2.0), (1.25, 0.5, 1.75, 2.0),  # row 3
-    (-1.75, 6.5, -1.25, 8.0), (1.25, 6.5, 1.75, 8.0),  # row 4
-    (12.5, -6.75, 13, -5.25),  # right tall room
+doors = [  # >= 1.75 m wide, or the navmesh (agent radius 0.5) closes them
+    (-12, -7.0, -11.5, -5.25),  # far left
+    (-3.75, -7.5, -2, -7.0), (2.5, -7.5, 4.25, -7.0),  # row 1
+    (-3.75, -4.75, -2, -4.25), (2.5, -4.75, 4.25, -4.25),  # row 2
+    (-1.75, 0.25, -1.25, 2.0), (1.25, 0.25, 1.75, 2.0),  # row 3
+    (-1.75, 6.25, -1.25, 8.0), (1.25, 6.25, 1.75, 8.0),  # row 4
+    (12.5, -7.0, 13, -5.25),  # right tall room
 ]
 NX, NZ = round((X1 - X0) / G), round((Z1 - Z0) / G)
 grid = [[False] * NZ for _ in range(NX)]
@@ -94,31 +94,40 @@ furniture = [
 ]
 wall_nodes += [(n, p, s, 3, FURN) for n, p, s in furniture]
 
-SPIRIT, ALTAR, MEMENTO, LOVED, CANDLE, HAUNT, EVIDENCE, CIRCLE = range(8)
-VIOLET = (0.6, 0.3, 1); ORANGE = (1, 0.48, 0.1); DULL = (0.45, 0.4, 0.38)
-cube = (0.5, 0.5, 0.5)
-# name, (x, z), kind, title, min_level, size, color, power
+MEMORY, CANDLE, HAUNT, MIRROR, PLAN, DOOR, KNOCK, EVIDENCE, CIRCLE = range(9)
+CYAN = (0.6, 0.95, 1); ORANGE = (1, 0.48, 0.1); DULL = (0.45, 0.4, 0.38); FLAME = (1, 0.75, 0.35)
+GLINT = (0.18, 0.18, 0.18); CANDLE_SIZE = (0.12, 0.3, 0.12)
+# Rooms in the story: R1L servants' bedroom, CorridorH corridor with shackles, R3R kitchen, R2R mirror room,
+# R4R archaeologists' camp, FarLeft steward's closet, PassageUp/Top behind the door, YourRoom behind the bricked wall.
+# name, (x, z), kind, title, need, size, color, extra exports (y = height of the base)
 stations = [
-    ("Bones", (22.4, -12.0), ALTAR, "Твої кістки", 1, (1.4, 0.5, 0.8), (0.85, 0.8, 0.68), 0),
-    ("Circle", (20.5, -10.0), CIRCLE, "Коло ритуалу", 1, (2.4, 0.06, 2.4), (1, 0.56, 0.69), 0),
-    ("Shackles", (18.2, -12.1), EVIDENCE, "Кайдани", 2, (0.7, 0.4, 0.3), DULL, 0),
-    ("Tally", (23.3, -9.6), EVIDENCE, "Дні на стіні", 2, (0.12, 1.2, 1.6), DULL, 0),
-    ("Bowl", (21.6, -8.2), EVIDENCE, "Миска з ім'ям", 2, (0.5, 0.2, 0.5), DULL, 0),
-    ("CandleStub", (6.0, -9.0), SPIRIT, "Свічковий недогарок", 1, cube, VIOLET, 0),
-    ("Icon", (-13.2, -8.2), SPIRIT, "Стара ікона", 1, cube, VIOLET, 0),
-    ("Toy", (-6.0, 1.5), SPIRIT, "Дитяча іграшка", 1, cube, VIOLET, 0),
-    ("Mirror", (8.0, 8.2), SPIRIT, "Розбите дзеркало", 1, cube, VIOLET, 0),
-    ("Beads", (14.4, -7.8), SPIRIT, "Кістяні чотки", 1, cube, VIOLET, 0),
-    ("Prayerbook", (-6.6, -3.2), SPIRIT, "Молитовник", 1, cube, VIOLET, 0),
-    ("Chains", (8.6, -3.6), HAUNT, "Ланцюги на стіні", 1, (0.4, 0.9, 0.2), ORANGE, 1),
-    ("Bell", (-6.0, -6.7), HAUNT, "Дзвоник слуг", 1, (0.3, 0.4, 0.3), ORANGE, 1),
-    ("Jug", (6.0, 2.0), HAUNT, "Глиняний глек", 1, (0.4, 0.5, 0.4), ORANGE, 1),
-    ("Grate", (-13.6, -4.0), HAUNT, "Іржаві ґрати", 2, (0.2, 1.4, 1.2), ORANGE, 2),
-    ("Chest", (-5.0, 8.2), HAUNT, "Стара скриня", 2, (1.0, 0.6, 0.6), ORANGE, 2),
-    ("Niche", (15.2, -4.2), HAUNT, "Кістки в ніші", 1, (0.5, 0.4, 0.4), ORANGE, 1),
-    ("GateBell", (0.85, 10.0), HAUNT, "Дзвін біля входу", 1, (0.3, 0.5, 0.3), ORANGE, 1),
-    ("DripChain", (11.6, -8.6), HAUNT, "Ланцюг у проході", 1, (0.2, 0.9, 0.2), ORANGE, 1),
-    ("Knock", (13.2, -10.9), HAUNT, "Стук за завалом", 1, (0.3, 0.6, 0.3), ORANGE, 1),
+    ("Memory1", (-8.4, -10.0), MEMORY, "Свистулька-пташка", "", GLINT, CYAN, {"memory_id": 1, "y": 0.9}),
+    ("Memory2", (-9.5, -6.7), MEMORY, "Бляха «17»", "", GLINT, CYAN, {"memory_id": 2, "y": 0.6}),
+    ("Memory3", (9.1, 3.4), MEMORY, "Лист від матері", "", GLINT, CYAN, {"memory_id": 3, "y": 1.0}),
+    ("Memory4", (-13.2, -9.0), MEMORY, "Ключ від хвіртки", "", GLINT, CYAN, {"memory_id": 4, "y": 0.6}),
+    ("Memory5", (23.3, -11.6), MEMORY, "Ім'я на стіні", "", GLINT, CYAN, {"memory_id": 5, "y": 1.1}),
+    ("Circle", (20.5, -10.0), CIRCLE, "Коло ритуалу", "", (2.4, 0.06, 2.4), (1, 0.56, 0.69), {}),
+    ("Shackles", (18.2, -12.1), EVIDENCE, "Кайдани", "", (0.7, 0.4, 0.3), DULL, {}),
+    ("Tally", (23.3, -9.6), EVIDENCE, "Подряпини-дні", "", (0.12, 1.2, 1.6), DULL, {}),
+    ("Bowl", (21.6, -8.2), EVIDENCE, "Миска", "", (0.5, 0.2, 0.5), DULL, {}),
+    ("CandleEntrance", (0.9, 5.5), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.8}),
+    ("CandleHall", (0.9, -1.0), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.8}),
+    ("CandleMirror", (5.5, -1.4), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "false", "y": 0.8}),
+    ("CandleKitchen", (8.5, 1.0), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.8}),
+    ("CandleCorridor", (-0.9, -6.8), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.8}),
+    ("CandleBedroom", (-5.0, -9.9), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "false", "y": 0.8}),
+    ("Chains", (-10.5, -6.85), HAUNT, "Кайдани на стіні", "sound", (0.4, 0.9, 0.2), ORANGE, {"power": 1}),
+    ("Bell", (-6.0, -6.7), HAUNT, "Дзвоник слуг", "sound", (0.3, 0.4, 0.3), ORANGE, {"power": 1}),
+    ("Jug", (6.0, 2.0), HAUNT, "Глиняний глек", "sound", (0.4, 0.5, 0.4), ORANGE, {"power": 1}),
+    ("Grate", (-13.6, -4.0), HAUNT, "Іржаві ґрати", "sound", (0.2, 1.4, 1.2), ORANGE, {"power": 1}),
+    ("Chest", (-5.0, 8.2), HAUNT, "Стара скриня", "sound", (1.0, 0.6, 0.6), ORANGE, {"power": 1}),
+    ("Niche", (15.2, -4.2), HAUNT, "Кістки в ніші", "sound", (0.5, 0.4, 0.4), ORANGE, {"power": 1}),
+    ("GateBell", (0.85, 10.0), HAUNT, "Дзвін біля входу", "sound", (0.3, 0.5, 0.3), ORANGE, {"power": 1}),
+    ("DripChain", (11.6, -8.6), HAUNT, "Ланцюг у проході", "sound", (0.2, 0.9, 0.2), ORANGE, {"power": 1}),
+    ("Mirror", (9.35, -2.6), MIRROR, "Запилене дзеркало", "write", (0.1, 1.4, 0.9), (0.6, 0.65, 0.7), {"y": 0.3}),
+    ("Plan", (8.0, 5.2), PLAN, "План маєтку", "sound", (0.9, 0.04, 0.6), (0.85, 0.75, 0.55), {"y": 0.8}),
+    ("Door", (11.125, -7.0), DOOR, "Двері", "hands", (1.75, 2.4, 0.15), (0.35, 0.22, 0.12), {}),
+    ("Wall", (13.95, -10.875), KNOCK, "Цегляна стіна", "hands", (0.1, 2.0, 1.5), (0.5, 0.3, 0.25), {"y": 0.2}),
 ]
 dig_sites = [(-5, -9), (5.5, -9), (-5, -2.8), (5.5, -2.6), (-5, 1.5), (5.5, 2), (-5, 7), (6, 7),
              (-13, -6), (14.4, -6), (0, 3), (0, -5.9)]
@@ -210,19 +219,22 @@ light_energy = 0.6
 omni_range = 6.0
 """)
 o.append('[node name="Stations" type="Node3D" parent="."]\n')
-for name, (x, z), kind, title, lvl, size, c, power in stations:
-    extra = f"power = {power}\n" if kind == HAUNT else ""
+for name, (x, z), kind, title, need, size, c, extra in stations:
+    ex = dict(extra)
+    y = ex.pop("y", 0)
+    lines = "".join(f"{k} = {v}\n" for k, v in ex.items())
     o.append(f"""[node name="{name}" type="StaticBody3D" parent="Stations"]
-transform = {t(x, size[1] / 2, z)}
+transform = {t(x, y + size[1] / 2, z)}
 script = ExtResource("3_station")
 kind = {kind}
 title_text = "{title}"
-min_level = {lvl}
+need = "{need}"
 size = {v3(size)}
 color = {col(c)}
-{extra}""")
+{lines}""")
 o.append('[node name="Markers" type="Node3D" parent="."]\n')
 o.append(f'[node name="Entrance" type="Marker3D" parent="Markers"]\ntransform = {t(0, 0, 11.4)}\n')
+o.append(f'[node name="Camp" type="Marker3D" parent="Markers"]\ntransform = {t(6.5, 0, 6.6)}\n')
 o.append(f'[node name="RoomCenter" type="Marker3D" parent="Markers"]\ntransform = {t(20.5, 0, -10)}\n')
 for n, (x, z) in enumerate(dig_sites):
     o.append(f'[node name="Site{n}" type="Marker3D" parent="Markers" groups=["dig_site"]]\ntransform = {t(x, 0, z)}\n')

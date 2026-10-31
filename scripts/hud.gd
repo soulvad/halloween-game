@@ -1,43 +1,35 @@
 extends CanvasLayer
 ## In-game UI from the "ВІДПУСТИ — UI" design (boards 04–14), built in code with the UI kit:
-## HUD (visibility card, goal, stage panel, minimap, action tiles, E prompt, subtitles),
-## altar (your bones) modal, fade / holy banners, map (M), quest + hints book (J), pause (Esc), hold-to-release card and the end screen.
-## Runs while the tree is paused (the altar, pause and end screens pause it).
+## HUD (memories + powers card, goal, stage panel, minimap, E tile, E prompt, subtitles, «Нова сила» toast),
+## map (M), quest + hints book (J), pause (Esc), hold-to-release card and the end screen.
+## Runs while the tree is paused (pause / end screen here, memory comics from game.gd).
 
 const UI = preload("res://scripts/ui.gd")
 const Station = preload("res://scripts/station.gd")
+const ComicPage = preload("res://scripts/comic_page.gd")
 const SCREENS := "res://scripts/screens.gd"  ## how-to / settings, written by the menu side
 
 const LINE_TIME := 4.5  ## seconds a subtitle stays
-const LEVEL_TINT := [Color(), Color(0.47, 0.92, 1, 0.45), Color(1, 0.77, 0.19, 0.22), Color(1, 0.56, 0.69, 0.35)]
-const FADE_TINT := Color(0.47, 0.92, 1, 0.7)
-const HURT_TINT := Color(1, 0.16, 0.24, 0.75)
-const LEVEL_HINT := ["", "крізь стіни — вільно", "стіни кімнат тримають", "ритуал може тебе відпустити"]
-const DARK_RED := Color("B3122A")
+const TOAST_TIME := 3.5  ## seconds the «Нова сила» banner stays (counts only while the game runs)
 const DARK_GREEN := Color("3E8E1E")
 const BOOK_SVG := '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5Z"/><path d="M4 20.5V5.5M8.5 8h7M8.5 11.5h5"/>'
-const STAGE_NAMES := ["Страх", "Священник", "Заманювання", "Розкопки", "Докази", "Ритуал"]  ## by GameState.Stage
-const STAGE_SHORT := ["Налякати", "Священник", "До завалу", "Розкопки", "Докази", "Ритуал"]  ## goal-panel steps
+## Power icon: a UI kit icon name or an svg path in the kit's 24×24 stroke style.
+const POWER_ICON := {
+	"breath": '<path d="M3 8h10a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h6"/>',
+	"sound": "speaker",
+	"write": '<path d="M4 20l1.2-4.8L16 4.4l3.6 3.6L8.8 18.8Z"/><path d="M14 6.5l3.5 3.5"/>',
+	"hands": "hand",
+}
+const STAGE_NAMES := ["Помітьте мене", "Священник", "Знайдіть мою кімнату", "Розкопки", "Твоя кімната", "Ритуал"]  ## by GameState.Stage
+const STAGE_SHORT := ["Помітьте", "Священник", "Кімната", "Розкопки", "Речі", "Ритуал"]  ## goal-panel steps
 const ROOM := Rect2(17.5, -12.5, 6, 4.7)  ## your sealed room (x, z), from the level layout
 const RUBBLE_POS := Vector3(17.5, 0, -10)  ## shortcut: map marker spot if the level has no "Rubble" node; use the node once it exists
-const ALTAR_PROS := {
-	2: ["+Люди можуть тебе побачити — це лякає ще дужче", "+Важкі речі шумлять сильніше", "+Можна підсвічувати докази у своїй кімнаті",
-		"−Стіни кімнат більше не пропустять", "−Заряд тане: −0.05 за секунду"],
-	3: ["+Тебе бачать усі — тільки так ритуал тебе відпустить", "+Утримуй E у колі, коли ритуал завершено", "−Меблі теж тримають", "−Заряд тане: −0.25 за секунду"],
-}
 
 var game  ## game.gd (untyped: its methods are not known statically)
 var end_title: Label  ## set when the end screen is up (tests read it)
 var _hud: Control  ## everything shown while playing
-var _vignette: ColorRect
-var _lvl_tile: PanelContainer
-var _lvl_name: Label
-var _lvl_num: Label
-var _segs: Array[StyleBoxFlat] = []
-var _charge_val: Label
-var _pips: Array[StyleBoxFlat] = []
-var _hint_l: Label
-var _hint_r: Label
+var _mem_count: Label
+var _powers := {}  ## power -> {sb, icon, name, help}
 var _goal_text: Label
 var _steps: Array[Dictionary] = []
 var _stage_name: Label
@@ -46,7 +38,7 @@ var _stage_fill: Panel
 var _priest_line: Label
 var _mini_cam: Camera3D
 var _room: Label
-var _tiles := {}  ## "E"/"Q" -> {col, sb, icon, cap, badge}
+var _tiles := {}  ## "E" -> {col, sb, icon, cap, badge}
 var _prompt: PanelContainer
 var _prompt_key: StyleBoxFlat
 var _prompt_title: Label
@@ -54,20 +46,18 @@ var _prompt_sub: Label
 var _line: PanelContainer
 var _line_text: RichTextLabel
 var _line_t := 0.0
-var _banner: VBoxContainer
-var _banner_title: Label
-var _banner_pill: PanelContainer
-var _banner_text: Label
+var _toast: VBoxContainer
+var _toast_title: Label
+var _toast_text: Label
+var _toast_t := 0.0
 var _letgo: Control
 var _hold_fill: Panel
 var _hold_label: Label
 var _map: Control
 var _map_cam: Camera3D
-var _markers: Array = []  ## [node, pill]
-var _spirit_rows: Array = []  ## [station, status label]
+var _markers: Array = []  ## [node or Vector3, pill, hide once dug]
 var _haunt_rows: Array = []  ## [station, status label]
-var _altar: Control
-var _altar_frame := -1
+var _map_mem: Array[Label] = []  ## memories 1..5 in the map legend
 var _pause: Control
 var _resume_btn: Button
 var _sub: Control  ## how-to / settings screen opened from the pause
@@ -75,11 +65,15 @@ var _sub_frame := -1
 var _end: Control
 var _book: PanelContainer
 var _book_badge: PanelContainer
-var _quests: Array[Dictionary] = []
+var _book_goal: Dictionary  ## current stage step on the «Цілі» page
+var _book_goal_sub: Label
 var _quest_priest: Label
+var _book_mem: Array[Label] = []  ## memories 1..5 on the «Цілі» page
+var _comic_view: Control  ## «Комікс» page (comic_page.gd)
+var _mem_seen := 0  ## memories already seen in the open book (unread badge)
 var _hint_list: VBoxContainer
 var _read := {}  ## hint ids seen in the open book
-var _mouse_before := Input.MOUSE_MODE_VISIBLE  ## restored after pause / altar (captured in first person)
+var _mouse_before := Input.MOUSE_MODE_VISIBLE  ## restored after the pause (captured in first person)
 var _priest: Node3D
 var _visitors: Array = []
 
@@ -93,9 +87,7 @@ func _ready() -> void:
 			_priest = n
 	_hud = _full()
 	add_child(_hud)
-	_vignette = UI.vignette(LEVEL_TINT[1])
-	_hud.add_child(_vignette)
-	_build_card()
+	_build_powers()
 	_build_goal()
 	_build_right()
 	_build_bottom()
@@ -105,13 +97,14 @@ func _ready() -> void:
 	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hud.add_child(dot)
 	dot.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
-	_build_banner()
+	_build_toast()
 	_build_letgo()
 	_build_map()
 	_build_book()
 	GameState.said.connect(_on_said)
 	GameState.hint_unlocked.connect(func(_id): _rebuild_hints())
-	GameState.altar_requested.connect(_open_altar)
+	GameState.memory_found.connect(func(_id): _rebuild_hints(); _update_comic())
+	GameState.power_gained.connect(_on_power)
 	GameState.finished.connect(_on_finished)
 
 
@@ -121,15 +114,13 @@ func _exit_tree() -> void:
 
 
 func _unhandled_input(e: InputEvent) -> void:
-	if _end:
-		return
+	if _end or (get_tree().paused and not _pause):
+		return  # end screen, or a memory comic paused the tree
 	var frame := Engine.get_process_frames()
 	if e.is_action_pressed("ui_cancel"):
 		if is_instance_valid(_sub) or frame == _sub_frame:
 			return  # the how-to / settings screen handles its own Esc
-		if _altar:
-			_close_altar()
-		elif _book.visible:
+		if _book.visible:
 			toggle_book()
 		elif _map.visible:
 			_map.hide()
@@ -137,9 +128,6 @@ func _unhandled_input(e: InputEvent) -> void:
 			resume()
 		else:
 			open_pause()
-		get_viewport().set_input_as_handled()
-	elif e.is_action_pressed("interact") and _altar and frame != _altar_frame:
-		_altar_confirm()
 		get_viewport().set_input_as_handled()
 	elif e.is_action_pressed("map") and not get_tree().paused:
 		toggle_map()
@@ -152,18 +140,20 @@ func _unhandled_input(e: InputEvent) -> void:
 func _process(delta: float) -> void:
 	_line_t -= delta
 	_line.visible = _line_t > 0 and GameState.subtitles
+	if not get_tree().paused:
+		_toast_t -= delta
 	if _end:
 		return
 	var t = game.player.target_station()
 	if not t is Station:
 		t = null  # visitors are not aim targets
-	_update_card()
+	_update_powers()
 	_update_goal()
 	_update_right()
 	_update_bottom(t)
 	var letting: bool = game.at_release()
 	_letgo.visible = letting
-	_update_banner()
+	_toast.visible = _toast_t > 0 and not letting
 	if letting:
 		var f: float = game.hold / game.RELEASE_TIME
 		_hold_fill.size = Vector2((_hold_fill.get_parent().size.x - 8) * f, 26)
@@ -266,8 +256,6 @@ func _kind(n) -> String:
 ## Current stage progress: [0..1 or -1 for none, text].
 func _stage_progress() -> Array:
 	match GameState.stage:
-		GameState.Stage.HAUNT:
-			return [GameState.unease / GameState.UNEASE_TO_CALL, "страх %d%%" % int(100 * minf(GameState.unease / GameState.UNEASE_TO_CALL, 1))]
 		GameState.Stage.DIG:
 			return [GameState.dig, "%d%%" % int(100 * GameState.dig)]
 		GameState.Stage.EVIDENCE:
@@ -289,7 +277,7 @@ func _room_at(p: Vector3) -> String:
 	return "Біля входу" if p.z > 8 else "Підземелля"
 
 
-## Pause / modal UI needs the cursor; play may have it captured (first person).
+## The pause needs the cursor; play may have it captured (first person).
 func _free_mouse() -> void:
 	_mouse_before = Input.mouse_mode
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -335,82 +323,61 @@ func _view(cam: Camera3D, sz: Vector2) -> Control:
 
 # --- HUD ---
 
-func _build_card() -> void:
+## Top-left: memories found + the four powers, locked until their memory comes back.
+func _build_powers() -> void:
 	var card := UI.panel(UI.PAPER, 26, 7, 20)
-	card.custom_minimum_size.x = 540
+	card.custom_minimum_size.x = 460
 	_pin(card, Control.PRESET_TOP_LEFT)
-	var col := UI.vbox(12)
+	var col := UI.vbox(10)
 	card.add_child(col)
-	var head := UI.hbox(14)
+	var head := UI.hbox(12)
 	col.add_child(head)
-	_lvl_tile = UI.panel(UI.CYAN, 14, 0, 6, 4)
-	_lvl_tile.add_child(UI.icon("ghost", 30))
-	head.add_child(_lvl_tile)
-	var names := UI.vbox(0)
-	names.add_child(UI.label("Видимість", 14, UI.LABEL, "body", 900, true))
-	_lvl_name = UI.label("", 30, UI.INK, "body", 900, true)
-	names.add_child(_lvl_name)
-	head.add_child(names)
-	_lvl_num = UI.label("", 40, UI.INK, "body", 900)
-	head.add_child(_expand(_lvl_num))
-	var bar := UI.hbox(4)
-	var caps := UI.hbox(4)
-	col.add_child(bar)
-	col.add_child(caps)
-	for i in 3:
-		var seg := UI.panel(UI.LILAC, 12, 0, 0, 4)
-		seg.custom_minimum_size.y = 30
-		bar.add_child(_expand(seg))
-		_segs.append(_sb(seg))
-		caps.add_child(_expand(UI.label(GameState.LEVEL_NAMES[i + 1], 14, UI.LABEL, "body", 800, true), [HORIZONTAL_ALIGNMENT_LEFT, HORIZONTAL_ALIGNMENT_CENTER, HORIZONTAL_ALIGNMENT_RIGHT][i]))
+	head.add_child(UI.icon("heart", 28))
+	head.add_child(UI.label("Спогади", 22, UI.INK, "body", 900, true))
+	_mem_count = UI.label("", 28, UI.INK, "body", 900)
+	head.add_child(_expand(_mem_count))
 	col.add_child(UI.rule())
-	var row := UI.hbox(10)
-	col.add_child(row)
-	row.add_child(UI.icon("bolt", 26))
-	row.add_child(UI.label("Заряд", 22, UI.INK, "body", 900, true))
-	_charge_val = UI.label("", 28, UI.INK, "body", 900)
-	row.add_child(_expand(_charge_val))
-	var pips := UI.hbox(7)
-	col.add_child(pips)
-	for i in int(GameState.MAX_CHARGE):
-		var p := UI.panel(UI.LILAC, 9, 0, 0, 4)
-		p.custom_minimum_size = Vector2(38, 34)
-		pips.add_child(p)
-		_pips.append(_sb(p))
-	var hints := UI.hbox(24)
-	col.add_child(hints)
-	_hint_l = _hand("", 22)
-	_hint_r = _hand("", 22)
-	hints.add_child(_expand(_hint_l, HORIZONTAL_ALIGNMENT_LEFT))
-	hints.add_child(_expand(_hint_r))
+	col.add_child(UI.label("Сили", 14, UI.LABEL, "body", 900, true))
+	for p in GameState.POWERS:
+		var row := UI.hbox(12)
+		col.add_child(row)
+		var tile := UI.panel(UI.GREY, 12, 0, 6, 3)
+		var icon := _power_icon(p, 30)
+		tile.add_child(icon)
+		row.add_child(tile)
+		var tv := UI.vbox(0)
+		tv.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var n := UI.label("", 19, UI.INK, "body", 900)
+		var h := UI.label("", 15, UI.MUTED, "body", 600)
+		tv.add_child(n)
+		tv.add_child(h)
+		row.add_child(tv)
+		_powers[p] = {sb = _sb(tile), icon = icon, name = n, help = h}
 
 
-func _update_card() -> void:
-	var l: int = GameState.level
-	var hurt: bool = GameState.hurt > 0
-	_sb(_lvl_tile).bg_color = UI.CYAN if GameState.is_fading() else UI.LEVEL_COLORS[l]
-	_lvl_name.text = GameState.LEVEL_NAMES[l]
-	_lvl_num.text = "%d/%d" % [l, GameState.MAX_LEVEL]
-	for i in 3:
-		_segs[i].bg_color = UI.LEVEL_COLORS[i + 1] if i < l else UI.LILAC
-	_charge_val.text = "%.1f / %d" % [GameState.charge, GameState.MAX_CHARGE]
-	_set_color(_charge_val, DARK_RED if hurt or (l > 1 and GameState.charge < 1) else UI.INK)
-	var full := UI.RED if hurt else UI.CHARGE
-	for i in _pips.size():
-		var fill := clampf(GameState.charge - i, 0, 1)
-		_pips[i].bg_color = full if fill >= 0.999 else (full.lerp(UI.LILAC, 0.55) if fill > 0.05 else UI.LILAC)
-		_pips[i].shadow_offset = Vector2(0, 4) if fill >= 0.999 else Vector2.ZERO
-	if GameState.is_fading():
-		_hint_l.text = "крізь усі стіни"
-	elif hurt:
-		_hint_l.text = "на нулі — " + ("рівень %d" % (l - 1) if l > 1 else "назад на старт")
-	else:
-		_hint_l.text = LEVEL_HINT[l]
-	if l < GameState.MAX_LEVEL:
-		var need: float = GameState.LEVEL_REQ[l + 1] - GameState.charge
-		_hint_r.text = "до рівня %d ще %d →" % [l + 1, ceili(need)] if need > 0 else "на вівтар →"
-	else:
-		_hint_r.text = "тане −%.2f/с" % GameState.UPKEEP[l]
+func _update_powers() -> void:
+	_mem_count.text = "%d / %d" % [GameState.memories.size(), GameState.MEMORY_COUNT]
+	for p in _powers:
+		var d: Dictionary = _powers[p]
+		var has := GameState.has_power(p)
+		d.sb.bg_color = UI.GOLD if has else UI.GREY
+		d.icon.modulate.a = 1.0 if has else 0.35
+		d.name.text = GameState.POWER_NAMES[p] if has else "???"
+		d.help.text = GameState.POWER_HELP[p] if has else "ще не згадав"
+		_set_color(d.name, UI.INK if has else UI.LABEL)
+
+
+func _svg_icon(svg: String, size: int) -> TextureRect:
+	var img := Image.new()
+	img.load_svg_from_string('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#17111C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">%s</svg>' % svg, size / 24.0)
+	var t := UI.icon("ghost", size)
+	t.texture = ImageTexture.create_from_image(img)
+	return t
+
+
+func _power_icon(p: String, size: int) -> TextureRect:
+	var ic: String = POWER_ICON[p]
+	return _svg_icon(ic, size) if ic.begins_with("<") else UI.icon(ic, size)
 
 
 func _build_goal() -> void:
@@ -520,7 +487,7 @@ func _build_bottom() -> void:
 	_pin(br, Control.PRESET_BOTTOM_RIGHT)
 	var tiles := UI.hbox(12)
 	br.add_child(tiles)
-	for k in ["E", "Q"]:
+	for k in ["E"]:
 		var col := UI.action_tile(k, "hand", UI.GOLD, "")
 		var tile: PanelContainer = col.get_child(0)
 		var badge := UI.chip("", UI.CHARGE, UI.INK, 14, 3)
@@ -542,7 +509,14 @@ func _set_tile(k: String, bg: Color, icon_name: String, caption: String, badge :
 
 
 func _verb(t) -> String:
-	return {"SPIRIT": "Зарядитися", "ALTAR": "Твої кістки", "HAUNT": "Шуміти", "EVIDENCE": "Підсвітити", "CIRCLE": "Утримуй"}.get(_kind(t), "Взаємодія")
+	return {"MEMORY": "Згадати", "CANDLE": "Подих", "HAUNT": "Шуміти", "MIRROR": "Писати", "PLAN": "Зсунути", "DOOR": "Відчинити",
+		"KNOCK": "Стукати", "EVIDENCE": "Показати", "CIRCLE": "Утримуй"}.get(_kind(t), "Взаємодія")
+
+
+## Power a station needs that the ghost hasn't got yet ("" = none missing).
+func _missing(t) -> String:
+	var need = t.get("need")
+	return need if need is String and need != "" and not GameState.has_power(need) else ""
 
 
 func _update_bottom(t) -> void:
@@ -552,12 +526,6 @@ func _update_bottom(t) -> void:
 		_set_tile("E", UI.MOM if _kind(t) == "CIRCLE" else UI.GOLD, "hand", _verb(t))
 	else:
 		_set_tile("E", UI.GREY, "lock", _verb(t))
-	if GameState.is_fading():
-		_set_tile("Q", UI.CYAN, "ghost_dashed", "Невидимий %.1f" % GameState.fade_left)
-	elif GameState.charge >= GameState.FADE_COST:
-		_set_tile("Q", UI.CYAN, "ghost_dashed", "Сховатися", "−%d" % GameState.FADE_COST)
-	else:
-		_set_tile("Q", UI.GREY, "ghost_dashed", "Мало заряду", "−%d" % GameState.FADE_COST, UI.RED)
 
 
 func _build_prompt() -> void:
@@ -587,21 +555,27 @@ func _build_prompt() -> void:
 
 
 func _prompt_hint(t) -> String:
+	var need := _missing(t)
+	if need != "":
+		return "потрібна сила: %s" % GameState.POWER_NAMES.get(need, need)
 	match _kind(t):
-		"SPIRIT":
-			return "+%d заряд, потім %d с перерви" % [Station.SPIRIT_CHARGE, Station.SPIRIT_COOLDOWN]
-		"ALTAR":
-			return "вівтар · поріг заряду, нічого не витрачає"
+		"MEMORY":
+			return "торкнися — повернеться спогад"
+		"CANDLE":
+			return "люди підуть на світло, що змінилося"
 		"HAUNT":
-			return "ще %d с тиші" % ceili(t.cooldown) if t.cooldown > 0 else "−1 заряд · люди поруч підуть на звук"
+			var cd = t.get("cooldown")
+			return "ще %d с тиші" % ceili(cd) if cd is float and cd > 0 else "люди поруч підуть на звук"
+		"MIRROR":
+			return "напис уже є" if GameState.mirror_written else "напиши на склі · археолог має бути поруч"
+		"PLAN":
+			return "план уже зсунуто" if GameState.plan_moved else "покажи, де на плані бракує кімнати"
+		"KNOCK":
+			return "три удари, пауза, один · хтось має бути поруч"
 		"EVIDENCE":
-			if t.shown:
-				return "вже показано"
-			return "з рівня 2" if GameState.level < 2 else "люди мають бути поруч"
+			return "вже показано" if t.get("shown") else "покажи, коли люди поруч"
 		"CIRCLE":
-			if GameState.release_ready():
-				return "ритуал завершено · утримуй E"
-			return "стань Присутністю (рівень 3)" if GameState.stage == GameState.Stage.RITUAL and GameState.ritual >= 1.0 else "чекай, поки священник завершить ритуал"
+			return "ритуал завершено · утримуй E" if GameState.release_ready() else "чекай, поки священник завершить ритуал"
 	return ""
 
 
@@ -619,41 +593,27 @@ func _update_prompt(t) -> void:
 	_prompt.position = cam.unproject_position(top) - Vector2(_prompt.size.x / 2, _prompt.size.y + 20)
 
 
-# --- fade / hurt (boards 08, 09) ---
+# --- «Нова сила» toast ---
 
-func _build_banner() -> void:
-	_banner = UI.vbox(8)
-	_banner.alignment = BoxContainer.ALIGNMENT_CENTER
-	_pin(_banner, Control.PRESET_CENTER_TOP, 0, 170)
-	_banner_title = UI.title("", 96)
-	_banner_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_banner.add_child(_banner_title)
-	_banner_pill = UI.panel(UI.CYAN, 999, 4, 6, 4)
-	_banner_pill.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_banner_text = UI.label("", 18, UI.INK, "body", 900, true)
-	_banner_pill.add_child(_banner_text)
-	_banner.add_child(_banner_pill)
+func _build_toast() -> void:
+	_toast = UI.vbox(8)
+	_toast.alignment = BoxContainer.ALIGNMENT_CENTER
+	_pin(_toast, Control.PRESET_CENTER_TOP, 0, 200)
+	_toast_title = UI.title("", 84, UI.GOLD)
+	_toast_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_toast.add_child(_toast_title)
+	var pill := UI.panel(UI.GOLD, 999, 4, 6, 4)
+	pill.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_toast_text = UI.label("", 18, UI.INK, "body", 900, true)
+	pill.add_child(_toast_text)
+	_toast.add_child(pill)
+	_toast.hide()
 
 
-func _update_banner() -> void:
-	var tint: Color = LEVEL_TINT[GameState.level]
-	_banner.visible = not _letgo.visible
-	if GameState.hurt > 0:
-		tint = HURT_TINT
-		_banner_title.text = "Святе світло пече!"
-		_set_color(_banner_title, UI.GOLD)
-		_sb(_banner_pill).bg_color = UI.GOLD
-		_banner_text.text = "відлети від священника · −%d заряду/с" % GameState.HOLY_DRAIN
-	elif GameState.is_fading() and GameState.grace <= 0:
-		_banner_title.text = "Зник! %.1f с" % GameState.fade_left
-		_set_color(_banner_title, UI.CYAN)
-		_sb(_banner_pill).bg_color = UI.CYAN
-		_banner_text.text = "тебе не бачить ніхто · крізь усі стіни"
-	else:
-		_banner.visible = false
-	if GameState.hurt <= 0 and GameState.is_fading():
-		tint = FADE_TINT
-	(_vignette.material as ShaderMaterial).set_shader_parameter("tint", tint)
+func _on_power(p: String) -> void:
+	_toast_title.text = "Нова сила: %s" % GameState.POWER_NAMES.get(p, p)
+	_toast_text.text = GameState.POWER_HELP.get(p, "")
+	_toast_t = TOAST_TIME
 
 
 # --- hold to release (board 12) ---
@@ -727,13 +687,14 @@ func _build_map() -> void:
 		var pill := UI.pill(text, color, 15)
 		view.add_child(pill)
 		_markers.append([target, pill, until_dug])
-	for s in stations:
-		if _kind(s) == "ALTAR":
-			mark.call(s, "Твої кістки", UI.CHARGE)
+	mark.call(Vector3(ROOM.get_center().x, 0, ROOM.get_center().y), "Твоя кімната", UI.CHARGE)
 	var rubble = game.find_child("Rubble", true, false)
 	mark.call(rubble if rubble is Node3D else RUBBLE_POS, "Завал", UI.ORANGE, true)
+	for s in stations:
+		if _kind(s) == "MEMORY":
+			mark.call(s, "спогад", UI.GOLD)
 	for n in _visitors:
-		mark.call(n, n.title_text, UI.PAPER if _kind(n) == "PRIEST" else UI.GOLD)
+		mark.call(n, n.title_text, UI.PAPER if _kind(n) == "PRIEST" else UI.LILAC)
 	mark.call(game.get_node("Player"), "Ти", UI.CYAN)  # last = on top; game.player is @onready, not set yet
 
 	var leg := UI.panel(UI.PAPER, 26, 8, 24)
@@ -743,12 +704,10 @@ func _build_map() -> void:
 	leg.add_child(col)
 	var head := func(text: String):
 		col.add_child(UI.label(text, 22, UI.INK, "body", 900, true))
-	head.call("Стіни")
-	for line in ["Зовнішні — тримають завжди", "Стіни кімнат — тримають з рівня 2", "Меблі — тримають з рівня 3",
-			"Q — %d с крізь усі внутрішні" % GameState.FADE_TIME, "Священник — святе світло, пече"]:
+	head.call("Як вести людей")
+	for line in ["Люди йдуть на звук і на світло, що змінилося", "Священник ходить за археологами", "Твоя кімната — вгорі праворуч, за стіною"]:
 		col.add_child(UI.label("· " + line, 19, UI.MUTED, "body", 600))
 	col.add_child(UI.rule())
-	head.call("Де зарядитися")
 	var row_of := func(text: String) -> Label:
 		var r := UI.hbox(8)
 		r.add_child(UI.label(text, 19, UI.INK, "body", 700))
@@ -756,16 +715,14 @@ func _build_map() -> void:
 		r.add_child(_expand(st))
 		col.add_child(r)
 		return st
-	for s in stations:
-		if _kind(s) == "SPIRIT":
-			_spirit_rows.append([s, row_of.call(s.title_text)])
-	col.add_child(_hand("Кожна річ дає +%d і відпочиває %d с." % [Station.SPIRIT_CHARGE, Station.SPIRIT_COOLDOWN], 24))
+	head.call("Спогади")
+	for id in GameState.MEMORY_COUNT:
+		_map_mem.append(row_of.call("%d." % (id + 1)))
 	col.add_child(UI.rule())
 	head.call("Чим шуміти")
 	for s in stations:
-		if _kind(s) == "HAUNT":
+		if _kind(s) in ["HAUNT", "CANDLE"]:
 			_haunt_rows.append([s, row_of.call(s.title_text)])
-	col.add_child(_hand("−1 заряд · люди йдуть на звук", 24))
 	var foot := UI.hbox(10)
 	foot.add_child(UI.chip("M"))
 	foot.add_child(UI.label("закрити карту", 18, UI.PAPER, "body", 700))
@@ -788,14 +745,17 @@ func _update_map() -> void:
 		pill.visible = at and not (m[2] and GameState.stage > GameState.Stage.DIG)
 		if pill.visible:
 			pill.position = _map_cam.unproject_position(n if n is Vector3 else n.global_position) - pill.size / 2
-	for r in _spirit_rows + _haunt_rows:
+	for i in _map_mem.size():
+		_set_memory_row(_map_mem[i], i + 1)
+	for r in _haunt_rows:
 		var s = r[0]
 		var st: Label = r[1]
-		if GameState.level < s.min_level:
-			st.text = "рівень %d" % s.min_level
+		var cd = s.get("cooldown")
+		if _missing(s) != "":
+			st.text = "треба: " + GameState.POWER_NAMES.get(_missing(s), "")
 			_set_color(st, UI.LABEL)
-		elif s.cooldown > 0:
-			st.text = "%d с" % ceili(s.cooldown)
+		elif cd is float and cd > 0:
+			st.text = "%d с" % ceili(cd)
 			_set_color(st, UI.ORANGE)
 		else:
 			st.text = "готово"
@@ -804,12 +764,11 @@ func _update_map() -> void:
 
 # --- quest + hints book (J) ---
 
-func _book_icon(size: int) -> TextureRect:
-	var img := Image.new()
-	img.load_svg_from_string('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#17111C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">%s</svg>' % BOOK_SVG, size / 24.0)
-	var t := UI.icon("ghost", size)
-	t.texture = ImageTexture.create_from_image(img)
-	return t
+## "3. Лист від матері" once found, "??? ще не згадав" before.
+func _set_memory_row(l: Label, id: int) -> void:
+	var found := id in GameState.memories
+	l.text = "%d. %s" % [id, GameState.MEMORY_TITLES.get(id, "")] if found else "%d. ???" % id
+	_set_color(l, DARK_GREEN if found else UI.LABEL)
 
 
 ## Closed book: tile in the top-right column with the unread-hints badge.
@@ -817,13 +776,16 @@ func _book_tile() -> PanelContainer:
 	var p := UI.panel(UI.GOLD, 18, 5, 10, 4)
 	var row := UI.hbox(10)
 	p.add_child(row)
-	row.add_child(_book_icon(30))
+	row.add_child(_svg_icon(BOOK_SVG, 30))
 	row.add_child(UI.label("Книга", 18, UI.INK, "body", 900, true))
 	row.add_child(UI.chip("J"))
 	_book_badge = UI.chip("0", UI.RED, UI.INK, 15, 3)
 	row.add_child(_book_badge)
 	_book_badge.hide()
 	return p
+
+
+const COMIC_LETTERS := ["A", "B", "C", "D", "E", "F"]  ## memories 1..5, F = finale
 
 
 func _build_book() -> void:
@@ -841,63 +803,77 @@ func _build_book() -> void:
 		v.add_child(head)
 		pages.add_child(pp)
 		return v
-	var left: VBoxContainer = page.call("Квести", UI.GOLD, UI.PAPER)
+	var left: VBoxContainer = page.call("Цілі", UI.GOLD, UI.PAPER)
 	left.get_child(0).add_child(_expand(_hand("J / Esc — закрити", 22)))
-	for i in STAGE_NAMES.size():
-		var row := UI.panel(Color(0, 0, 0, 0), 12, 0, 8, 0)
-		var rv := UI.vbox(2)
-		row.add_child(rv)
-		var d := _step(rv, 20)
-		d.panel = row
-		d.sub = _wrap(UI.label("", 16, UI.MUTED, "body", 600), 430)
-		rv.add_child(d.sub)
-		left.add_child(row)
-		_quests.append(d)
-	left.add_child(UI.rule())
-	_quest_priest = UI.label("", 19, UI.INK, "body", 900)
+	var row := UI.panel(Color(UI.GOLD, 0.85), 12, 0, 8, 0)
+	var rv := UI.vbox(2)
+	row.add_child(rv)
+	_book_goal = _step(rv, 20)
+	_book_goal_sub = _wrap(UI.label("", 17, UI.INK, "body", 700), 430)
+	rv.add_child(_book_goal_sub)
+	left.add_child(row)
+	_quest_priest = UI.label("", 18, UI.INK, "body", 900)
 	left.add_child(_quest_priest)
-	var right: VBoxContainer = page.call("Підказки", UI.CHARGE, Color("FFF6E0"))
+	left.add_child(UI.rule())
+	left.add_child(UI.label("Спогади", 22, UI.INK, "body", 900, true))
+	for i in GameState.MEMORY_COUNT:
+		_book_mem.append(UI.label("", 18, UI.LABEL, "body", 800))
+		left.add_child(_book_mem[i])
+	left.add_child(UI.rule())
+	left.add_child(UI.label("Підказки", 22, UI.INK, "body", 900, true))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_hint_list = UI.vbox(10)
+	_hint_list = UI.vbox(8)
 	_hint_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_hint_list)
-	right.add_child(scroll)
+	left.add_child(scroll)
+	var right: VBoxContainer = page.call("Комікс", UI.CHARGE, Color("FFF6E0"))
+	_comic_view = ComicPage.new()
+	_comic_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_comic_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.add_child(_comic_view)
+	_comic_view.setup("memories")
 	_book.hide()
 	_rebuild_hints()
+	_update_comic()
 
 
-## J: the book drops from the top-right corner (the game keeps running); closing marks hints read.
+## J: the book drops from the top-right corner (the game keeps running); closing marks hints and memories read.
 func toggle_book() -> void:
 	if _book.visible:
 		for id in GameState.hints:
 			_read[id] = true
+		_mem_seen = GameState.memories.size()
 		_book.hide()
 	else:
 		_map.hide()
 		_book.show()
 		_update_book()
+		_update_comic()
 		_book.position.y = -800
 		create_tween().tween_property(_book, "position:y", 36.0, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_rebuild_hints()
 
 
-## One quest per story stage; the current one shows the live goal and progress.
+## «Цілі»: the current stage with its live goal and progress, the priest, found memories.
 func _update_book() -> void:
+	var i := clampi(GameState.stage, 0, STAGE_NAMES.size() - 1)
 	var pr := _stage_progress()
-	for i in _quests.size():
-		var d: Dictionary = _quests[i]
-		var s := _stage_state(i)
-		_set_step(d, "%d · %s" % [i + 1, STAGE_NAMES[i]], s)
-		_set_color(d.label, [UI.LABEL, UI.INK, DARK_GREEN][s])
-		_sb(d.ring).border_color = UI.INK if s == 1 else UI.LABEL
-		_sb(d.panel).bg_color = Color(UI.GOLD, 0.85) if s == 1 else Color(0, 0, 0, 0)
-		d.sub.text = GameState.goal() + (" · " + pr[1] if pr[1] != "" else "") if s == 1 else GameState.STAGE_GOALS[i]
+	_set_step(_book_goal, "Етап %d/%d · %s" % [i + 1, STAGE_NAMES.size(), STAGE_NAMES[i]], 1)
+	_book_goal_sub.text = GameState.goal() + (" · " + pr[1] if pr[1] != "" else "")
 	_quest_priest.text = _priest_status()
+	for m in _book_mem.size():
+		_set_memory_row(_book_mem[m], m + 1)
 
 
-## Hints, newest first; unread ones stand out until the book is closed.
+## «Комікс»: panels A–E open with their memory, F after the finale; the rest stay dark with «?».
+func _update_comic() -> void:
+	for k in COMIC_LETTERS.size():
+		_comic_view.set_panel_state(COMIC_LETTERS[k], GameState.won if k == 5 else (k + 1) in GameState.memories)
+
+
+## Hints, newest first; unread ones stand out until the book is closed. Badge = unread hints + new memories.
 func _rebuild_hints() -> void:
 	for c in _hint_list.get_children():
 		c.queue_free()
@@ -906,116 +882,20 @@ func _rebuild_hints() -> void:
 		var id: String = GameState.hints[i]
 		var fresh: bool = not _read.has(id)
 		unread += int(fresh)
-		var p := UI.panel(UI.PAPER if fresh else UI.LILAC, 16, 4 if fresh else 0, 12, 3, UI.ORANGE if fresh else UI.INK)
+		var p := UI.panel(UI.PAPER if fresh else UI.LILAC, 14, 4 if fresh else 0, 10, 3, UI.ORANGE if fresh else UI.INK)
 		var r := UI.hbox(10)
 		p.add_child(r)
 		if fresh:
 			var chip := UI.chip("нове", UI.ORANGE, UI.INK, 14, 2)
 			chip.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 			r.add_child(chip)
-		r.add_child(_wrap(UI.label(GameState.HINTS[id], 18, UI.INK, "body", 600), 370 if fresh else 440))
+		r.add_child(_wrap(UI.label(GameState.HINTS[id], 16, UI.INK, "body", 600), 360 if fresh else 430))
 		_hint_list.add_child(p)
 	if GameState.hints.is_empty():
 		_hint_list.add_child(_hand("Поки порожньо…", 26))
+	unread += maxi(GameState.memories.size() - _mem_seen, 0)
 	_book_badge.visible = unread > 0
 	_book_badge.get_child(0).text = str(unread)
-
-
-# --- altar (board 07) ---
-
-func _open_altar() -> void:
-	if _altar or GameState.level >= GameState.MAX_LEVEL:
-		return
-	get_tree().paused = true
-	_free_mouse()
-	_altar_frame = Engine.get_process_frames()
-	var l: int = GameState.level
-	var need := int(GameState.LEVEL_REQ[l + 1])
-	var have := mini(int(GameState.charge), need)
-	_altar = _full()
-	_altar.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(_altar)
-	_altar.add_child(UI.backdrop(Color(UI.INK, 0.45)))
-	var box := UI.panel(UI.PAPER, 30, 10, 32)
-	box.custom_minimum_size.x = 660
-	_pin(box, Control.PRESET_TOP_RIGHT, 80, 150, _altar)
-	var col := UI.vbox(20)
-	box.add_child(col)
-	var head := UI.hbox(12)
-	col.add_child(head)
-	head.add_child(UI.title("Твої кістки", 76, UI.CHARGE))
-	head.add_child(_expand(_hand("ланцюги дзенькають…", 30)))
-	var lv := UI.hbox(16)
-	col.add_child(lv)
-	for i in 2:
-		var lvl := l + i
-		var p := UI.panel(UI.LEVEL_COLORS[lvl] if i else UI.LEVEL_COLORS[lvl].lerp(UI.PAPER, 0.75), 18, 0, 14, 4)
-		if i:
-			_sb(p).shadow_color = UI.INK
-			_sb(p).shadow_size = 1
-			_sb(p).shadow_offset = Vector2(0, 5)
-		var pv := UI.vbox(6)
-		pv.add_child(UI.label(["Зараз", "Станеш"][i], 13, UI.LABEL, "body", 900, true))
-		pv.add_child(UI.label("%d · %s" % [lvl, GameState.LEVEL_NAMES[lvl]], 30, UI.INK, "body", 900, true))
-		p.add_child(pv)
-		lv.add_child(_expand(p))
-		if i == 0:
-			lv.add_child(UI.label("→", 44, UI.INK, "body", 900))
-	var list := UI.vbox(10)
-	col.add_child(list)
-	for line: String in ALTAR_PROS[l + 1]:
-		var r := UI.hbox(12)
-		var plus := line[0] == "+"
-		var mark := UI.chip(line[0], UI.GREEN if plus else UI.RED, UI.INK, 18, 3)
-		mark.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-		r.add_child(mark)
-		r.add_child(_wrap(UI.label(line.substr(1), 20, UI.INK, "body", 600), 520))
-		list.add_child(r)
-	var price := UI.panel(UI.LILAC, 18, 0, 14, 4)
-	col.add_child(price)
-	var pr := UI.hbox(14)
-	price.add_child(pr)
-	pr.add_child(UI.label("Ціна", 20, UI.INK, "body", 900, true))
-	var pips := UI.hbox(5)
-	pr.add_child(pips)
-	for i in need:
-		var pip := UI.panel(UI.CHARGE if i < have else UI.PAPER, 8, 0, 0, 4)
-		pip.custom_minimum_size = Vector2(26 if need > 4 else 34, 30)
-		pips.add_child(pip)
-	pr.add_child(_expand(UI.label("%d з %d" % [have, need], 22, UI.INK, "body", 900)))
-	var ok: bool = GameState.can_level_up()
-	pr.add_child(UI.pill("вистачає" if ok else "бракує", UI.GREEN if ok else UI.RED, 15))
-	if not ok:
-		col.add_child(_hand("заряд не витрачається — назбирай ще %d" % ceili(need - GameState.charge), 26, DARK_RED))
-	var btns := UI.hbox(16)
-	col.add_child(btns)
-	var up := UI.button("Піднятися", "primary", "E", "", 26)
-	up.disabled = not ok
-	up.pressed.connect(_altar_confirm)
-	btns.add_child(_expand(up))
-	var later := UI.button("Пізніше", "secondary", "Esc", "", 22)
-	later.pressed.connect(_close_altar)
-	btns.add_child(later)
-	(up if ok else later).grab_focus.call_deferred()
-	var note := _hand("Що видиміший — то\nближче до волі", 32, UI.INK)
-	var np := UI.panel(UI.PAPER, 20, 5, 16, 4)
-	np.add_child(note)
-	np.position = Vector2(600, 640)
-	np.rotation_degrees = -3
-	_altar.add_child(np)
-
-
-func _altar_confirm() -> void:
-	if _altar and GameState.level_up():
-		_close_altar()
-
-
-func _close_altar() -> void:
-	if _altar:
-		_altar.queue_free()
-		_altar = null
-		Input.mouse_mode = _mouse_before
-	get_tree().paused = false
 
 
 # --- pause (board 11) ---
@@ -1060,8 +940,9 @@ func open_pause() -> void:
 	var sv := UI.vbox(12)
 	stats.add_child(sv)
 	sv.add_child(UI.label("Ця ніч", 22, UI.INK, "body", 900, true))
-	for kv in [["Етап", "%d · %s" % [GameState.stage + 1, STAGE_NAMES[GameState.stage]]], ["Видимість", "%d · %s" % [GameState.level, GameState.LEVEL_NAMES[GameState.level]]],
-			["Заряд", "%.1f / %d" % [GameState.charge, GameState.MAX_CHARGE]], ["Шуму наробив", _times(GameState.haunts)],
+	var powers := PackedStringArray(GameState.powers.map(func(p): return GameState.POWER_NAMES[p]))
+	for kv in [["Етап", "%d · %s" % [GameState.stage + 1, STAGE_NAMES[GameState.stage]]], ["Спогади", "%d / %d" % [GameState.memories.size(), GameState.MEMORY_COUNT]],
+			["Сили", ", ".join(powers) if powers else "жодної"], ["Шуму наробив", _times(GameState.haunts)],
 			["Священник", _priest_status().trim_prefix("Священник: ")], ["Час", _clock(GameState.elapsed)]]:
 		var r := UI.hbox(10)
 		r.add_child(UI.label(kv[0], 15, UI.LABEL, "body", 900, true))
@@ -1120,7 +1001,6 @@ func _to_menu() -> void:
 func _on_finished(_won: bool) -> void:  # the dungeon story has no losing ending
 	if is_instance_valid(_sub):
 		_sub.queue_free()
-	_close_altar()
 	resume()
 	_map.hide()
 	_hud.hide()
@@ -1140,11 +1020,12 @@ func _on_finished(_won: bool) -> void:  # the dungeon story has no losing ending
 	centered.call(UI.pill("Фінал · Звільнення", UI.GOLD, 20, "ghost"))
 	end_title = UI.title("Ти вільний", 150)
 	centered.call(end_title)
+	if GameState.name_known():
+		centered.call(_hand("Тиміш Ковальчук", 64, UI.CYAN))
 	centered.call(UI.label("Тебе знайшли й пам'ятають. Підземелля старого міста відпустило тебе.", 40, UI.GOLD, "body", 900))
 	var grid := UI.hbox(22)
-	var peak: int = GameState.peak_level
-	for kv in [["Час", _clock(GameState.elapsed)], ["Зібрано заряду", "%d" % GameState.gathered],
-			["Шуму наробив", _times(GameState.haunts)], ["Найвищий рівень", "%d · %s" % [peak, GameState.LEVEL_NAMES[peak]]]]:
+	for kv in [["Час", _clock(GameState.elapsed)], ["Спогади", "%d / %d" % [GameState.memories.size(), GameState.MEMORY_COUNT]],
+			["Шуму наробив", _times(GameState.haunts)]]:
 		var card := UI.panel(UI.PAPER, 22, 7, 20)
 		card.custom_minimum_size.x = 270
 		var cv := UI.vbox(8)

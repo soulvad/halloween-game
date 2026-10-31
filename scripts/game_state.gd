@@ -1,81 +1,65 @@
 extends Node
-## Autoload: ghost state (visibility level, spirit charge, fade) + the dungeon story (stages, unease, dig, evidence, ritual).
-## Charge is fuel: the altar (your bones) needs a threshold, every level above 1 burns charge each second.
-## Story: a servant died in the count's dungeon and can't leave. Archaeologists come. Haunt them until they call
-## a priest, lure everyone to your sealed room, they dig through the rubble, see the evidence, the priest holds
-## a ritual, and at level 3 you hold E in the circle to leave. Linear, no way to lose.
+## Autoload: the dungeon story. A servant boy (Тиміш) was walled up in the count's dungeon and forgot who he was.
+## Linear, no resources, no way to lose. Memories (touch a glint) give powers; with them the ghost steers the living:
+## HAUNT «Помітьте мене»: memories 1–3, noises/candles lead archaeologists, write ДОПОМОЖІТЬ on the mirror →
+## PRIEST_COMING → LURE «Знайдіть мою кімнату»: push the plan, memory 4 (hands), open the door, knock 3–1 on the wall →
+## DIG → EVIDENCE: show your things, memory 5 (your name) → RITUAL: the priest prays, hold E in the circle → finale.
 
-signal visibility_changed  ## level changed or fade started/ended
-signal banished  ## knocked out at level 1: back to the spawn
 signal finished(won: bool)
 signal said(who: String, text: String, color: Color)  ## subtitles (HUD)
-signal altar_requested  ## E at the altar: the HUD opens the altar modal, which calls level_up()
 signal hint_unlocked(id: String)  ## a new page in the book (HUD)
 signal stage_changed(stage: int)
-signal haunted(pos: Vector3, power: float)  ## a haunt object made noise; visitors in earshot react
+signal haunted(pos: Vector3, power: float)  ## a noise / light change; visitors in earshot react
+signal memory_found(id: int)  ## game.gd plays the memory comic, HUD updates
+signal power_gained(power: String)
 
 enum Phase { PLAY, END }
-## HAUNT: scare the archaeologists (unease) · PRIEST_COMING: they called him · LURE: lead the group to the rubble
-## DIG: they clear it · EVIDENCE: show them your room · RITUAL: the priest frees you (then hold E in the circle).
+## Stage names kept from the first dungeon draft: HAUNT = «Помітьте мене», LURE = «Знайдіть мою кімнату», EVIDENCE = your room.
 enum Stage { HAUNT, PRIEST_COMING, LURE, DIG, EVIDENCE, RITUAL }
 
-const MAX_LEVEL := 3
-const MAX_CHARGE := 10.0
-const LEVEL_REQ := { 2: 4.0, 3: 8.0 }  ## charge needed at the altar (not spent)
-const UPKEEP := [0.0, 0.0, 0.05, 0.25]  ## charge per second by level; at 0 the level drops
-const FADE_COST := 2.0
-const FADE_TIME := 4.0
-const HIT_GRACE := 2.0  ## after a knock: nothing hurts
-const HOLY_DRAIN := 2.0  ## charge per second on holy ground (the priest's aura)
-const UNEASE_TO_CALL := 8.0  ## archaeologists call the priest at this much unease
 const EVIDENCE_NEEDED := 3
-const LEVEL_NAMES := ["", "Тінь", "Відлуння", "Присутність"]
-const HURT_SHOW := 0.3  ## seconds the HUD shows "hurt" after the last drain
+const MEMORY_COUNT := 5
+const POWERS := ["breath", "sound", "write", "hands"]
+const POWER_NAMES := {"breath": "Подих", "sound": "Поштовх і звук", "write": "Письмо", "hands": "Сила рук"}
+const POWER_HELP := {
+	"breath": "гасити й запалювати свічки",
+	"sound": "брязкати металом, штовхати дрібні речі",
+	"write": "писати слова на пилу й склі",
+	"hands": "відчиняти двері, стукати в стіну",
+}
+const MEMORY_POWER := {1: "breath", 2: "sound", 3: "write", 4: "hands"}  ## memory 5 gives your name, no power
+const MEMORY_TITLES := {1: "Пташка", 2: "Сімнадцятий", 3: "Лист від матері", 4: "Ключ від хвіртки", 5: "Ім'я на стіні"}
 const GHOST_COLOR := Color("9BF6FF")
-## Goal line per stage (HUD goal panel, book).
-const STAGE_GOALS := [
-	"Налякай археологів: шуми предметами поруч із ними",
-	"Археологи кличуть священника — зачекай біля входу",
-	"Заведи всіх до завалу: шуми предметами, і вони підуть на звук",
-	"Археологи розкопують завал до твоєї кімнати",
-	"Покажи їм докази: підсвіти речі у своїй кімнаті (рівень 2)",
-	"Священник проводить ритуал. Стань Присутністю й утримуй E у колі",
-]
 ## Book hints, unlocked once per round by hint(id). Add new ones here and call hint() where they happen.
 const HINTS := {
-	"start": "Спіритичні речі (фіолетові) дають заряд: E біля них, потім вони відпочивають. Твої кістки — вівтар: там піднімаєш видимість.",
-	"haunt": "Помаранчеві речі можна змусити шуміти (E, 1 заряд). Люди поруч чують і йдуть подивитися — так їх і ведеш.",
-	"holy": "Святе світло пече навіть тінь: тримайся трохи осторонь священника.",
-	"level2": "Тепер люди можуть тебе побачити — це лякає їх ще більше. Важкі речі (ґрати, скриня) шумлять сильніше.",
-	"sprint": "Shift — спринт: швидше, але витрачає заряд.",
-	"knock": "Заряд упав до нуля: ти слабшаєш на рівень. На першому рівні тебе відкине до твоїх кісток.",
-	"priest": "Священник іде! Його світло пече — не підлітай впритул. Він ходить за археологами.",
-	"lure": "Веди групу: шуми предметами все ближче до завалу у верхньому правому коридорі. Біля завалу — «Стук за завалом».",
-	"dig": "Археологи розкопують завал. Ще трохи — і вони побачать твою кімнату.",
-	"evidence": "Підсвіти докази (E, рівень 2), коли люди поруч: кайдани, дні на стіні, миска з ім'ям.",
-	"level3": "Ти Присутність: тебе бачать усі. Тільки так ритуал може тебе відпустити.",
-	"ritual": "Ритуал завершено. Стань у коло й утримуй E — і ти нарешті підеш.",
+	"start": "Ти нічого не пам'ятаєш. Шукай мерехтіння в темряві й торкайся їх (E) — так повертаються спогади.",
+	"memory": "Кожен спогад повертає силу. Подивись, що нового ти вмієш.",
+	"haunt": "Археологи йдуть на звук і на світло, що змінилося. Так їх і ведеш — крок за кроком.",
+	"mirror": "Ти вмієш писати. Приведи археолога до запиленого дзеркала й напиши на ньому (E).",
+	"priest": "Археологи кличуть священника. Він прийде до входу й ходитиме за ними.",
+	"lure": "На столі археологів лежить план маєтку. Зсунь його (E) — хай побачать, що однієї кімнати на плані бракує.",
+	"door": "Двері до твого коридору зачинені. Сила рук відчиняє двері.",
+	"knock": "Простукай стіну так, як ви стукали з Ганнусею: три удари, пауза, один (E E E … E). Хтось має бути поруч.",
+	"dig": "Археологи розбирають стіну. Ще трохи — і вони побачать твою кімнату.",
+	"evidence": "Покажи їм свої речі (E), коли вони поруч: кайдани, подряпини-дні, миску. І торкнися напису на стіні.",
+	"ritual": "Священник молиться в колі. Коли закінчить — стань у коло й утримуй E.",
 }
 
 var phase := Phase.PLAY
-var level := 1
-var charge := 0.0
-var fade_left := 0.0  ## > 0: nobody sees the ghost, it passes every inner wall
-var grace := 0.0
 var won := false
-var hurt := 0.0  ## > 0: just lost charge to `hurt_by`
-var hurt_by := ""  ## "holy" (or "hunter" from the old house level)
 var stage := Stage.HAUNT
-var unease := 0.0  ## HAUNT: grows when visitors hear haunts / see the ghost
-var lure_pos := Vector3.INF  ## last haunt the group should walk to (LURE)
+var memories: Array[int] = []  ## memory ids found, in order
+var powers: Array[String] = []
+var mirror_written := false
+var plan_moved := false  ## LURE: the plan on the archaeologists' table shows the missing room
+var wall_knocked := false  ## LURE: the code 3–1 knocked on the bricked wall for a witness
 var dig := 0.0  ## DIG progress 0..1
 var evidence := 0  ## pieces of evidence shown
 var ritual := 0.0  ## RITUAL progress 0..1
+var intro_seen := false  ## prologue comic shown this session (not reset between rounds)
 # Stats for the end screen.
 var elapsed := 0.0
-var gathered := 0.0  ## charge ever gained
-var haunts := 0  ## noises made
-var peak_level := 1
+var haunts := 0  ## noises / light changes made
 var hints: Array[String] = []  ## unlocked hint ids, oldest first
 var player: Node3D  ## set by the player on spawn
 
@@ -86,56 +70,47 @@ var subtitles := true
 
 func reset() -> void:
 	phase = Phase.PLAY
-	level = 1
-	charge = 0.0
-	fade_left = 0.0
-	grace = 0.0
 	won = false
-	hurt = 0.0
-	hurt_by = ""
 	stage = Stage.HAUNT
-	unease = 0.0
-	lure_pos = Vector3.INF
+	memories.clear()
+	powers.clear()
+	mirror_written = false
+	plan_moved = false
+	wall_knocked = false
 	dig = 0.0
 	evidence = 0
 	ritual = 0.0
 	elapsed = 0.0
-	gathered = 0.0
 	haunts = 0
-	peak_level = 1
 	hints.clear()
-	visibility_changed.emit()
 
 
 func _process(delta: float) -> void:
-	grace = maxf(grace - delta, 0)
-	hurt = maxf(hurt - delta, 0)
 	if phase == Phase.PLAY:
 		elapsed += delta
-	if fade_left > 0:
-		fade_left -= delta
-		if fade_left <= 0:
-			visibility_changed.emit()
-	if phase == Phase.PLAY and level > 1:
-		charge -= UPKEEP[level] * delta
-		if charge <= 0:
-			charge = 0.0
-			set_level(level - 1)
 
 
-func is_fading() -> bool:
-	return fade_left > 0
+func has_power(p: String) -> bool:
+	return p in powers
 
 
-## Someone with this sight level notices the ghost right now.
-func visible_to(sees_from: int) -> bool:
-	return not is_fading() and level >= sees_from
+func name_known() -> bool:
+	return 5 in memories
 
 
-func add_charge(v: float) -> void:
-	var before := charge
-	charge = clampf(charge + v, 0, MAX_CHARGE)
-	gathered += maxf(charge - before, 0)
+## Touching a memory glint: remember it, gain its power. game.gd shows the comic on memory_found.
+func remember(id: int) -> void:
+	if id in memories:
+		return
+	memories.append(id)
+	var p: String = MEMORY_POWER.get(id, "")
+	if p != "" and p not in powers:
+		powers.append(p)
+		power_gained.emit(p)
+	memory_found.emit(id)
+	hint("memory")
+	if p == "write":
+		hint("mirror")
 
 
 func set_stage(s: Stage) -> void:
@@ -146,22 +121,43 @@ func set_stage(s: Stage) -> void:
 	hint(["haunt", "priest", "lure", "dig", "evidence", "ritual"][s])
 
 
+## Goal line for the HUD goal panel and the book.
 func goal() -> String:
-	if stage == Stage.RITUAL and ritual >= 1.0 and level < MAX_LEVEL:
-		return "Ритуал готовий — стань Присутністю (рівень 3) і утримуй E у колі"
-	return STAGE_GOALS[stage]
+	match stage:
+		Stage.HAUNT:
+			if powers.is_empty():
+				return "Ти нічого не пам'ятаєш. Знайди мерехтіння в темряві й торкнися його"
+			if not has_power("write"):
+				return "Шуми й гаси свічки — веди археологів. Шукай ще спогади"
+			return "Приведи археолога до дзеркала й напиши на ньому"
+		Stage.PRIEST_COMING:
+			return "Археологи кличуть священника — зачекай"
+		Stage.LURE:
+			if not plan_moved:
+				return "Зсунь план на столі археологів — покажи, де твоя кімната"
+			if not has_power("hands"):
+				return "Двері зачинені. Знайди ще один спогад"
+			return "Відчини двері й простукай стіну: три удари, пауза, один"
+		Stage.DIG:
+			return "Археологи розбирають стіну до твоєї кімнати"
+		Stage.EVIDENCE:
+			if evidence < EVIDENCE_NEEDED:
+				return "Покажи їм свої речі (%d/%d)" % [evidence, EVIDENCE_NEEDED]
+			return "Торкнися напису на стіні"
+	if ritual < 1.0:
+		return "Священник проводить ритуал"
+	return "Стань у коло й утримуй E — час іти"
 
 
-## A haunt object made noise at `pos`; visitors in earshot react (visitor.gd).
-func haunt(pos: Vector3, power: float) -> void:
+## A noise or light change at `pos`; visitors in earshot react (visitor.gd).
+func haunt(pos: Vector3, power := 1.0) -> void:
 	haunts += 1
-	lure_pos = pos
 	haunted.emit(pos, power)
 
 
-## The ritual is done and the ghost is fully visible: hold E in the circle to leave (game.gd).
+## The ritual is done: hold E in the circle to leave (game.gd).
 func release_ready() -> bool:
-	return stage == Stage.RITUAL and ritual >= 1.0 and level >= MAX_LEVEL
+	return stage == Stage.RITUAL and ritual >= 1.0
 
 
 ## Unlock a book hint once per round; returns true the first time.
@@ -182,65 +178,10 @@ func think(text: String) -> void:
 	say("Ти", text, GHOST_COLOR)
 
 
-func can_level_up() -> bool:
-	return level < MAX_LEVEL and charge >= LEVEL_REQ[level + 1]
-
-
-func level_up() -> bool:
-	if not can_level_up():
-		return false
-	set_level(level + 1)
-	return true
-
-
-func set_level(l: int) -> void:
-	level = clampi(l, 1, MAX_LEVEL)
-	peak_level = maxi(peak_level, level)
-	if level >= 2:
-		hint("level%d" % level)
-		hint("sprint")
-	visibility_changed.emit()
-
-
-## Spend charge to turn invisible for a while (holy ground still burns).
-func fade(time := FADE_TIME, cost := FADE_COST) -> bool:
-	if is_fading() or charge < cost:
-		return false
-	charge -= cost
-	fade_left = time
-	visibility_changed.emit()
-	return true
-
-
-## Holy ground. Empty charge = lose a level (at level 1: banished to spawn).
-func drain(v: float, by := "holy") -> void:
-	if grace > 0 or phase != Phase.PLAY:
-		return
-	charge -= v
-	hurt = HURT_SHOW
-	hurt_by = by
-	if by == "holy":
-		hint("holy")
-	if charge > 0:
-		return
-	charge = 0.0
-	grace = HIT_GRACE
-	fade_left = HIT_GRACE
-	hint("knock")
-	if level == 1:
-		banished.emit()
-	set_level(level - 1)
-
-
-## Holy ground around `pos` (the priest) burns the ghost inside `radius`.
-func burn_near(pos: Vector3, radius: float, delta: float) -> void:
-	if player and Vector2(player.global_position.x - pos.x, player.global_position.z - pos.z).length() < radius:
-		drain(HOLY_DRAIN * delta, "holy")
-
-
 func finish(did_win: bool) -> void:
 	if phase == Phase.END:
 		return
 	phase = Phase.END
 	won = did_win
 	finished.emit(did_win)
+

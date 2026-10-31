@@ -1,19 +1,16 @@
 extends CharacterBody3D
 
-## Ghost, first person: mouse look, WASD float (no gravity), Shift sprint (burns charge), E interact, Q fade, F scare.
-## Collision mask follows the visibility level: walls with solid_from > level are passed through.
+## Ghost, first person: mouse look, WASD float (no gravity), Shift sprint, E interact.
+## Collides only with layer 1 (outer walls): floats through inner walls, furniture, doors and the bricked wall.
 
 const Wall = preload("res://scripts/wall.gd")
 
 const WALK := 3.5
-const SPRINT := 6.0  ## faster than a chasing hunter (4.5), slower than nothing else
-const SPRINT_COST := 0.4  ## charge per second while sprinting
+const SPRINT := 6.0
 const ACCEL := 7.0  ## soft start/stop, the ghost glides
 const MOUSE_SENS := 0.0022
 const EYE := 1.55
 const BOB := 0.04  ## gentle float of the view
-const ALPHA := [0.0, 0.25, 0.55, 0.9]  ## body opacity per visibility level (seen by others / minimap)
-const FADE_ALPHA := 0.1
 const LAYER_SELF := 4  ## visual layer 3: the own body, hidden from the first-person camera
 
 var held := ""  ## memento name or ""
@@ -35,17 +32,15 @@ func _ready() -> void:
 	GameState.player = self
 	body.layers = LAYER_SELF
 	camera.cull_mask = 0xFFFFF & ~LAYER_SELF
-	GameState.visibility_changed.connect(_on_visibility_changed)
-	_on_visibility_changed()
+	collision_mask = 1
+	body.transparency = 0.6  ## a faint glow on the minimap
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func _physics_process(delta: float) -> void:
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var dir := transform.basis * Vector3(input.x, 0, input.y)
-	sprinting = Input.is_action_pressed("sprint") and dir != Vector3.ZERO and GameState.charge > 0
-	if sprinting:
-		GameState.charge = maxf(GameState.charge - SPRINT_COST * delta, 0)
+	sprinting = Input.is_action_pressed("sprint") and dir != Vector3.ZERO
 	var want := dir * (SPRINT if sprinting else WALK)
 	velocity = velocity.lerp(want, minf(ACCEL * delta, 1))
 	move_and_slide()
@@ -67,12 +62,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		var s = target_station()
 		if s:
 			s.interact(self)
-	elif event.is_action_pressed("fade"):
-		GameState.fade()
-	elif event.is_action_pressed("scare"):
-		var s = target_station()
-		if s and s.has_method("scare"):
-			s.scare()
 
 
 ## What the crosshair points at, else the nearest interactable in front (Reach), else null.
@@ -100,8 +89,3 @@ func set_held(item: String, color := Color.WHITE) -> void:
 		_held_visual = Wall.box(Vector3(0.18, 0.18, 0.18), color)
 		hand.add_child(_held_visual)
 
-
-func _on_visibility_changed() -> void:
-	var fading := GameState.is_fading()
-	collision_mask = 1 if fading else (1 << GameState.level) - 1
-	body.transparency = 1.0 - (FADE_ALPHA if fading else ALPHA[GameState.level])

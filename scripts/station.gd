@@ -1,39 +1,47 @@
 @tool
 extends StaticBody3D
 
-## Interactive object; the player calls interact(player) when pressing E at it.
-## SPIRIT gives charge, ALTAR (your bones) asks the HUD to open the altar modal, HAUNT makes a noise visitors hear,
-## EVIDENCE is revealed to the archaeologists in your room, CIRCLE is where you hold E after the ritual (game.gd).
+## Interactive object; the player calls interact(player) when pressing E at it. `need` = power required ("" = none).
+## MEMORY: a glint, touching it remembers (only the next memory in order is visible). CANDLE: lit/out, visitors notice.
+## HAUNT: a noise visitors hear. MIRROR: write ДОПОМОЖІТЬ for a witness → they call the priest. PLAN: push the estate
+## plan on the archaeologists' table. DOOR: blocks people while closed. KNOCK: the bricked wall, rhythm 3–1 for a witness.
+## EVIDENCE: your things in your room, shown to a witness. CIRCLE: hold E after the ritual (game.gd).
 
 const Wall = preload("res://scripts/wall.gd")
 const UI = preload("res://scripts/ui.gd")
 const Visitor = preload("res://scripts/visitor.gd")
 
-## MEMENTO, LOVED, CANDLE belonged to the old house level; kept only so the enum values stay stable.
-enum Kind { SPIRIT, ALTAR, MEMENTO, LOVED, CANDLE, HAUNT, EVIDENCE, CIRCLE }
+enum Kind { MEMORY, CANDLE, HAUNT, MIRROR, PLAN, DOOR, KNOCK, EVIDENCE, CIRCLE }
 
-const SPIRIT_CHARGE := 1.0
-const SPIRIT_COOLDOWN := 12.0
-const HAUNT_COST := 1.0
-const HAUNT_COOLDOWN := 6.0
-const WITNESS_RANGE := 7.0  ## EVIDENCE: an archaeologist this close sees it revealed
+const COOLDOWN := {Kind.CANDLE: 1.5, Kind.HAUNT: 4.0}
+const WITNESS_RANGE := 7.0  ## an archaeologist this close sees what you do
+const HEAR_KNOCK := 2.0  ## KNOCK: has to stand right at the wall (not in the room next door)
+const KNOCK_FAST := 0.7  ## max gap between the first three knocks
+const KNOCK_PAUSE := Vector2(0.8, 2.5)  ## the pause before the last knock
 const LAYER_STATION := 8  ## layer 4: only the player's aim sees it, the ghost floats through
-const HAUNT_LINES := ["*дзень-дзень*", "*скрип*", "*брязкіт*", "*стук-стук*", "*шурхіт*"]
+const LAYER_PEOPLE_ONLY := 64  ## a closed door blocks people (and the navmesh), not the ghost
+const HAUNT_LINES := ["*дзень-дзень*", "*скрип*", "*брязкіт*", "*шурхіт*"]
 
-@export var kind := Kind.SPIRIT
-@export var title_text := "Дзеркало"
-@export_range(1, 3) var min_level := 1  ## visibility level needed to use it
+@export var kind := Kind.HAUNT
+@export var title_text := "Кайдани"
+@export var need := ""  ## power from GameState.POWERS, "" = none
+@export var memory_id := 0  ## MEMORY: 1..5
+@export var lit := true  ## CANDLE
+@export var open := false  ## DOOR
 @export var size := Vector3(0.5, 0.5, 0.5):
 	set(v):
 		size = v
 		_build()
 @export var color := Color(0.6, 0.3, 1)
-@export var power := 1.0  ## HAUNT: how loud (unease per listener)
+@export var power := 1.0  ## HAUNT / CANDLE: how far it carries (unease per listener in old builds)
 
-var cooldown := 0.0  ## SPIRIT, HAUNT
+var cooldown := 0.0
 var shown := false  ## EVIDENCE
-var _mesh: MeshInstance3D
+var _knocks: Array[float] = []  ## KNOCK: times of the current attempt
+var _mesh: Node3D  ## placeholder box (MeshInstance3D) or the final model from art/models/<node name>
 var _label: Label3D
+var _light: OmniLight3D
+var _block: CollisionShape3D  ## DOOR
 
 
 func _ready() -> void:
@@ -45,98 +53,182 @@ func _ready() -> void:
 	_label.font = UI.font()
 	if kind == Kind.EVIDENCE:
 		add_to_group("evidence")
+	if kind == Kind.DOOR:
+		var b := StaticBody3D.new()
+		b.collision_layer = LAYER_PEOPLE_ONLY
+		b.collision_mask = 0
+		_block = CollisionShape3D.new()
+		_block.shape = BoxShape3D.new()
+		_block.shape.size = size
+		b.add_child(_block)
+		add_child(b)
+	_refresh()
 
 
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
 	cooldown = maxf(cooldown - delta, 0)
+	if kind == Kind.MEMORY:
+		visible = available()
+		_mesh.position.y = sin(Time.get_ticks_msec() * 0.003) * 0.08
 	_label.text = title()
-	_label.visible = GameState.show_labels
-	var dim := GameState.level < min_level or cooldown > 0
-	if kind == Kind.CIRCLE:
-		dim = GameState.stage != GameState.Stage.RITUAL
-	_mesh.transparency = 0.6 if dim else 0.0
+	_label.visible = GameState.show_labels and visible
+	if kind not in [Kind.MEMORY, Kind.DOOR]:
+		if _mesh is GeometryInstance3D:
+			_mesh.transparency = 0.0 if can_use() or shown else 0.45
+
+
+## MEMORY: this is the next memory to find.
+func available() -> bool:
+	if memory_id in GameState.memories or GameState.memories.size() < memory_id - 1:
+		return false
+	return memory_id != 5 or (GameState.stage == GameState.Stage.EVIDENCE and GameState.evidence >= GameState.EVIDENCE_NEEDED)
 
 
 func title() -> String:
+	if need != "" and not GameState.has_power(need):
+		return title_text + " (ще не вмієш)"
 	match kind:
-		Kind.CIRCLE:
-			if GameState.stage != GameState.Stage.RITUAL:
-				return title_text + " (ще не час)"
-			if GameState.ritual < 1.0:
-				return "%s: священник молиться %d%%" % [title_text, int(GameState.ritual * 100)]
-			if GameState.level < GameState.MAX_LEVEL:
-				return title_text + ": стань Присутністю (рівень 3)"
-			return title_text + ": утримуй E — піти"
+		Kind.MEMORY:
+			return "Спогад: торкнутися"
+		Kind.CANDLE:
+			return "%s: %s" % [title_text, "загасити" if lit else "запалити"]
+		Kind.HAUNT:
+			return title_text + (" (%d с)" % ceili(cooldown) if cooldown > 0 else ": шуміти")
+		Kind.MIRROR:
+			if GameState.mirror_written:
+				return "ДОПОМОЖІТЬ"
+			return title_text + (": написати" if witness() else " (ніхто не побачить)")
+		Kind.PLAN:
+			if GameState.plan_moved:
+				return title_text + " (зсунуто)"
+			if GameState.stage != GameState.Stage.LURE:
+				return title_text
+			return title_text + (": зсунути" if witness() else " (ніхто не побачить)")
+		Kind.DOOR:
+			return "%s: %s" % [title_text, "зачинити" if open else "відчинити"]
+		Kind.KNOCK:
+			if GameState.stage != GameState.Stage.LURE or not GameState.plan_moved:
+				return title_text
+			var dots := "●".repeat(_knocks.size()) + "○".repeat(4 - _knocks.size())
+			return "%s: тук-тук-тук … тук  %s%s" % [title_text, dots, "" if witness() else " (поруч нікого)"]
 		Kind.EVIDENCE:
 			if shown:
 				return title_text + " (побачили)"
-	if GameState.level < min_level:
-		return "%s (рівень %d)" % [title_text, min_level]
-	match kind:
-		Kind.SPIRIT:
-			return title_text + (" (%d с)" % ceili(cooldown) if cooldown > 0 else ": зарядитися")
-		Kind.ALTAR:
-			if GameState.level >= GameState.MAX_LEVEL:
-				return title_text
-			return "%s: рівень %d (треба %d заряду)" % [title_text, GameState.level + 1, GameState.LEVEL_REQ[GameState.level + 1]]
-		Kind.HAUNT:
-			return title_text + (" (%d с)" % ceili(cooldown) if cooldown > 0 else ": шуміти")
-		Kind.EVIDENCE:
 			if GameState.stage != GameState.Stage.EVIDENCE:
-				return title_text + " (ніхто не бачить)"
-			return title_text + (": підсвітити" if witness() else " (поруч нікого)")
+				return title_text
+			return title_text + (": показати" if witness() else " (поруч нікого)")
+		Kind.CIRCLE:
+			if GameState.stage != GameState.Stage.RITUAL:
+				return title_text
+			if GameState.ritual < 1.0:
+				return "%s: священник молиться %d%%" % [title_text, int(GameState.ritual * 100)]
+			return title_text + ": утримуй E — піти"
 	return title_text
 
 
-## An archaeologist close enough to see this evidence revealed.
+## An archaeologist close enough to see it.
 func witness() -> bool:
+	var r := HEAR_KNOCK if kind == Kind.KNOCK else WITNESS_RANGE
 	for v in get_tree().get_nodes_in_group("visitor"):
-		if v.visible and v.kind == Visitor.Kind.ARCH and v.global_position.distance_to(global_position) < WITNESS_RANGE:
+		if v.visible and v.kind == Visitor.Kind.ARCH and v.global_position.distance_to(global_position) < r:
 			return true
 	return false
 
 
 ## E would do something right now (the HUD shows ready / locked).
 func can_use() -> bool:
-	match kind:
-		Kind.CIRCLE:
-			return GameState.release_ready()
-		Kind.EVIDENCE:
-			return not shown and GameState.level >= min_level and GameState.stage == GameState.Stage.EVIDENCE and witness()
-	if GameState.level < min_level:
+	if (need != "" and not GameState.has_power(need)) or cooldown > 0:
 		return false
 	match kind:
-		Kind.SPIRIT:
-			return cooldown <= 0 and GameState.charge < GameState.MAX_CHARGE
-		Kind.ALTAR:
-			return GameState.level < GameState.MAX_LEVEL
-		Kind.HAUNT:
-			return cooldown <= 0 and GameState.charge >= HAUNT_COST
+		Kind.MEMORY:
+			return available()
+		Kind.CANDLE, Kind.HAUNT, Kind.DOOR:
+			return true
+		Kind.MIRROR:
+			return not GameState.mirror_written and GameState.stage == GameState.Stage.HAUNT and witness()
+		Kind.PLAN:
+			return not GameState.plan_moved and GameState.stage == GameState.Stage.LURE and witness()
+		Kind.KNOCK:
+			return not GameState.wall_knocked and GameState.stage == GameState.Stage.LURE and GameState.plan_moved and witness()
+		Kind.EVIDENCE:
+			return not shown and GameState.stage == GameState.Stage.EVIDENCE and witness()
+		Kind.CIRCLE:
+			return GameState.release_ready()
 	return false
 
 
 func interact(_p) -> void:
 	if not can_use():
 		return
+	cooldown = COOLDOWN.get(kind, 0.0)
 	match kind:
-		Kind.SPIRIT:
-			GameState.add_charge(SPIRIT_CHARGE)
-			cooldown = SPIRIT_COOLDOWN
-		Kind.ALTAR:
-			GameState.altar_requested.emit()
+		Kind.MEMORY:
+			GameState.remember(memory_id)
+		Kind.CANDLE:
+			lit = not lit
+			GameState.haunt(global_position, power)
 		Kind.HAUNT:
-			GameState.charge -= HAUNT_COST
-			cooldown = HAUNT_COOLDOWN
 			GameState.say(title_text, HAUNT_LINES.pick_random(), UI.ORANGE)
 			GameState.haunt(global_position, power)
+		Kind.MIRROR:
+			GameState.mirror_written = true
+		Kind.PLAN:
+			GameState.plan_moved = true
+			position.x += 0.15
+		Kind.DOOR:
+			open = not open
+			GameState.haunt(global_position, power)
+			if owner and owner.has_method("rebake_nav"):
+				owner.rebake_nav.call_deferred()
+		Kind.KNOCK:
+			_knock()
 		Kind.EVIDENCE:
 			shown = true
-			_mesh.transparency = 0.0
-			(_mesh.mesh.material as StandardMaterial3D).albedo_color = UI.GOLD
 			GameState.evidence += 1
 		# CIRCLE: holding E is handled by game.gd
+	_refresh()
+
+
+## One knock; three quick ones, a pause, one more = the code «я тут».
+func _knock() -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	if not _knocks.is_empty():
+		var gap := now - _knocks[-1]
+		var ok := gap <= KNOCK_FAST if _knocks.size() < 3 else gap >= KNOCK_PAUSE.x and gap <= KNOCK_PAUSE.y
+		if not ok:
+			_knocks.clear()
+	_knocks.append(now)
+	GameState.say(title_text, "*тук*", UI.ORANGE)
+	if _knocks.size() == 4:
+		_knocks.clear()
+		GameState.wall_knocked = true
+
+
+func _refresh() -> void:
+	if Engine.is_editor_hint() or not _mesh:
+		return
+	match kind:
+		Kind.CANDLE:
+			_light.visible = lit
+			if _mat():
+				_mat().emission_enabled = lit
+		Kind.DOOR:
+			_block.disabled = open
+			_mesh.rotation.y = -1.4 if open else 0.0
+			_mesh.position.x = -size.x / 2 if open else 0.0
+		Kind.MIRROR:
+			if GameState.mirror_written and _mat():
+				_mat().albedo_color = Color(0.55, 0.1, 0.1)
+		Kind.EVIDENCE:
+			if shown and _mat():
+				_mat().albedo_color = UI.GOLD
+
+
+## The placeholder box's material (null when a final model replaced it).
+func _mat() -> StandardMaterial3D:
+	return (_mesh.mesh.material as StandardMaterial3D) if _mesh is MeshInstance3D else null
 
 
 func _build() -> void:
@@ -145,12 +237,24 @@ func _build() -> void:
 	for c in get_children():
 		if not c.owner:
 			c.free()
-	_mesh = Wall.box(size, color)
+	_mesh = Wall.visual(name, size, color)
 	add_child(_mesh)
 	var shape := CollisionShape3D.new()
 	shape.shape = BoxShape3D.new()
 	shape.shape.size = size
 	add_child(shape)
+	if kind in [Kind.MEMORY, Kind.CANDLE]:
+		var m := _mat()
+		if m:
+			m.emission = color
+			m.emission_energy_multiplier = 2.0
+			m.emission_enabled = true
+		_light = OmniLight3D.new()
+		_light.light_color = color
+		_light.omni_range = 3.0 if kind == Kind.CANDLE else 2.0
+		_light.light_energy = 1.2
+		_light.position.y = size.y / 2 + 0.1
+		add_child(_light)
 	_label = Label3D.new()
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_label.visibility_range_end = 10.0  ## first person: only nearby things are labelled
@@ -160,5 +264,5 @@ func _build() -> void:
 	_label.position.y = size.y / 2 + 0.4
 	_label.text = title_text
 	_label.layers = 2  ## the minimap camera culls labels
-	_label.modulate = {Kind.SPIRIT: UI.CHARGE, Kind.ALTAR: UI.CHARGE, Kind.HAUNT: UI.ORANGE, Kind.EVIDENCE: UI.GOLD, Kind.CIRCLE: UI.MOM}.get(kind, UI.PAPER)
+	_label.modulate = {Kind.MEMORY: UI.CYAN, Kind.HAUNT: UI.ORANGE, Kind.CANDLE: UI.GOLD, Kind.EVIDENCE: UI.GOLD, Kind.CIRCLE: UI.MOM}.get(kind, UI.PAPER)
 	add_child(_label)

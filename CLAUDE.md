@@ -10,24 +10,25 @@ Old cooking prototype is backed up in `_archive_cooking/` (ignored by Godot).
 - After editing scripts, run the smoke test. Update it when gameplay rules change.
 
 ## Game loop — «Підземелля старого міста»
-The count tortured his servants in this dungeon; you died in the farthest cell and can't leave. Linear story, **no enemies, no way to lose**. Stages: `GameState.Stage` (driven in `game.gd._process`, visitors react in `visitor.gd`):
-1. **HAUNT**: archaeologists (Олена, Тарас, with lanterns) explore dig sites. `E` on a noise object (orange, 1 charge, 6s cooldown) → archaeologists within 12 m go check it, `unease += power`; at L2+ a sighting adds +2 once per level. `unease ≥ 8` → they call the priest.
-2. **PRIEST_COMING** (15s): everyone waits at the entrance. **LURE**: the priest (Отець Василь) walks in; archaeologists walk to the last noise they heard, the priest follows. Lead them up the passage with «Стук за завалом».
-3. **DIG**: an archaeologist within 3 m of `Level/Rubble` digs (12s); the rubble (people-only, the ghost floats through it) is freed and the navmesh rebaked.
-4. **EVIDENCE**: everyone gathers in your room; at L2 `E` on Кайдани / Подряпини / Миска while an archaeologist is within 7 m reveals it (3 needed).
-5. **RITUAL**: the priest prays in the circle (20s). Then at L3 **hold `E`** in the circle 2.5s (`game.RELEASE_TIME`) = win.
-- Ghost basics: charge from spirit items (`E`, +1, 12s cd), altar = your bones (modal, threshold L2 4 / L3 8, spends nothing), each level burns upkeep, `Q` fade, Shift sprint. The priest's aura (r 1.8, off during the ritual) drains charge: empty = drop a level, at L1 = back to your bones.
-- First person: mouse look, walk 3.5, sprint 6. `Esc` pause, `M` map, `J`/Tab quest + hints book.
+Story: `docs/comic_script.md` (comic script) + the team's story doc. Тиміш, a servant boy walled up by count Auersberg, forgot who he was. Linear, **no resources, no enemies, no way to lose, one (good) ending**. The ghost floats through every inner wall; only the outer walls stop it.
+- **Memories → powers.** A cyan glint (`MEMORY`, only the next one in order is visible) → `E` → memory comic → power: 1 Пташка → Подих (candles), 2 Сімнадцятий → Поштовх і звук (noise objects, push the plan), 3 Лист → Письмо (mirror), 4 Ключ → Сила рук (door, knock), 5 Ім'я на стіні (your name, ritual key).
+- **Stages** (`GameState.Stage`, driven in `game.gd._process`, visitors react in `visitor.gd`):
+  1. HAUNT «Помітьте мене»: candle on/off and noises → archaeologists (Олена, Тарас) within 12 m come to check. With Письмо write ДОПОМОЖІТЬ on the mirror while one is within 7 m → they call the priest.
+  2. PRIEST_COMING (15 s) → LURE «Знайдіть мою кімнату»: archaeologists work at their camp table; push the plan (witness) → they head for the bricked wall, but the door (closed, blocks people + navmesh) stops them. Memory 4 → open the door → knock 3 quick + pause + 1 with an archaeologist within 2 m.
+  3. DIG (12 s) → EVIDENCE: everyone in your room; show 3 things (witness), then memory 5 appears → RITUAL: the priest prays 20 s, hold `E` in the circle 2.5 s → finale comic → end screen.
+- **Comics** (`scenes/comic.tscn`): two pages in the artist's 6-panel layout. «prologue» plays on the first game start (`GameState.intro_seen`); «memories» panel A–E reveals on memory 1–5, F after the ritual (finale); the same page sits in the J/Tab book. Art/voice/models/textures drop in by file name, see `docs/assets.md`. `game.comic(id)`; the smoke test sets `comics_enabled = false`.
+- First person: mouse look, walk 3.5, Shift sprint 6. `Esc` pause, `M` map, `J`/Tab quest + hints book.
 
 ## Files
-- `scripts/game_state.gd` — autoload `GameState`: phase, level, charge, upkeep, fade, grace, story (`stage`, `set_stage()`, `goal()`, `unease`, `haunt(pos, power)` → signal `haunted`, `dig`, `evidence`, `ritual`, `release_ready()`), `drain()`, `burn_near()`. Signals `visibility_changed`, `stage_changed`, `banished`, `finished(won)`, `said` (`say()`, `think()`), `altar_requested`, `hint_unlocked`. Book hints `HINTS` + `hint(id)` (each stage unlocks its hint). **Tuning numbers live here** (story timings in `game.gd`).
-- `scripts/station.gd` — `@tool` interactive object, `kind`: SPIRIT, ALTAR, HAUNT (`power`), EVIDENCE (`shown`, `witness()`), CIRCLE (MEMENTO/LOVED/CANDLE are old, unused). `can_use()` + `interact(player)`.
+- `scripts/game_state.gd` — autoload `GameState`: phase, `stage` + `set_stage()` + `goal()`, `memories`/`remember(id)`/`name_known()`, `powers`/`has_power()` (`POWERS`, `POWER_NAMES`, `POWER_HELP`, `MEMORY_POWER`, `MEMORY_TITLES`), story flags `mirror_written`, `plan_moved`, `wall_knocked`, `dig`, `evidence`, `ritual`, `release_ready()`, `haunt(pos, power)` (→ `haunted`). Signals `memory_found`, `power_gained`, `stage_changed`, `said` (`say()`, `think()`), `hint_unlocked`, `finished`. Book hints `HINTS` + `hint(id)`.
+- `scripts/station.gd` — `@tool` interactive object, `kind`: MEMORY (`memory_id`), CANDLE (`lit`), HAUNT, MIRROR, PLAN, DOOR (`open`, people-only blocker, calls `game.rebake_nav()`), KNOCK (rhythm), EVIDENCE, CIRCLE; `need` = power required. `title()` / `can_use()` / `interact(player)`; `witness()` = an archaeologist close enough.
+- `scripts/comic.gd` + `scripts/comic_data.gd` + `scenes/comic.tscn` — comic player: `play(id)` → `finished`, pauses the tree; data per id: pages → panels (`text`, `who`, `art`, `voice`, `time`). Test: `tests/comic_test.tscn` prints `COMIC OK`.
 - `scripts/visitor.gd` — archaeologist (ARCH) / priest (PRIEST, hidden until `arrive()`); navmesh walking via `NavigationAgent3D`, behaviour per stage; finds `Markers/*` and `Level/Rubble` through `owner`.
-- `scripts/wall.gd` — `@tool` box from `size`; `solid_from` = level from which it blocks the ghost; `people_only` = blocks only people (rubble). `box()`, `holy_glow()`.
-- `scripts/player.gd` — first-person ghost: `Head/Camera3D`, aim `RayCast3D` (layer 4) then `Reach` fallback, `E`/`Q`/`F`, collision mask follows level.
-- `scripts/game.gd` — navmesh bake (`_bake_nav()`), stage transitions, `_open_room()`, release hold (`at_release()`, `hold`, `_release()`), banish → spawn.
-- `scripts/hud.gd` — all in-game UI built in code with `scripts/ui.gd` (HUD, goal panel, altar modal, map, pause, book, end screen); owns `Esc` / `M` / `J`.
-- `scenes/game.tscn` — **generated** by `python tools/gen_dungeon.py scenes/game.tscn` (rooms as 0.25 m grid rectangles + doors → wall segments, furniture, stations, lights, `Markers` (Entrance, RoomCenter, dig sites), visitors, player). Edit the generator, not the scene. Keep passages/doors ≥ 1.5 m wide or the navmesh (agent radius 0.5) closes them.
+- `scripts/wall.gd` — `@tool` box from `size` (or `art/models/<node name>` via `visual()` / `model()`, textures via `textured()`); `solid_from` 1 = outer wall (blocks the ghost), 2–3 = inner wall / furniture (people + navmesh only); `people_only` = layer 7 (the bricked wall `Level/Rubble`). `box()`, `holy_glow()`.
+- `scripts/player.gd` — first-person ghost: `Head/Camera3D`, aim `RayCast3D` (layer 4) then `Reach` fallback, `E`; collision mask 1.
+- `scripts/game.gd` — navmesh bake (`_bake_nav()`, `rebake_nav()`), stage transitions, comics (`comic(id)`), `_open_room()`, release hold (`at_release()`, `hold`, `_release()`).
+- `scripts/hud.gd` — all in-game UI built in code with `scripts/ui.gd` (HUD with powers row + memories counter, goal panel, map, pause, book, end screen); owns `Esc` / `M` / `J`.
+- `scenes/game.tscn` — **generated** by `python tools/gen_dungeon.py scenes/game.tscn` (rooms as 0.25 m grid rectangles + doors → wall segments, furniture, stations, lights, `Markers` (Entrance, Camp, RoomCenter, dig sites), visitors, player). Edit the generator, not the scene. Keep passages/doors ≥ 1.75 m wide or the navmesh (agent radius 0.5) closes them.
 - `tools/painter/` (`paint.bat`) — hand-drawn texture painter.
 - `scripts/walk_rig.gd` — legacy, unused.
 
@@ -39,3 +40,7 @@ The count tortured his servants in this dungeon; you died in the farthest cell a
 - Scripts reach the box helper via `const Wall = preload("res://scripts/wall.gd")` (no `class_name`: headless runs don't build the class cache).
 - UI text is Ukrainian.
 - Art is placeholder boxes; swap meshes without touching logic.
+
+## TODO (agreed, not built yet)
+- Fly-over intro after the prologue comic: top-down camera along a path over the dungeon, showing the main features (archaeologists, memory glints, the bricked wall). Skippable.
+- Comic voice-over: record lines + per-panel timings (`time` / `voice` in the comic data), then drop the temporary on-screen texts.
