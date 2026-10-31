@@ -14,6 +14,14 @@ const ACCEL := 7.0  ## soft start/stop, the ghost glides
 const MOUSE_SENS := 0.0022
 const EYE := 1.55
 const BOB := 0.04  ## gentle float of the view
+## Flying: the view swells up and down and rocks a little, stronger with speed, and leans into a strafe.
+const FLY_BOB := 0.075  ## m at walking speed
+const FLY_SIDE := 0.025  ## m
+const FLY_ROLL := 0.022  ## rad
+const FLY_PITCH := 0.009  ## rad
+const FLY_LEAN := 0.028  ## rad at walking speed, sideways
+const FLY_RATE := 3.4  ## rad/s of the swell at walking speed
+const FLY_EASE := 2.5  ## how quickly it fades in and out, per second
 const LAYER_SELF := 4  ## visual layer 3: the own body, hidden from the first-person camera
 const PHASE_MASK := 2 | 4 | 64  ## inner walls, furniture, bricked wall / closed doors: what the ghost floats through
 const PHASE_NEAR := 0.45  ## the veil starts this far (m) from a wall's surface
@@ -24,6 +32,9 @@ const PHASE_FOV := 9.0  ## extra degrees deep inside a wall
 var held := ""  ## memento name or ""
 var held_color := Color.WHITE
 var sprinting := false
+var flight := 0.0  ## 0 hovering .. 1 walking speed .. SPRINT / WALK sprinting, smoothed
+var _fly_t := 0.0
+var _lean := 0.0
 var _held_visual: Node3D
 var _t := 0.0
 var phase := 0.0  ## 0 clear .. 1 deep inside a wall (smoothed; the HUD and tests read it)
@@ -118,7 +129,8 @@ func wall_depth() -> float:
 
 func _process(delta: float) -> void:
 	_t += delta
-	head.position.y = EYE + sin(_t * 1.6) * BOB
+	_sway(delta)
+	head.position.y = EYE + sin(_t * 1.6) * BOB + sin(_fly_t) * FLY_BOB * flight
 	body.position.y = 1.1 + sin(_t * 1.6) * 0.08
 	phase = move_toward(phase, _phase_target, delta * 6.0)
 	_veil.set_shader_parameter("amount", phase)
@@ -136,6 +148,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		var s = target_station()
 		if s:
 			s.interact(self)
+
+
+## Rock the view while flying. The camera, not the head: the head's pitch is the mouse look.
+func _sway(delta: float) -> void:
+	var speed := Vector2(velocity.x, velocity.z).length() / WALK
+	flight = lerpf(flight, speed, minf(FLY_EASE * delta, 1))
+	_fly_t += delta * FLY_RATE * (0.6 + 0.4 * flight)  # by its own clock: changing speed never jumps the phase
+	var side := velocity.dot(global_basis.x) / WALK
+	_lean = lerpf(_lean, side, minf(FLY_EASE * delta, 1))
+	head.position.x = cos(_fly_t * 0.5) * FLY_SIDE * flight
+	camera.rotation.z = sin(_fly_t * 0.5) * FLY_ROLL * flight - _lean * FLY_LEAN
+	camera.rotation.x = cos(_fly_t) * FLY_PITCH * flight
 
 
 ## What the crosshair points at, else the nearest interactable in front (Reach), else null.

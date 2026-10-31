@@ -75,6 +75,7 @@
 | `Circle` | коло ритуалу на підлозі | 2.4 × 0.06 × 2.4 |
 | `CrateR1L`, `TableR1R`, `BunksR2L`, `BarrelsR2R`, `PlankR3L`, `CrateR3R`, `ShelfR4L`, `TableR4R`, `StonesRT`, `BunkYourRoom` | меблі | див. `tools/gen_dungeon.py` |
 | `Olena`, `Taras`, `Priest` | археологиня, археолог, священник (origin біля ніг) | ~0.6 × 1.7 × 0.6 |
+| `Lantern` | ліхтар Джека, літає підземеллям. Є: Kay Lousberg, [Jackolantern](https://poly.pizza/m/iSDZJLP0xs), CC0. Гра зменшує його в 5 разів, обличчя дивиться на +Z | 1.5 × 1.3 × 1.5 |
 
 ## 4. Текстури
 

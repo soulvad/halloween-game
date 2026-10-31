@@ -8,6 +8,7 @@ const Station = preload("res://scripts/station.gd")
 const Visitor = preload("res://scripts/visitor.gd")
 const Wall = preload("res://scripts/wall.gd")
 const Ambient = preload("res://scripts/ambient.gd")
+const Lanterns = preload("res://scripts/lanterns.gd")
 const COMIC_SCENE := "res://scenes/comic.tscn"
 const Tour = preload("res://scripts/tour.gd")
 const RELEASE_TIME := 2.5  ## seconds to hold E in the circle
@@ -39,6 +40,9 @@ func _ready() -> void:
 	GameState.finished.connect(_on_finished)
 	GameState.think("Холодно… Темно… Хто я? Я нічого не пам'ятаю.")
 	GameState.hint("start")
+	var lanterns := Lanterns.new()
+	lanterns.name = "Lanterns"
+	add_child(lanterns)
 	if not GameState.intro_seen:
 		GameState.intro_seen = true
 		_intro.call_deferred()

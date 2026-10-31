@@ -43,6 +43,27 @@ func _ready() -> void:
 	var mem = func(i): return st.call("Memory%d" % i)
 	await _frames(2)
 
+	# flying rocks the view, hovering settles it; lanterns drift along the navmesh under the ceiling
+	var lanterns = g.get_node("Lanterns")
+	await _until(func(): return lanterns.get_child_count() == lanterns.COUNT, 3.0)
+	assert(lanterns.get_child_count() == lanterns.COUNT)
+	var lantern: Node3D = lanterns.get_child(0)
+	var lantern_from := lantern.position
+	var entrance: Vector3 = g.get_node("Markers/Entrance").global_position
+	for i in range(1, lanterns.COUNT):  # never in the rock around the rooms
+		var c: Node3D = lanterns.get_child(i)
+		assert(lanterns.in_dungeon(g.get_world_3d().navigation_map, entrance, Vector3(c.position.x, 0, c.position.z)))
+	assert(Vector2(lantern_from.x, lantern_from.z).distance_to(Vector2(p.position.x, p.position.z)) < 6.0)  # met right at the start
+	p.velocity = Vector3(p.WALK, 0, 0)
+	p._sway(1.0)
+	assert(p.flight > 0.9)
+	p._sway(0.2)
+	assert(absf(p.camera.rotation.z) > 0.001)
+	p.velocity = Vector3.ZERO
+	await _until(func(): return false, 3.0)
+	assert(p.flight < 0.05 and absf(p.camera.rotation.z) < 0.01)
+	assert(lantern.position.distance_to(lantern_from) > 1.0 and lantern.position.y > 1 and lantern.position.y < 2.9)
+
 	# start: no powers, only the first memory glints, the ghost floats through inner walls
 	assert(GameState.stage == GameState.Stage.HAUNT and GameState.powers.is_empty() and p.collision_mask == 1)
 	assert(not priest.visible and mem.call(1).can_use() and not mem.call(2).can_use() and not mem.call(5).can_use())
