@@ -120,6 +120,9 @@ func arrive(at: Vector3) -> void:
 func _on_haunted(pos: Vector3, power: float, by: String) -> void:
 	if kind != Kind.ARCH or _flat(pos) > HEAR * power or GameState.stage != GameState.Stage.HAUNT:
 		return
+	for v in get_tree().get_nodes_in_group("visitor"):  # only the nearest archaeologist goes to check
+		if v != self and v.kind == Kind.ARCH and v._flat(pos) < _flat(pos):
+			return
 	_target = pos
 	_by = by
 	_investigate = INVESTIGATE_TIME

@@ -130,6 +130,7 @@ func _ready() -> void:
 	olena.global_position = near.call(c2)
 	c2.interact(p)
 	assert(olena._investigate > 0 and olena.lured_by() == "breath" and GameState.haunts == 1)
+	assert(st.call("Taras")._investigate <= 0)  # only the nearest one goes
 	assert(hud._mini._rings.size() == 1 and hud._mini._blink.has(olena))  # the map: a ring spreads, she blinks
 	var t := await _until(func(): return 2 in GameState.memories, 30)
 	print("Memory 2 found after %.1f s" % t)
