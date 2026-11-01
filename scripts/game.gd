@@ -298,4 +298,5 @@ func _on_power_gained(p: String) -> void:
 func _on_finished(_won: bool) -> void:
 	player.set_physics_process(false)
 	player.set_process_unhandled_input(false)
-	comic("finale")
+	await comic("finale")
+	$HUD.to_be_continued()  # the end screen waits under the comic: its music and arrow start once the comic is over
