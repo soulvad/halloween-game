@@ -164,7 +164,7 @@ func _process(delta: float) -> void:
 	_aim()
 
 
-## Rim the station under the aim: an overlay on every mesh it has (placeholder box or imported model).
+## Rim the station under the aim: an overlay on every mesh it has (placeholder box or imported model), not on a candle's stand.
 func _aim() -> void:
 	var t = target_station() if camera.current else null
 	if t != _aimed:
@@ -178,8 +178,10 @@ func _aim() -> void:
 
 
 func _overlay(n: Node, mat: Material) -> void:
+	var stand = n.get("_stand")
 	for m in n.find_children("*", "MeshInstance3D", true, false):
-		m.material_overlay = mat
+		if not stand or not stand.is_ancestor_of(m):
+			m.material_overlay = mat
 
 
 ## Mouse look before the GUI: with the mouse captured the cursor sits mid-screen, and a HUD control under it
