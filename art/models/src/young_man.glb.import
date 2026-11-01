@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://1awovj4mtba0"
-path="res://.godot/imported/Olena.glb-6d642e016b3381db1c15d7c35a498fd3.scn"
+uid="uid://07mkqbg6p5y2"
+path="res://.godot/imported/young_man.glb-12b5802887d0df6c629621d125efdca2.scn"
 
 [deps]
 
-source_file="res://art/models/Olena.glb"
-dest_files=["res://.godot/imported/Olena.glb-6d642e016b3381db1c15d7c35a498fd3.scn"]
+source_file="res://art/models/src/young_man.glb"
+dest_files=["res://.godot/imported/young_man.glb-12b5802887d0df6c629621d125efdca2.scn"]
 
 [params]
 

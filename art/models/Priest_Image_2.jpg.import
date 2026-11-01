@@ -2,19 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://yynpwh0cn63n"
-path="res://.godot/imported/priest_gold_Image_0.jpg-a346e074205dde0563c5c2a4d3611457.ctex"
+uid="uid://c5kw1s1jaob8h"
+path="res://.godot/imported/Priest_Image_2.jpg-0b9d505052ba87623c18839635c0e6e9.ctex"
 metadata={
 "vram_texture": false
 }
 generator_parameters={
-"md5": "619c5566959af1dbc617ce0a27740f7e"
+"md5": "16705260c03b7b25d9f9bbe544dd40ae"
 }
 
 [deps]
 
-source_file="res://art/models/src/priest_gold_Image_0.jpg"
-dest_files=["res://.godot/imported/priest_gold_Image_0.jpg-a346e074205dde0563c5c2a4d3611457.ctex"]
+source_file="res://art/models/Priest_Image_2.jpg"
+dest_files=["res://.godot/imported/Priest_Image_2.jpg-0b9d505052ba87623c18839635c0e6e9.ctex"]
 
 [params]
 

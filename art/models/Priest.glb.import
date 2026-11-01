@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dejm25aask2he"
-path="res://.godot/imported/Taras.glb-bfe2dfba9463ea959331a7e6a5a09d74.scn"
+uid="uid://df140lsft1j52"
+path="res://.godot/imported/Priest.glb-67ad030f273c93da30e34aaae58b2ce3.scn"
 
 [deps]
 
-source_file="res://art/models/Taras.glb"
-dest_files=["res://.godot/imported/Taras.glb-bfe2dfba9463ea959331a7e6a5a09d74.scn"]
+source_file="res://art/models/Priest.glb"
+dest_files=["res://.godot/imported/Priest.glb-67ad030f273c93da30e34aaae58b2ce3.scn"]
 
 [params]
 

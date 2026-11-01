@@ -2,19 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cbicg3gca81wl"
-path="res://.godot/imported/Olena_Image_2.jpg-20d649fbc6096a935540502142ff26f3.ctex"
+uid="uid://gstekn6vmyu4"
+path="res://.godot/imported/young_man_Image_1.jpg-06aebacdbe5a7f926d8a58b2714642e8.ctex"
 metadata={
 "vram_texture": false
 }
 generator_parameters={
-"md5": "4b38b535e5364b7980dc542d0547f1c9"
+"md5": "533285ec381077a61887ded60c4d4e47"
 }
 
 [deps]
 
-source_file="res://art/models/Olena_Image_2.jpg"
-dest_files=["res://.godot/imported/Olena_Image_2.jpg-20d649fbc6096a935540502142ff26f3.ctex"]
+source_file="res://art/models/src/young_man_Image_1.jpg"
+dest_files=["res://.godot/imported/young_man_Image_1.jpg-06aebacdbe5a7f926d8a58b2714642e8.ctex"]
 
 [params]
 

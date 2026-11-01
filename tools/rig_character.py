@@ -5,7 +5,7 @@ Textures are capped at 2048 for the web build. By Ostap (make_tymish.py), genera
 
 blender -b -P tools/rig_character.py -- <source.glb> <out.glb> <name> <height> <ghost|walker> [front.png] [save.blend] [flip]
 `flip` turns the model around when the toes-vs-ankles guess of its facing is wrong (Taras).
-Made so far: Tymish 1.52 ghost, Olena 1.65 walker, Taras 1.78 walker flip (sources in art/comfy-models/).
+In the game: Tymish 1.52 ghost, Priest 1.78 walker (sources in art/comfy-models/).
 """
 import math
 import os

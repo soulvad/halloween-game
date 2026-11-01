@@ -2,19 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dfhijimf8hcjg"
-path="res://.godot/imported/Taras_Image_0.jpg-3bda9a2785e9af51f996f48eedf6bf0e.ctex"
+uid="uid://6grpa8ekhu2f"
+path="res://.godot/imported/Priest_Image_0.jpg-df71be0fcf23c5ddc63a70337a9b3618.ctex"
 metadata={
 "vram_texture": false
 }
 generator_parameters={
-"md5": "df61e30d88c6d1babac74514463fbc70"
+"md5": "84dbb963007764c11a58ef3dfe453076"
 }
 
 [deps]
 
-source_file="res://art/models/Taras_Image_0.jpg"
-dest_files=["res://.godot/imported/Taras_Image_0.jpg-3bda9a2785e9af51f996f48eedf6bf0e.ctex"]
+source_file="res://art/models/Priest_Image_0.jpg"
+dest_files=["res://.godot/imported/Priest_Image_0.jpg-df71be0fcf23c5ddc63a70337a9b3618.ctex"]
 
 [params]
 

@@ -2,19 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://x0msy80vhvo1"
-path="res://.godot/imported/priest_gold_Image_2.jpg-14987c1c44d541aadaa1b84b5c186e88.ctex"
+uid="uid://b26gw1hjd4dup"
+path="res://.godot/imported/woman_Image_2.jpg-81028159930a0ebae9aafdc039be8b70.ctex"
 metadata={
 "vram_texture": false
 }
 generator_parameters={
-"md5": "d48446aa84c5248d3b6330ea11a27fa6"
+"md5": "8a959acfff80130e103bc3a86a9a820b"
 }
 
 [deps]
 
-source_file="res://art/models/src/priest_gold_Image_2.jpg"
-dest_files=["res://.godot/imported/priest_gold_Image_2.jpg-14987c1c44d541aadaa1b84b5c186e88.ctex"]
+source_file="res://art/models/src/woman_Image_2.jpg"
+dest_files=["res://.godot/imported/woman_Image_2.jpg-81028159930a0ebae9aafdc039be8b70.ctex"]
 
 [params]
 

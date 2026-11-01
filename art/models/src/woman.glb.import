@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://b0h6h63y6em3n"
-path="res://.godot/imported/priest_gold.glb-3467f7512ef2fa0c495bc974ea2eb6e6.scn"
+uid="uid://npekfrns8ldg"
+path="res://.godot/imported/woman.glb-ed881f17b3dcb5c3d359249a57170272.scn"
 
 [deps]
 
-source_file="res://art/models/src/priest_gold.glb"
-dest_files=["res://.godot/imported/priest_gold.glb-3467f7512ef2fa0c495bc974ea2eb6e6.scn"]
+source_file="res://art/models/src/woman.glb"
+dest_files=["res://.godot/imported/woman.glb-ed881f17b3dcb5c3d359249a57170272.scn"]
 
 [params]
 
