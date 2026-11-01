@@ -248,11 +248,15 @@ func _room_spot() -> Vector3:
 
 ## Step along the navmesh towards `target`.
 func _walk(target: Vector3, speed: float) -> void:
+	var map := get_world_3d().navigation_map
+	if NavigationServer3D.map_get_iteration_id(map) > 0:  # a thing on furniture / by a wall: stop at the nearest spot people can stand on
+		target = NavigationServer3D.map_get_closest_point(map, target)
 	_agent.target_position = target
 	var to := _agent.get_next_path_position() - global_position
 	to.y = 0
 	var close := _flat(target) < 0.3
-	velocity = Vector3.ZERO if close or to.length() < 0.01 else to.normalized() * speed
+	var step := minf(speed, to.length() / get_physics_process_delta_time())  # never overshoot the next point (jitter)
+	velocity = Vector3.ZERO if close or to.length() < 0.01 else to.normalized() * step
 	move_and_slide()
 	if velocity.length() > 0.1:
 		rotation.y = lerp_angle(rotation.y, atan2(-velocity.x, -velocity.z), 0.15)
