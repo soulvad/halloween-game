@@ -5,6 +5,7 @@ extends Node3D
 ## → RITUAL → (priest prayed, E held in the circle) finale comic, end.
 ## Linear, no way to lose. Comics: prologue at start, one per memory, finale. All UI lives in scripts/hud.gd.
 
+const MIRROR_THOUGHT_DELAY := 4.0  ## s after «Я згадав…» for the mirror thought
 const Station = preload("res://scripts/station.gd")
 const Visitor = preload("res://scripts/visitor.gd")
 const Wall = preload("res://scripts/wall.gd")
@@ -281,6 +282,10 @@ func _exit_tree() -> void:
 
 func _on_power_gained(p: String) -> void:
 	GameState.think("Я згадав… Тепер я можу %s." % GameState.POWER_HELP[p])
+	if p == "hands":  # the last power opens the mirror: say where to go next, once the first line has been read
+		await get_tree().create_timer(MIRROR_THOUGHT_DELAY).timeout
+		if not GameState.mirror_written:
+			GameState.think("Дзеркало… Там, у кімнаті. Якщо напишу на ньому — вони прочитають.")
 
 
 func _on_finished(_won: bool) -> void:
