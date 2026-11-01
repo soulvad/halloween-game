@@ -19,7 +19,6 @@ const LAYER_PEOPLE_ONLY := 64
 ## `wall.png` textures every wall box, `floor.png` / `ceiling.png` the floor and ceiling (game.gd).
 const MODEL_DIR := "res://art/models/"
 const TEXTURE_DIR := "res://art/textures/"
-const ROCK_TOP := Color(0.05, 0.045, 0.06)  ## the top of the rock in the guide's cut-away, flat: solid, not a floor
 
 var _mesh: Node3D
 
@@ -36,7 +35,10 @@ func _build() -> void:
 			c.free()
 	_mesh = visual(name, size, color)
 	if _mesh is MeshInstance3D and solid_from < 3:
-		textured(_mesh.mesh.material, "wall")
+		if solid_from == 1:  # outer walls: their far side shows in the cut-away, must melt into the background
+			_mesh.mesh.material = _black()
+		else:
+			textured(_mesh.mesh.material, "wall")
 		_rock_top()
 	add_child(_mesh)
 	var shape := CollisionShape3D.new()
@@ -47,17 +49,24 @@ func _build() -> void:
 	collision_mask = 0
 
 
+## The top of the rock in the cut-away views: pure black like the background, the rooms float in it.
 func _rock_top() -> void:
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = ROCK_TOP
 	var top := PlaneMesh.new()
 	top.size = Vector2(size.x, size.z)
-	top.material = mat
+	top.material = _black()
 	var m := MeshInstance3D.new()
 	m.mesh = top
-	m.position.y = size.y / 2 + 0.001
+	m.position.y = size.y / 2 + 0.01
 	add_child(m)
+
+
+## No light and no fog reach it, so the screen pass leaves it at 0.
+static func _black() -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color.BLACK
+	mat.disable_fog = true
+	return mat
 
 
 ## `art/models/<node_name>.glb|.gltf|.tscn`, else the name's first word (CandleHall → Candle, CrateR1L → Crate,
