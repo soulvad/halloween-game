@@ -32,8 +32,8 @@ const HEAR_KNOCK := 4.0  ## KNOCK: has to be in your room (not the passage outsi
 const FIND_RANGE := 3.0  ## MEMORY 2–4: a lured archaeologist this close notices it and walks up
 const EXAMINE_NEAR := 1.5  ## ...looks at it from this close
 const EXAMINE_TIME := 3.0  ## ...for this long before it's found (slower while still walking up)
-const KNOCK_FAST := 0.7  ## max gap between the first three knocks
-const KNOCK_PAUSE := Vector2(0.8, 2.5)  ## the pause before the last knock
+const KNOCK_BEATS := [0.0, 0.5, 1.0, 2.25]  ## s from the first knock: three quick, a pause, one (hud.gd rings show when)
+const KNOCK_TOLERANCE := 0.2  ## a knock may be off by this share of the gap before it; more, or too late = start over
 const LAYER_STATION := 8  ## layer 4: only the player's aim sees it, the ghost floats through
 const LABEL_PX := 0.0012  ## label size up close (UI.world_label)
 const HAUNT_LINES := ["*дзень-дзень*", "*скрип*", "*брязкіт*", "*шурхіт*"]
@@ -58,6 +58,7 @@ var shown := false  ## EVIDENCE
 var _exam := 0.0  ## MEMORY 2–4: seconds an archaeologist has been looking at it
 var _noticed := false  ## MEMORY 2–4: an archaeologist is walking up to it
 var _knocks: Array[float] = []  ## KNOCK: times of the current attempt
+var knock_misses := 0  ## KNOCK: attempts broken off (hud.gd shakes the dots)
 var _mesh: Node3D  ## placeholder box (MeshInstance3D) or the final model from art/models/<node name>
 var _label: Label3D
 var _light: OmniLight3D
@@ -100,6 +101,8 @@ func _process(delta: float) -> void:
 		visible = available() or _gone > 0
 		_mesh.position.y = sin(Time.get_ticks_msec() * 0.003) * 0.08
 		_examine(delta)
+	if kind == Kind.KNOCK and not _knocks.is_empty() and knock_time() > knock_window(_knocks.size()).y:
+		_knock_miss()  # waited too long for the next knock
 	if kind == Kind.CIRCLE:  # appears with the ritual
 		visible = GameState.stage == GameState.Stage.RITUAL
 		collision_layer = LAYER_STATION if visible else 0
@@ -391,19 +394,41 @@ func see() -> void:
 	_refresh()
 
 
-## One knock; three quick ones, a pause, one more = the code «я тут».
+## One knock; three quick ones, a pause, one more = the code «я тут». The first knock starts the beat, every next one
+## must land in its window (knock_window()), or the attempt starts over with no knock counted.
 func _knock() -> void:
-	var now := Time.get_ticks_msec() / 1000.0
-	if not _knocks.is_empty():
-		var gap := now - _knocks[-1]
-		var ok := gap <= KNOCK_FAST if _knocks.size() < 3 else gap >= KNOCK_PAUSE.x and gap <= KNOCK_PAUSE.y
-		if not ok:
-			_knocks.clear()
-	_knocks.append(now)
+	var now := knock_clock()
 	GameState.say(title_text, "*тук*", UI.ORANGE)
-	if _knocks.size() == 4:
+	if not _knocks.is_empty():
+		var w := knock_window(_knocks.size())
+		var at := now - _knocks[0]
+		if at < w.x or at > w.y:
+			_knock_miss()
+			return
+	_knocks.append(now)
+	if _knocks.size() == KNOCK_BEATS.size():
 		_knocks.clear()
 		GameState.wall_knocked = true
+
+
+## KNOCK: when beat i may land, in s from the first knock.
+func knock_window(i: int) -> Vector2:
+	var gap: float = KNOCK_BEATS[i] - KNOCK_BEATS[i - 1]
+	return Vector2(KNOCK_BEATS[i] - gap * KNOCK_TOLERANCE, KNOCK_BEATS[i] + gap * KNOCK_TOLERANCE)
+
+
+## KNOCK: seconds since the attempt's first knock, -1 with none.
+func knock_time() -> float:
+	return knock_clock() - _knocks[0] if not _knocks.is_empty() else -1.0
+
+
+static func knock_clock() -> float:
+	return Time.get_ticks_msec() / 1000.0
+
+
+func _knock_miss() -> void:
+	_knocks.clear()
+	knock_misses += 1
 
 
 func _refresh() -> void:

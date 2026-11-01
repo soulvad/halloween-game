@@ -18,7 +18,7 @@ const ROOM := Rect2(17.5, -12.5, 6, 4.7)
 const ROOM_BANNER_TIME := 1.8
 const STAGE_CARD_TIME := 2.6  ## seconds the stage title card stays (counts only while the game runs)
 const FLY_TIME := 0.7  ## a new power's icon flying from the screen centre into its slot
-const KNOCK_DOT := 46.0  ## px, the beat dots ●●● ● while aiming at the knock wall
+const KNOCK_DOT := 64.0  ## px, the beat dots ●●● ● while aiming at the knock wall
 const RUBBLE_POS := Vector3(17.5, 0, -10)
 
 var game
@@ -49,6 +49,9 @@ var _stage_title: Label
 var _stage_sub: Label
 var _knock_row: HBoxContainer
 var _knock_dots: Array[TextureRect] = []
+var _knock_rings: Array[Control] = []  ## one per dot: closes on its dot when that knock is due
+var _knock_ring := [-1, 0.0, false]  ## which dot's ring shows, how closed (0..1+), in its window
+var _knock_misses := 0
 var _knock_n := 0
 var _knocked := false
 var _prompt_for: Node3D  ## the target the E card was built for: a new one pops in
@@ -657,6 +660,12 @@ func _build_knock() -> void:
 		var d := UI.icon("later", int(KNOCK_DOT), UI.PAPER)
 		_knock_row.add_child(d)
 		_knock_dots.append(d)
+		var ring := Control.new()
+		ring.set_anchors_preset(Control.PRESET_FULL_RECT)
+		ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ring.draw.connect(_draw_knock_ring.bind(ring, i))
+		d.add_child(ring)
+		_knock_rings.append(ring)
 	_knock_row.hide()
 
 
@@ -682,11 +691,35 @@ func _update_knock(t) -> void:
 	var n: int = t._knocks.size()
 	for i in 4:
 		_knock_dots[i].texture = UI.icon_texture("current" if i < n else "later", int(KNOCK_DOT), UI.PAPER)
+	if t.knock_misses > _knock_misses:  # off the beat: the dots blush and the attempt starts over
+		_knock_row.modulate = UI.RED
+		_knock_row.create_tween().tween_property(_knock_row, "modulate", Color.WHITE, 0.5)
+	_knock_misses = t.knock_misses
+	_knock_ring = [-1, 0.0, false]
+	if n > 0 and n < t.KNOCK_BEATS.size():  # the next knock's ring closes in on its dot right on the beat
+		var at: float = t.knock_time()
+		var w: Vector2 = t.knock_window(n)
+		_knock_ring = [n, (at - t.KNOCK_BEATS[n - 1]) / (t.KNOCK_BEATS[n] - t.KNOCK_BEATS[n - 1]), at >= w.x and at <= w.y]
+	for r in _knock_rings:
+		r.queue_redraw()
 	if n > _knock_n:
 		var d := _knock_dots[n - 1]
 		d.pivot_offset = d.size / 2
 		Fx.pop(d, 1.3, 0.2)
 	_knock_n = n
+
+
+## The next knock's guide: a still target ring on the dot, and a ring shrinking onto it, right on it at the perfect
+## moment (k = 1), cyan while a knock would count (±20%: station.gd knock_window()).
+func _draw_knock_ring(ring: Control, i: int) -> void:
+	if _knock_ring[0] != i:
+		return
+	var target := KNOCK_DOT * 0.55
+	var k := clampf(_knock_ring[1], 0.0, 1.5)
+	var col: Color = UI.CYAN if _knock_ring[2] else UI.PAPER
+	ring.draw_arc(ring.size / 2, target, 0, TAU, 48, Color(col, 0.55), 3.0, true)
+	ring.draw_arc(ring.size / 2, target * (1.0 + (1.0 - k) * 1.4), 0, TAU, 48, Color(col, 0.4 + 0.6 * minf(k, 1.0)),
+		6.0 if _knock_ring[2] else 4.0, true)
 
 
 func _build_letgo() -> void:

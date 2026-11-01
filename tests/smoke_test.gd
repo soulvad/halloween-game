@@ -206,12 +206,15 @@ func _ready() -> void:
 	t = await _until(func(): return wall.witness(), 30)
 	assert(wall.can_use())
 
-	for i in 4: wall.interact(p)
-	assert(not GameState.wall_knocked)
-	await get_tree().create_timer(1.0).timeout
-	for i in 3: wall.interact(p)
-	await get_tree().create_timer(1.1).timeout
+	for i in 4: wall.interact(p)  # off the beat: the attempt starts over, and the wrong knock doesn't count
+	assert(not GameState.wall_knocked and wall._knocks.is_empty() and wall.knock_misses == 2)  # knocks 2 and 4 missed
 	wall.interact(p)
+	await get_tree().create_timer(1.0).timeout  # too slow: dropped, no dot left over
+	assert(wall._knocks.is_empty() and wall.knock_misses == 3)
+	for i in wall.KNOCK_BEATS.size():
+		if i > 0:  # on the beat, in real time (fast-forward would walk the witnesses away)
+			await get_tree().create_timer(wall.KNOCK_BEATS[i] - wall.knock_time(), true, false, true).timeout
+		wall.interact(p)
 	assert(GameState.wall_knocked)
 	await _frames(2)
 	assert(GameState.stage == GameState.Stage.RITUAL)
