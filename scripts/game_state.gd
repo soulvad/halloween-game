@@ -65,6 +65,10 @@ var show_labels := true  ## labels above items and people
 var subtitles := true
 
 
+func _ready() -> void:
+	ThemeDB.fallback_font = load("res://fonts/MarckScript-Regular.ttf")  # texts with no font of their own: same hand as UI.font()
+
+
 func reset() -> void:
 	phase = Phase.PLAY
 	won = false
