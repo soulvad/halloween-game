@@ -900,9 +900,14 @@ func _build_book() -> void:
 		_goal_rows.append(d)
 	left.add_child(UI.rule())
 	left.add_child(UI.label("Підказки", 22, UI.INK, "body", 900, true))
-	_hint_list = UI.vbox(8)  # only the latest hint: the page had no room to scroll through them all
+	var scroll := ScrollContainer.new()  # takes what's left of the page, so a long hint never makes the book taller
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	_hint_list = UI.vbox(8)  # only the latest hint
 	_hint_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.add_child(_hint_list)
+	scroll.add_child(_hint_list)
+	left.add_child(scroll)
 	var right: VBoxContainer = page.call("Спогади", "right")
 	right.get_child(0).add_child(_expand(UI.label("1–6 — переглянути знову", 17, UI.MUTED, "body", 600), HORIZONTAL_ALIGNMENT_RIGHT))
 	_comic_view = ComicPage.new()
