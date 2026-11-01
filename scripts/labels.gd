@@ -6,6 +6,8 @@ extends CanvasLayer
 
 const UI = preload("res://scripts/ui.gd")
 const WALLS := 1 | 2 | 4  ## collision layers 1–3: rock, inner walls, furniture hide labels behind them
+const OUTLINE := 2.0  ## × the label's own outline: a heavy ink rim so the text reads on any wall
+const SHADOW := Color(0, 0, 0, 0.5)  ## a wider dark halo behind the rim
 
 var _canvas := Control.new()
 
@@ -46,6 +48,9 @@ func _draw_labels() -> void:
 		var pos := at + Vector2(-w / 2.0, font.get_ascent(size) / 2.0 - font.get_descent(size) / 2.0)
 		var a := l.modulate.a
 		if l.outline_size > 0:
+			var rim := maxi(2, roundi(l.outline_size * k * OUTLINE))
 			_canvas.draw_string_outline(font, pos, l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size,
-				maxi(1, roundi(l.outline_size * k)), Color(l.outline_modulate, l.outline_modulate.a * a))
+				rim * 3, Color(SHADOW, SHADOW.a * a))
+			_canvas.draw_string_outline(font, pos, l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size,
+				rim, Color(Color.BLACK, a))
 		_canvas.draw_string(font, pos, l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, l.modulate)
