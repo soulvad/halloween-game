@@ -144,6 +144,20 @@ func _unhandled_input(e: InputEvent) -> void:
 	elif e.is_action_pressed("journal") and not get_tree().paused:
 		toggle_book()
 		get_viewport().set_input_as_handled()
+	elif e is InputEventKey and e.pressed and not e.echo and e.keycode >= KEY_1 and e.keycode <= KEY_6 and not get_tree().paused:
+		_replay(e.keycode - KEY_0)
+		get_viewport().set_input_as_handled()
+
+
+## Keys 1–5 replay a memory's comic, 6 the finale; only the ones already seen.
+func _replay(n: int) -> void:
+	if not (GameState.won if n == 6 else n in GameState.memories):
+		GameState.think("Цього я ще не пригадав…")
+		return
+	if _book.visible:
+		toggle_book()
+	_map.hide()
+	game.comic("finale" if n == 6 else "memory_%d" % n)
 
 
 func _process(delta: float) -> void:
@@ -886,19 +900,17 @@ func _build_book() -> void:
 		_goal_rows.append(d)
 	left.add_child(UI.rule())
 	left.add_child(UI.label("Підказки", 22, UI.INK, "body", 900, true))
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_hint_list = UI.vbox(8)
+	_hint_list = UI.vbox(8)  # only the latest hint: the page had no room to scroll through them all
 	_hint_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(_hint_list)
-	left.add_child(scroll)
+	left.add_child(_hint_list)
 	var right: VBoxContainer = page.call("Спогади", "right")
+	right.get_child(0).add_child(_expand(UI.label("1–6 — переглянути знову", 17, UI.MUTED, "body", 600), HORIZONTAL_ALIGNMENT_RIGHT))
 	_comic_view = ComicPage.new()
 	_comic_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_comic_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.add_child(_comic_view)
 	_comic_view.setup("memories")
+	_comic_view.stickers = true
 	_book.hide()
 	_rebuild_hints()
 	_update_comic()
@@ -959,10 +971,11 @@ func _rebuild_hints() -> void:
 	for c in _hint_list.get_children():
 		c.queue_free()
 	var unread := 0
-	for i in range(GameState.hints.size() - 1, -1, -1):
-		var id: String = GameState.hints[i]
+	for id: String in GameState.hints:
+		unread += int(not _read.has(id))
+	if not GameState.hints.is_empty():
+		var id: String = GameState.hints.back()
 		var fresh: bool = not _read.has(id)
-		unread += int(fresh)
 		var p := UI.panel(UI.PAPER if fresh else UI.LILAC, 14, 4 if fresh else 0, 12, 3, UI.ORANGE if fresh else UI.INK)
 		var r := UI.hbox(10)
 		p.add_child(r)
