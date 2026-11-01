@@ -22,6 +22,7 @@ const END_ARROW := "res://art/ui/to_be_continued.png"  ## python tools/draw_cont
 const END_ARROW_W := 560.0  ## px
 const END_MUSIC := "res://audio/music/end_knocks.ogg"  ## python tools/make_end_music.py, made of the knock sound
 const END_MUSIC_DB := -12.0  ## light and quiet
+const END_LOOP_FROM := 2.4  ## s: the hit bar at the start of END_MUSIC (tools/make_end_music.py prints it)
 const KNOCK_DOT := 64.0  ## px, the beat dots ●●● ● while aiming at the knock wall
 const RUBBLE_POS := Vector3(17.5, 0, -10)
 
@@ -1195,7 +1196,8 @@ func _on_finished(_won: bool) -> void:
 	_to_be_continued()
 
 
-## The end screen's sign-off: the chalk «Ту бі контіньюд» arrow slides in from the left, a quiet loop of knocks plays.
+## The end screen's sign-off: the chalk «Ту бі контіньюд» arrow slides in from the left, the climax of the release
+## music plays (a big hit, then a quiet loop of knocks; the build-up played while E was held, game.gd).
 func _to_be_continued() -> void:
 	var arrow := TextureRect.new()
 	arrow.texture = load(END_ARROW)
@@ -1212,11 +1214,11 @@ func _to_be_continued() -> void:
 	var music := AudioStreamPlayer.new()
 	var loop: AudioStreamOggVorbis = load(END_MUSIC)
 	loop.loop = true
+	loop.loop_offset = END_LOOP_FROM  # the big hit plays once, then the tune loops
 	music.stream = loop
-	music.volume_db = -40.0
+	music.volume_db = END_MUSIC_DB + Fx.MIX_DB  # the climax: straight in, no fade
 	_end.add_child(music)
 	music.play()
-	music.create_tween().tween_property(music, "volume_db", END_MUSIC_DB + Fx.MIX_DB, 2.0)
 
 
 func _on_said(who: String, text: String, color: Color) -> void:

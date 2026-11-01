@@ -1,8 +1,12 @@
-"""A quiet loop made of knocks for the end screen: python tools/make_end_music.py
+"""The release music, made of knocks: python tools/make_end_music.py
 
 Takes the game's own knock (audio/sfx/knock.ogg), pitches it by resampling and lays it out on a grid: a low knock as
 the kick, mid knocks for the groove, high knocks playing a short tune in A minor pentatonic (an original line), with
-a soft plucked bass under it. Writes audio/music/end_knocks.ogg, seamless when looped. Needs ffmpeg on PATH.
+a soft plucked bass under it. Needs ffmpeg on PATH. Writes:
+  audio/music/end_buildup.ogg — BUILD s of knocks speeding up and climbing, played while E is held in the circle
+                                (game.gd; the hold is RELEASE_TIME long)
+  audio/music/end_knocks.ogg  — the climax for the end screen: one bar of a big hit, then the loop (hud.gd loops it
+                                from CLIMAX_BAR s on)
 """
 import os
 import subprocess
@@ -13,6 +17,8 @@ import numpy as np
 
 SRC = "audio/sfx/knock.ogg"
 OUT = "audio/music/end_knocks.ogg"
+BUILD_OUT = "audio/music/end_buildup.ogg"
+BUILD = 2.5  # s, = game.gd RELEASE_TIME
 SR = 44100
 BPM = 100
 STEP = 60 / BPM / 4  # a 16th note, s
@@ -67,15 +73,50 @@ for s, deg in TUNE:
     put(pitched(1.6 * 2 ** (SCALE[deg] / 12)), s, 0.42)
     put(pluck(A * 2 * 2 ** (SCALE[deg] / 12), 0.3), s, 0.12)  # a faint tone so the knock has a note
 
-out = mix[:length].copy()
-out[:SR] += mix[length:length + SR]
-out *= 0.5 / np.abs(out).max()  # quiet master; the game turns it down further
-pcm = os.path.join(tempfile.mkdtemp(), "loop.wav")
-with wave.open(pcm, "wb") as w:
-    w.setnchannels(1)
-    w.setsampwidth(2)
-    w.setframerate(SR)
-    w.writeframes((out * 32767).astype(np.int16).tobytes())
-os.makedirs(os.path.dirname(OUT), exist_ok=True)
-subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", pcm, "-c:a", "libvorbis", "-q:a", "5", OUT], check=True)
-print("wrote", OUT, "%.1f s" % (length / SR))
+loop = mix[:length].copy()
+loop[:SR] += mix[length:length + SR]
+
+# the climax: one bar opening on a big hit (stacked low knocks + the bass an octave apart), the tune's first notes
+bar = int(16 * STEP * SR)
+mix = np.zeros(bar + SR, np.float32)
+for r, g in ((0.5, 1.0), (0.62, 0.9), (0.8, 0.6)):
+    put(pitched(r), 0, g)
+put(pluck(A / 2, 1.6), 0, 0.6)
+put(pluck(A, 1.6), 0, 0.4)
+for s in (4, 6, 8, 10, 12, 13, 14, 15):  # a roll of knocks into the loop
+    put(mid, s, 0.3 + 0.03 * s)
+hit = mix[:bar]  # the roll runs straight into the loop's first beat
+climax = np.concatenate([hit, loop])
+
+# the build-up: knocks closer and closer, each a step higher, a rising tone under them
+mix = np.zeros(int((BUILD + 1.0) * SR), np.float32)
+t, gap, n = 0.0, 0.42, 0
+while t < BUILD:
+    i = int(t * SR)
+    k = pitched(0.8 * 2 ** (n / 24))
+    mix[i:i + len(k)] += k * (0.35 + 0.4 * t / BUILD)
+    t += gap
+    gap = max(0.07, gap * 0.86)
+    n += 1
+tt = np.arange(int(BUILD * SR)) / SR
+rise = np.sin(2 * np.pi * np.cumsum(A / 2 * 2 ** (tt / BUILD * 1.0)) / SR) * (tt / BUILD) ** 2 * 0.25
+mix[:len(rise)] += rise.astype(np.float32)
+build = mix
+
+
+def write(sig, path, peak):
+    sig = sig * (peak / np.abs(sig).max())
+    pcm = os.path.join(tempfile.mkdtemp(), "out.wav")
+    with wave.open(pcm, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(SR)
+        w.writeframes((sig * 32767).astype(np.int16).tobytes())
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", pcm, "-c:a", "libvorbis", "-q:a", "5", path], check=True)
+    print("wrote", path, "%.2f s" % (len(sig) / SR))
+
+
+write(climax, OUT, 0.5)  # quiet masters; the game turns them down further
+write(build, BUILD_OUT, 0.5)
+print("climax bar: %.3f s" % (bar / SR))
