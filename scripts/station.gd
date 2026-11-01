@@ -14,6 +14,8 @@ const Wall = preload("res://scripts/wall.gd")
 const UI = preload("res://scripts/ui.gd")
 const Visitor = preload("res://scripts/visitor.gd")
 const MirrorGlass = preload("res://scripts/mirror.gd")
+const PAINT_TEX := "res://art/textures/help_writing.png"
+const PAINT_SHADER = preload("res://scripts/paint.gdshader")
 const Fx = preload("res://scripts/fx.gd")
 
 enum Kind { MEMORY, CANDLE, HAUNT, MIRROR, PLAN, KNOCK, EVIDENCE, CIRCLE, EGG }
@@ -55,7 +57,9 @@ var _mesh: Node3D  ## placeholder box (MeshInstance3D) or the final model from a
 var _label: Label3D
 var _light: OmniLight3D
 var _flame: MeshInstance3D  ## CANDLE with a final model: there's no box to glow, so this shows it's lit
-var _writing: Label3D  ## MIRROR: ДОПОМОЖІТЬ on the glass (the placeholder box also reddens); HAUNT "write": ТУТ in the dust
+var _writing: Label3D  ## HAUNT "write": ТУТ in the dust
+var _glass: MeshInstance3D  ## MIRROR: the reflecting pane (mirror.gd)
+var _paint: MeshInstance3D  ## MIRROR: ДОПОМОЖІТЬ finger-painted on the glass (PAINT_TEX, tools/draw_writing.py)
 var _denied := false  ## the ghost already said why E does nothing here (once until it works)
 var _gone := 0.0  ## MEMORY 2–4: just found, the glint stays a moment to pop
 var _fade: Tween  ## CANDLE: flame going out / flaring up
@@ -73,7 +77,8 @@ func _ready() -> void:
 	if kind == Kind.CANDLE:
 		add_to_group("candle")  # visitors read `lit` to say what they saw
 	if kind == Kind.MIRROR:
-		add_child(MirrorGlass.new(size))
+		_glass = MirrorGlass.new(size)
+		add_child(_glass)
 	_refresh()
 
 
@@ -263,7 +268,8 @@ func _feedback() -> void:
 				Fx.puff(self, global_position + Vector3.UP * size.y / 2)
 		Kind.MIRROR:
 			Fx.sound(self, "write")
-			_letters("ДОПОМОЖІТЬ", 1.6)
+			_paint.set_instance_shader_parameter("reveal", 0.0)
+			create_tween().tween_method(func(k: float): _paint.set_instance_shader_parameter("reveal", k), 0.0, 1.0, 1.6)
 		Kind.KNOCK:
 			Fx.sound(self, "knock")
 			var cam: Camera3D = GameState.player.get("camera") if GameState.player else null
@@ -357,16 +363,19 @@ func _refresh() -> void:
 		Kind.MIRROR:
 			if GameState.mirror_written and _mat():
 				_mat().albedo_color = Color(0.55, 0.1, 0.1)
-			if GameState.mirror_written and not _writing:
-				_writing = Label3D.new()
-				_writing.text = "ДОПОМОЖІТЬ"
-				_writing.font = UI.font()
-				_writing.font_size = 64
-				_writing.pixel_size = 0.002
-				_writing.modulate = Color(0.75, 0.08, 0.08)
-				_writing.position.x = -size.x / 2 - 0.02  # the side facing the room
-				_writing.rotation.y = -PI / 2
-				add_child(_writing)
+			if GameState.mirror_written and not _paint:
+				_paint = MeshInstance3D.new()
+				var quad := QuadMesh.new()
+				var tex: Texture2D = load(PAINT_TEX)
+				var pane: Vector2 = _glass._glass
+				quad.size = Vector2(pane.x * 0.98, pane.x * 0.98 * tex.get_height() / tex.get_width())
+				var mat := ShaderMaterial.new()
+				mat.shader = PAINT_SHADER
+				mat.set_shader_parameter("tex", tex)
+				quad.material = mat
+				_paint.mesh = quad
+				_paint.position = Vector3(0, pane.y * 0.12, 0.004)  # on the glass, facing the room, a bit above the middle
+				_glass.add_child(_paint)
 		Kind.EVIDENCE:
 			if shown and _mat():
 				_mat().albedo_color = UI.GOLD
