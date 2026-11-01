@@ -267,7 +267,8 @@ func _on_memory_found(id: int) -> void:
 		Engine.time_scale = MEMORY_SLOW
 		await get_tree().create_timer(MEMORY_SLOW_TIME, true, false, true).timeout
 		Engine.time_scale = 1.0
-	comic("memory_%d" % id)
+	await comic("memory_%d" % id)
+	GameState.gain(GameState.MEMORY_POWER.get(id, ""))  # the power comes after the comic
 
 
 func _exit_tree() -> void:

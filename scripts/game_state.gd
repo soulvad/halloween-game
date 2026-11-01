@@ -93,19 +93,23 @@ func name_known() -> bool:
 	return 5 in memories
 
 
-## Touching a memory glint: remember it, gain its power. game.gd shows the comic on memory_found.
+## Touching a memory glint: remember it. game.gd shows the comic on memory_found, then calls gain() with its power.
 func remember(id: int) -> void:
 	if id in memories:
 		return
 	memories.append(id)
-	var p: String = MEMORY_POWER.get(id, "")
-	if p != "" and p not in powers:
-		powers.append(p)
-		power_gained.emit(p)
 	memory_found.emit(id)
 	hint("memory")
 	if id < 4:
 		hint("find")
+
+
+## The memory's power, once its comic is over (game.gd _on_memory_found).
+func gain(p: String) -> void:
+	if p == "" or p in powers:
+		return
+	powers.append(p)
+	power_gained.emit(p)
 	if p == "hands":  # the mirror opens with the last power (station.gd _mirror_ready)
 		hint("mirror")
 
