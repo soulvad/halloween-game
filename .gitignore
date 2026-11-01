@@ -7,3 +7,5 @@ engine/
 # local Claude Code tooling (session-sync hooks)
 .claude/
 build/
+builds/windows/
+builds/*.zip
