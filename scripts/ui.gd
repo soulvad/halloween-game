@@ -59,15 +59,24 @@ static var _fonts := {}
 static var _blank: Texture2D
 
 
-## Every text in the game is in the ghost's handwriting (Marck Script); `kind` is kept so callers still say what the text
-## is. Heavier weights are emboldened, the script is thin.
 static func font(kind := "body", weight := 800) -> Font:
 	var key := "%s%d" % [kind, weight]
 	if not _fonts.has(key):
+		var file := "Kurale-Regular"
+		match kind:
+			"display":
+				file = "OldStandard-Bold"
+			"italic":
+				file = "OldStandard-Italic"
+			"hand":
+				file = "MarckScript-Regular"
+			_:
+				if weight >= 900:
+					file = "OldStandard-Bold"
 		var f := FontVariation.new()
-		f.base_font = load(FONT_DIR % "MarckScript-Regular")
-		if weight >= 700 and kind != "hand":
-			f.variation_embolden = 0.5 if weight >= 900 else 0.3
+		f.base_font = load(FONT_DIR % file)
+		if file == "Kurale-Regular" and weight >= 700:
+			f.variation_embolden = 0.35
 		_fonts[key] = f
 	return _fonts[key]
 
