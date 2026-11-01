@@ -19,6 +19,8 @@ const INVESTIGATE_TIME := 8.0
 const STAY := Vector2(5, 10)  ## seconds spent at a dig site
 const ROOM_SPOTS := [Vector3(-1.5, 0, 1.3), Vector3(1.4, 0, 1.5), Vector3(0, 0, -1.6)]  ## around your room's centre
 const LAYER_VISITOR := 16
+const LOOK_DIST := 1.1  ## EVIDENCE: how far from the thing they stand
+const LOOK_ANGLE := 50.0  ## ...each this far round from straight in front, one left, one right
 const LABEL_PX := 0.0013  ## name label size up close (UI.world_label)
 const MASK := 7 | 64  ## walls, furniture, rubble
 const HEARD_LINES := ["Ви це чули?", "Звідки цей звук?..", "Там щось є. Ходімо подивимось.", "Знову… Це не вітер."]
@@ -34,6 +36,7 @@ const FOUND_LINES := ["Гляньте, яка стара річ…", "Хтось
 @export var color := Color(0.35, 0.55, 0.4)
 
 var focus := Vector3.INF  ## EVIDENCE: the thing to look at (game.gd)
+var focus_side := 1.0  ## EVIDENCE: which side of the thing to stand on (game.gd), so two never share a spot
 var _target := Vector3.INF  ## noise to check
 var _by := ""  ## the power that made that noise
 var _investigate := 0.0
@@ -204,10 +207,12 @@ func _physics_process(delta: float) -> void:
 			target = _marker("Entrance")
 		GameState.Stage.EVIDENCE:
 			var at_focus := kind == Kind.ARCH and focus != Vector3.INF
-			target = focus + _room_spot() * 0.3 if at_focus else _marker("RoomCenter") + _room_spot()
+			target = _look_spot() if at_focus else _marker("RoomCenter") + _room_spot()
 		GameState.Stage.RITUAL:
 			target = _marker("RoomCenter") + (Vector3.ZERO if kind == Kind.PRIEST else _room_spot())
 	_walk(target, speed)
+	if stage == GameState.Stage.EVIDENCE and kind == Kind.ARCH and focus != Vector3.INF and velocity.length() < 0.1:
+		rotation.y = lerp_angle(rotation.y, atan2(-(focus.x - global_position.x), -(focus.z - global_position.z)), 0.1)  # face the thing
 	_swing_lantern(stage == GameState.Stage.HAUNT and _investigate > 0)
 	_label.text = _label_text()
 	_label.visible = GameState.show_labels
@@ -245,6 +250,14 @@ func _marker(n: String) -> Vector3:
 
 
 ## A stable spot of its own around your room's centre.
+## EVIDENCE: a spot in front of the thing (on the room's side), turned LOOK_ANGLE to this one's side.
+func _look_spot() -> Vector3:
+	var d := _marker("RoomCenter") - focus
+	d.y = 0
+	d = d.normalized() if d.length() > 0.1 else Vector3.BACK
+	return focus + d.rotated(Vector3.UP, focus_side * deg_to_rad(LOOK_ANGLE)) * LOOK_DIST
+
+
 func _room_spot() -> Vector3:
 	var i := get_tree().get_nodes_in_group("visitor").find(self)
 	return ROOM_SPOTS[i % ROOM_SPOTS.size()]

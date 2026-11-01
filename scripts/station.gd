@@ -18,6 +18,9 @@ const PAINT_TEX := "res://art/textures/help_writing.png"
 const DUST_PATCH := "res://art/textures/dust_patch.png"
 const DUST_WRITING := "res://art/textures/dust_writing.png"
 const PAINT_SHADER = preload("res://scripts/paint.gdshader")
+const NAME_SCRATCH := "res://art/textures/name_scratch.png"
+const NAME_WALL_X := 23.49  ## Memory5: the east wall of your room (gen_dungeon YourRoom x1), just off its face
+const NAME_WIDTH := 1.6  ## m
 const Fx = preload("res://scripts/fx.gd")
 
 enum Kind { MEMORY, CANDLE, HAUNT, MIRROR, PLAN, KNOCK, EVIDENCE, CIRCLE, EGG }
@@ -59,7 +62,7 @@ var _mesh: Node3D  ## placeholder box (MeshInstance3D) or the final model from a
 var _label: Label3D
 var _light: OmniLight3D
 var _flame: MeshInstance3D  ## CANDLE with a final model: there's no box to glow, so this shows it's lit
-var _writing: MeshInstance3D  ## HAUNT "write": ТУТ traced through the dust (DUST_WRITING, tools/draw_dust.py)
+var _writing: MeshInstance3D  ## HAUNT "write": ТУТ traced through the dust (DUST_WRITING, tools/draw_dust.py); Memory5: your name scratched in the wall (NAME_SCRATCH, tools/draw_name.py)
 var _glass: MeshInstance3D  ## MIRROR: the reflecting pane (mirror.gd)
 var _paint: MeshInstance3D  ## MIRROR: ДОПОМОЖІТЬ finger-painted on the glass (PAINT_TEX, tools/draw_writing.py)
 var _denied := false  ## the ghost already said why E does nothing here (once until it works)
@@ -83,6 +86,8 @@ func _ready() -> void:
 		add_child(_glass)
 	if kind == Kind.HAUNT and need == "write":
 		_dust()
+	if kind == Kind.MEMORY and memory_id == 5:
+		_name_wall()
 	_refresh()
 
 
@@ -345,6 +350,32 @@ func _floor_quad(mat: Material, scale_: float, lift: float) -> MeshInstance3D:
 	m.position.y = -size.y / 2 + lift  # on the floor
 	m.rotation.x = -PI / 2
 	return m
+
+
+## Memory5: the name you scratched with a nail, hidden until an archaeologist reads it (scratch()).
+func _name_wall() -> void:
+	var tex: Texture2D = load(NAME_SCRATCH)
+	var mat := ShaderMaterial.new()
+	mat.shader = PAINT_SHADER
+	mat.set_shader_parameter("tex", tex)
+	mat.set_shader_parameter("gloss", 0.0)
+	var q := QuadMesh.new()
+	q.size = Vector2(NAME_WIDTH, NAME_WIDTH * tex.get_height() / tex.get_width())
+	q.material = mat
+	_writing = MeshInstance3D.new()
+	_writing.mesh = q
+	_writing.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_writing.top_level = true
+	_writing.position = Vector3(NAME_WALL_X, global_position.y, global_position.z)
+	_writing.rotation.y = -PI / 2  # faces -X, into the room
+	_writing.set_instance_shader_parameter("reveal", 0.0)
+	get_parent().add_child.call_deferred(_writing)  # not under the station: Memory5 itself is never visible
+
+
+## Memory5: the name shows up stroke by stroke while they read it (game.gd _look_over).
+func scratch(time: float) -> void:
+	if _writing:
+		_letters("", time)
 
 
 ## The finger traces the word in the dust, left to right.

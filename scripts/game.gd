@@ -231,8 +231,11 @@ func _look_over(delta: float) -> void:
 	var near := false
 	for v in archs:
 		v.focus = thing.global_position
+		v.focus_side = 1.0 if archs.find(v) % 2 == 0 else -1.0  # one each side of it, not both on one spot
 		near = near or Vector2(v.global_position.x - thing.global_position.x, v.global_position.z - thing.global_position.z).length() < LOOK_NEAR
 	_look_all += delta
+	if near and _look_t == 0.0 and thing.kind != Station.Kind.EVIDENCE:
+		thing.scratch(LOOK_TIME)  # the name comes out of the dark as they read it
 	_look_t = _look_t + delta if near else 0.0
 	if _look_t < LOOK_TIME and _look_all < LOOK_GIVE_UP:
 		return
