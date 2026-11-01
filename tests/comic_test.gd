@@ -60,6 +60,16 @@ func _ready() -> void:
 	_key(KEY_ESCAPE)
 	assert(c._done and not get_tree().paused, "Esc did not skip")
 
+	# A page turn mid-fade: the old page's last reveal must not fade in the new page's same letter
+	c = _start("prologue")
+	for i in 6:  # A..F on page 1, the last press turns to prologue2 while F is still fading
+		c.advance()
+	assert(c.page.page_id == "prologue2")
+	await get_tree().create_timer(0.8).timeout
+	for l in "BCDEF":
+		assert(not c.page.is_shown(l), "prologue2: %s shown ahead" % l)
+	c._finish()
+
 	# Unknown id finishes on its own (deferred, so `await finished` works).
 	c = _start("nope")
 	await c.finished

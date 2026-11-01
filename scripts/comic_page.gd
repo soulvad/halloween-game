@@ -20,6 +20,7 @@ var _notes := {}  # letter -> String
 var _alpha := {}  # letter -> 0 (locked) .. 1 (shown)
 var _art := {}  # letter -> Texture2D, only when the file exists
 var _frame: Texture2D
+var _fades: Array[Tween] = []  # running reveals: killed on a page turn, or they'd fade in the new page's same letter
 var _aspect := 1.0
 
 
@@ -30,6 +31,9 @@ func _init() -> void:
 
 func setup(id: String) -> void:
 	page_id = id
+	for t in _fades:
+		t.kill()
+	_fades.clear()
 	var page: Dictionary = Data.PAGES.get(id, {"layout": "", "panels": {}})
 	var layout: Dictionary = Data.LAYOUTS.get(page.layout, {"aspect": 1.0, "shapes": {}})
 	_aspect = layout.aspect
@@ -65,6 +69,7 @@ func reveal(letter: String) -> Tween:
 	_alpha[letter] = 0.0
 	var t := create_tween()
 	t.tween_method(_set_alpha.bind(letter), 0.0, 1.0, REVEAL)
+	_fades.append(t)
 	return t
 
 
