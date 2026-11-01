@@ -432,5 +432,7 @@ func _build() -> void:
 	_label.position.y = size.y / 2 + 0.4
 	_label.text = title_text
 	_label.layers = 2  ## the minimap camera culls labels
+	_label.transparency = 1.0  ## drawn flat by labels.gd: the ink pass mangles 3D text
+	_label.add_to_group("world_label")
 	_label.modulate = {Kind.MEMORY: UI.CYAN, Kind.HAUNT: UI.ORANGE, Kind.CANDLE: UI.GOLD, Kind.EVIDENCE: UI.GOLD, Kind.CIRCLE: UI.MOM}.get(kind, UI.PAPER)
 	add_child(_label)

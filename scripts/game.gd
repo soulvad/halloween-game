@@ -13,6 +13,7 @@ const Lanterns = preload("res://scripts/lanterns.gd")
 const Decor = preload("res://scripts/decor.gd")
 const Paintings = preload("res://scripts/paintings.gd")
 const Look = preload("res://scripts/look.gd")
+const Labels = preload("res://scripts/labels.gd")
 const Fx = preload("res://scripts/fx.gd")
 const UI = preload("res://scripts/ui.gd")
 const COMIC_SCENE := "res://scenes/comic.tscn"
@@ -85,6 +86,9 @@ func _ready() -> void:
 	var look := Look.new()
 	look.name = "Look"
 	add_child(look)
+	var labels := Labels.new()
+	labels.name = "Labels"
+	add_child(labels)
 	var lanterns := Lanterns.new()
 	lanterns.name = "Lanterns"
 	add_child(lanterns)

@@ -9,6 +9,8 @@ signal finished
 
 const UI = preload("res://scripts/ui.gd")
 const Station = preload("res://scripts/station.gd")
+const Fx = preload("res://scripts/fx.gd")
+const PROJECTOR_DB := -8.0  ## the reel rattling under the cutscene
 const FILM = preload("res://scripts/film.gdshader")
 const EDGE := 170  ## px: the pills stay clear of the film strips at the sides
 const LAYER_CEILING := 8  ## visual layer 4: the ceiling, cut away
@@ -38,6 +40,7 @@ var _line: RichTextLabel
 var _line_t := 0.0
 var _done := false
 var _mouse_before := Input.MOUSE_MODE_CAPTURED
+var _reel := AudioStreamPlayer.new()
 
 
 func play(g: Node3D) -> void:
@@ -72,6 +75,14 @@ func play(g: Node3D) -> void:
 		if not v.visible:  # the priest, if he has not walked in yet
 			v.arrive(entrance.global_position if entrance else v.global_position)
 	_build_ui()
+	var s := Fx.stream("projector") as AudioStreamOggVorbis
+	if s:
+		s.loop = true
+		_reel.stream = s
+		_reel.volume_db = -40.0
+		add_child(_reel)
+		_reel.play()
+		_reel.create_tween().tween_property(_reel, "volume_db", PROJECTOR_DB + Fx.MIX_DB, 0.6)
 	GameState.said.connect(_on_said)
 	_plan_route()
 	_build_tween()

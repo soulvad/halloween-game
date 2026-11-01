@@ -14,7 +14,7 @@ TEXT = sys.argv[1] if len(sys.argv) > 1 else "ДОПОМОЖІТЬ"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "art/textures/help_writing.png"
 FONT = "fonts/Caveat.ttf"
 W, H = 2048, 640
-PAINT = np.array([0.78, 0.06, 0.04])
+PAINT = np.array([0.68, 0.05, 0.035])
 random.seed(7)
 rng = np.random.default_rng(7)
 
@@ -66,7 +66,7 @@ inner = np.asarray(Image.fromarray((a * 255).astype(np.uint8)).filter(ImageFilte
     ImageFilter.GaussianBlur(3)), dtype=np.float32) / 255.0
 rim = np.clip(a - inner, 0, 1)
 grooves = 0.6 * noise(70, 9, 2) + 0.4 * noise(14, 30, 4)  # finger lines: long faint streaks, broken up
-shade = 0.8 + 0.3 * grooves - 0.4 * rim
+shade = 0.8 + 0.3 * grooves - 0.8 * rim  # rims nearly black, like paint drying at the edges
 thin = noise(25, 25, 3)
 alpha = a * np.clip(0.55 + 0.6 * thin + 0.4 * rim, 0, 1)
 alpha *= np.clip(0.75 + 0.5 * grooves, 0, 1)

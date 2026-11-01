@@ -78,6 +78,8 @@ func _ready() -> void:
 	_label.position.y = 2.1
 	_label.layers = 2  ## the minimap camera culls labels
 	_label.visibility_range_end = UI.LABEL_RANGE
+	_label.transparency = 1.0  ## drawn flat by labels.gd: the ink pass mangles 3D text
+	_label.add_to_group("world_label")
 	_label.font = UI.font()
 	_label.modulate = UI.GOLD if kind == Kind.PRIEST else UI.PAPER
 	add_child(_label)
@@ -101,6 +103,8 @@ func _ready() -> void:
 		_mark.pixel_size = 0.004
 		_mark.position.y = 2.45
 		_mark.layers = 2  ## the minimap camera culls labels
+		_mark.transparency = 1.0  ## drawn flat by labels.gd
+		_mark.add_to_group("world_label")
 		_mark.visible = false
 		add_child(_mark)
 	else:

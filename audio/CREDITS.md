@@ -39,6 +39,7 @@ Short cuts of the previews, mono, faded and loudness-normalized. Used through `s
 - `sfx/deny.ogg`: "DullThud.wav" by TriqyStudio, https://freesound.org/s/653370/
 - `sfx/memory.ogg`: "MAGShim_Reverse, Shimmering, Sweeping, Slow_14_JW Audio" by JW_Audio, https://freesound.org/s/831805/
 - `sfx/dust.ogg`: "Gravel Stone Dirt Debris Falling Small 1 12" by Sheyvan, https://freesound.org/s/569745/
+- `sfx/projector.ogg` (12 s loop, the time-lapse): "Film Projector - Long Run with Finish" by Stefan021, https://freesound.org/s/412145/
 
 ## Memory calls (Freesound, CC0, credit not required)
 
