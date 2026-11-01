@@ -14,6 +14,7 @@ var _canvas := Control.new()
 
 func _ready() -> void:
 	layer = -1  # above the ink pass, under the HUD
+	process_mode = Node.PROCESS_MODE_ALWAYS  # the guide and the time-lapse pause the tree: redraw anyway, or the last frame's labels stay
 	_canvas.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_canvas.draw.connect(_draw_labels)
