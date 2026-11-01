@@ -1,10 +1,13 @@
 """Copies a clip (the old CC0 models' `walk`) from one rigged GLB onto another rig and writes the target with it.
 Torso bones (hips, spine, chest, neck, head) take the source's rotation relative to its rest pose; limbs are swung to
-point the way the source's limbs point (the rigs rest differently: T-pose vs A-pose). Hips bob scaled by leg length.
+point the way the source's limbs point (the rigs rest differently: T-pose vs A-pose). Hips bob scaled by leg length, then
+the hips are set so the lower foot stands at its rest height.
 
-blender -b -P tools/retarget_walk.py -- <target.glb> <source.glb> <out.glb> [clip=walk] [legs=1.0]
-`legs` < 1 narrows the stride (the priest's robe is skinned to the thighs and flies apart at full swing).
-Used for: art/models/src/woman.glb (Olena, old Olena walk) and young_man.glb (Taras, old Taras walk) from art/3d-model/fixed/,
+blender -b -P tools/retarget_walk.py -- <target.glb> <source.glb> <out.glb> [clip=walk] [legs=1.0] [arms=1.0]
+The v4 people's skinning folds at the old walk's full swing (re-weighting them by auto weights was worse): damp it.
+`legs` < 1 narrows the stride (the priest's robe is skinned to the thighs and flies apart at full swing), `arms` < 1 the arm
+swing (Olena's puffed sleeves fold into the chest at full swing).
+Used for: art/models/src/woman.glb (Olena, old Olena walk, legs 0.75 arms 0.5) and young_man.glb (Taras, old Taras walk, legs 0.85 arms 0.6) from art/3d-model/fixed/,
 art/models/Priest.glb (old Taras walk, legs 0.6) from tools/rig_character.py
 (old models: `git show ce8f7d4:art/models/<Name>.glb`).
 """
@@ -18,6 +21,7 @@ args = sys.argv[sys.argv.index("--") + 1:]
 TARGET, SOURCE, OUT = [os.path.abspath(a) for a in args[:3]]
 CLIP = args[3] if len(args) > 3 else "walk"
 LEGS = float(args[4]) if len(args) > 4 else 1.0
+ARMS = float(args[5]) if len(args) > 5 else 1.0
 TORSO = ("hips", "spine", "chest", "neck", "head")
 # target-ish name -> source bone (old Quaternius-style rig)
 # no shoulders: the old rig's clavicles point up, ours sideways; matching them pulls the neck and head along
@@ -72,6 +76,8 @@ def leg(arm):
     return (arm.matrix_world @ b.head_local).z  # world height: the old rigs are rotated and scaled in the file
 
 
+
+
 ratio = leg(tgt) / leg(src)
 pairs = [(pb, source_of(pb.name)) for pb in tgt.pose.bones]
 pairs = [(pb, s) for pb, s in pairs if s]
@@ -79,6 +85,8 @@ depth = lambda pb: len(pb.parent_recursive)
 pairs.sort(key=lambda p: depth(p[0]))
 print("pairs", [(pb.name, s) for pb, s in pairs], "leg ratio %.2f" % ratio)
 
+feet = [pb for pb in tgt.pose.bones if pb.name.lower().startswith("foot")]
+floor = min((tgt.matrix_world @ pb.bone.tail_local).z for pb in feet)
 frame_from, frame_to = [int(round(f)) for f in src_action.frame_range]
 tgt.animation_data_create()
 action = bpy.data.actions.new(CLIP + "_new")
@@ -107,6 +115,8 @@ for frame in range(frame_from, frame_to + 1):
             want = (s_pose.to_3x3() @ Vector((0, 1, 0))).normalized()
             if base in ("thigh", "shin", "foot"):
                 want = rest_dir.slerp(want, LEGS)
+            else:
+                want = rest_dir.slerp(want, ARMS)
             rot = rest_dir.rotation_difference(want) @ t_rest.to_quaternion()
         loc = now.to_translation()
         if pb.parent is None or base == "hips":
@@ -114,6 +124,13 @@ for frame in range(frame_from, frame_to + 1):
         m = Matrix.Translation(loc) @ rot.to_matrix().to_4x4()
         pb.matrix = tgt.matrix_world.inverted() @ m
         bpy.context.view_layer.update()
+    # Stand on the floor: the lower foot at its rest height (the old walk dips the hips for its own IK legs).
+    low = min((tgt.matrix_world @ pb.tail).z for pb in feet)
+    hips = tgt.pose.bones[pairs[0][0].name]
+    m = tgt.matrix_world @ hips.matrix
+    m.translation.z += floor - low
+    hips.matrix = tgt.matrix_world.inverted() @ m
+    bpy.context.view_layer.update()
     for pb in tgt.pose.bones:
         pb.keyframe_insert("rotation_quaternion", frame=frame - frame_from)
         pb.keyframe_insert("location", frame=frame - frame_from)
