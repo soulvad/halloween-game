@@ -70,6 +70,8 @@ func _prologue_page() -> Control:
 		t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		t.set_anchors_preset(Control.PRESET_FULL_RECT)
 		t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if layer != "frame" and not GameState.intro_seen:
+			t.modulate = Color.BLACK  # the story stays blacked out until the prologue was played
 		page.add_child(t)
 	return page
 

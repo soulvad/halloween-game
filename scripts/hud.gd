@@ -20,9 +20,12 @@ const STAGE_CARD_TIME := 2.6  ## seconds the stage title card stays (counts only
 const FLY_TIME := 0.7  ## a new power's icon flying from the screen centre into its slot
 const END_ARROW := "res://art/ui/to_be_continued.png"  ## python tools/draw_continued.py
 const END_ARROW_W := 560.0  ## px
-const END_MUSIC := "res://audio/music/end_knocks.ogg"  ## python tools/make_end_music.py, made of the knock sound
-const END_MUSIC_DB := -12.0  ## light and quiet
-const END_LOOP_FROM := 2.4  ## s: the hit bar at the start of END_MUSIC (tools/make_end_music.py prints it)
+const END_MUSIC := "res://audio/music/end_roundabout.ogg"  ## Yes «Roundabout» from 0:29 of youtu.be/7uBqNgxAuBA (ffmpeg -ss 29)
+const END_MUSIC_DB := -6.0
+## Credits behind the «Ту бі контіньюд» arrow: [nick, role]. shortcut: roles are placeholders, the team fills them in.
+const CREDITS := [["soulvad", "роль уточнюється"], ["firemanC4", "роль уточнюється"], ["oskr", "роль уточнюється"],
+		["nastya", "роль уточнюється"], ["ostap", "роль уточнюється"]]
+const END_ARROW_AT := 15.5  ## s into END_MUSIC: 0:44.5 of the video, the arrow on the beat
 const KNOCK_DOT := 64.0  ## px, the beat dots ●●● ● while aiming at the knock wall
 const RUBBLE_POS := Vector3(17.5, 0, -10)
 
@@ -1196,29 +1199,61 @@ func _on_finished(_won: bool) -> void:
 	_to_be_continued()
 
 
-## The end screen's sign-off: the chalk «Ту бі контіньюд» arrow slides in from the left, the climax of the release
-## music plays (a big hit, then a quiet loop of knocks; the build-up played while E was held, game.gd).
+## The end screen's sign-off: «Roundabout» plays from the start of the screen, the chalk «Ту бі контіньюд» arrow
+## slides in from the left at END_ARROW_AT.
 func _to_be_continued() -> void:
 	var arrow := TextureRect.new()
 	arrow.texture = load(END_ARROW)
 	arrow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	arrow.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
 	arrow.custom_minimum_size = Vector2(END_ARROW_W, END_ARROW_W * arrow.texture.get_height() / arrow.texture.get_width())
-	arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	arrow.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	arrow.gui_input.connect(func(e: InputEvent) -> void:
+		if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
+			_credits())
 	_pin(arrow, Control.PRESET_BOTTOM_LEFT, 40, 50, _end)
 	var x := arrow.position.x
 	arrow.position.x = -END_ARROW_W - 40
 	var tw := arrow.create_tween()
-	tw.tween_interval(1.5)
+	tw.tween_interval(END_ARROW_AT)
 	tw.tween_property(arrow, "position:x", x, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	var music := AudioStreamPlayer.new()
-	var loop: AudioStreamOggVorbis = load(END_MUSIC)
-	loop.loop = true
-	loop.loop_offset = END_LOOP_FROM  # the big hit plays once, then the tune loops
-	music.stream = loop
-	music.volume_db = END_MUSIC_DB + Fx.MIX_DB  # the climax: straight in, no fade
+	music.stream = load(END_MUSIC)
+	music.volume_db = END_MUSIC_DB + Fx.MIX_DB
 	_end.add_child(music)
 	music.play()
+
+
+## The team, over the end screen; a click or Esc closes it.
+func _credits() -> void:
+	var over := _full()
+	over.mouse_filter = Control.MOUSE_FILTER_STOP
+	over.add_child(UI.backdrop(Color(UI.INK, 0.75)))
+	_end.add_child(over)
+	var card := UI.panel(UI.PAPER, 26, 7, 40)
+	var col := UI.vbox(14)
+	var head := UI.label("Над грою працювали", 40, UI.INK, "display", 700)
+	head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(head)
+	for c in CREDITS:
+		var row := UI.vbox(0)
+		var nick := UI.label(c[0], 44, UI.GHOST_INK, "hand", 700)
+		var role := UI.label(c[1], 20, UI.LABEL, "body", 600)
+		for l in [nick, role]:
+			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			row.add_child(l)
+		col.add_child(row)
+	var hint := UI.label("клік або Esc — закрити", 16, UI.LABEL, "body", 600)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(hint)
+	card.add_child(col)
+	card.custom_minimum_size.x = 520
+	_pin(card, Control.PRESET_CENTER, 0, 0, over)
+	over.gui_input.connect(func(e: InputEvent) -> void:
+		if e is InputEventMouseButton and e.pressed or e.is_action_pressed("ui_cancel"):
+			over.queue_free())
+	over.focus_mode = Control.FOCUS_ALL
+	over.grab_focus()
 
 
 func _on_said(who: String, text: String, color: Color) -> void:

@@ -20,9 +20,6 @@ const UI = preload("res://scripts/ui.gd")
 const COMIC_SCENE := "res://scenes/comic.tscn"
 const Tour = preload("res://scripts/tour.gd")
 const RELEASE_TIME := 2.5  ## seconds to hold E in the circle
-const BUILDUP := "res://audio/music/end_buildup.ogg"  ## python tools/make_end_music.py
-const BUILDUP_DB := -10.0
-const TAPE_STOP := 0.45  ## s for the build-up to wind down when E is let go
 const TIMELAPSE := "res://scripts/timelapse.gd"
 const PRIEST_DELAY := 15.0  ## from the call to the priest walking in
 const RITUAL_TIME := 20.0
@@ -53,7 +50,6 @@ const MEMORY_SLOW_TIME := 0.5  ## ...this many real seconds
 
 var comics_enabled := true  ## the smoke test turns comics off
 var hold := 0.0  ## seconds E has been held in the circle
-var _music: AudioStreamPlayer  ## the release build-up while E is held
 var priest_in := 0.0  ## PRIEST_COMING: seconds until he arrives
 var looked := 0  ## EVIDENCE: index into LOOKS (things seen)
 var _look_t := 0.0  ## EVIDENCE: seconds near the current thing
@@ -67,6 +63,8 @@ var _region: NavigationRegion3D
 ## not show them the last round.
 func _enter_tree() -> void:
 	GameState.reset()
+	# Before any child's _ready (ambient autoplays while the rest still builds): silent until the prologue pauses the game.
+	AudioServer.set_bus_mute(0, not GameState.intro_seen)
 
 
 func _ready() -> void:
@@ -146,6 +144,7 @@ func comic(id: String) -> void:
 
 ## First start: the prologue comic, then the 3D guide.
 func _intro() -> void:
+	AudioServer.set_bus_mute.call_deferred(0, false)  # after comic() pauses the tree below
 	await comic("prologue")
 	if comics_enabled:
 		await tour()
@@ -265,38 +264,9 @@ func at_release() -> bool:
 
 ## Hold E in the circle for RELEASE_TIME to leave; releasing starts over.
 func _release(holding: bool, delta: float) -> void:
-	var was := hold
 	hold = hold + delta if holding and GameState.phase == GameState.Phase.PLAY else 0.0
-	if was == 0.0 and hold > 0.0:
-		_buildup()
-	elif was > 0.0 and hold == 0.0 and GameState.phase == GameState.Phase.PLAY:
-		_tape_stop()
 	if hold >= RELEASE_TIME:
-		GameState.finish(true)  # the build-up plays on into the finale
-
-
-## Holding E in the circle: knocks speeding up and climbing (tools/make_end_music.py, as long as RELEASE_TIME).
-func _buildup() -> void:
-	if _music:
-		_music.queue_free()
-	_music = AudioStreamPlayer.new()
-	_music.stream = load(BUILDUP)
-	_music.volume_db = BUILDUP_DB + Fx.MIX_DB
-	_music.process_mode = Node.PROCESS_MODE_ALWAYS  # rings on under the finale comic
-	add_child(_music)
-	_music.play()
-
-
-## Let go too soon: the build-up winds down like a tape losing power, then stops.
-func _tape_stop() -> void:
-	if not _music:
-		return
-	var m := _music
-	_music = null
-	var tw := m.create_tween().set_parallel()
-	tw.tween_property(m, "pitch_scale", 0.3, TAPE_STOP)
-	tw.tween_property(m, "volume_db", -40.0, TAPE_STOP).set_ease(Tween.EASE_IN)
-	tw.chain().tween_callback(m.queue_free)
+		GameState.finish(true)
 
 
 ## A memory comes back: a cyan flash, the world slows for a breath, then its comic.
@@ -314,6 +284,7 @@ func _on_memory_found(id: int) -> void:
 
 func _exit_tree() -> void:
 	Engine.time_scale = 1.0  # left mid slow motion (back to the menu)
+	AudioServer.set_bus_mute(0, false)
 
 
 func _on_power_gained(p: String) -> void:
