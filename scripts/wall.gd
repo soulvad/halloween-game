@@ -83,6 +83,22 @@ static func visual(node_name: String, s: Vector3, c: Color) -> Node3D:
 	return n
 
 
+## Bounds of all the meshes in a model's own space (works out of the tree).
+static func bounds(root: Node3D) -> AABB:
+	var box := AABB()
+	var first := true
+	for m: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+		var tr := m.transform
+		var p := m.get_parent()
+		while p != root and p is Node3D:
+			tr = p.transform * tr
+			p = p.get_parent()
+		var a: AABB = tr * m.get_aabb()
+		box = a if first else box.merge(a)
+		first = false
+	return box
+
+
 ## Put `art/textures/<tex>.png` on a material (triplanar, so any box size tiles), if the file exists.
 static func textured(mat: StandardMaterial3D, tex: String, tiles := 0.5) -> void:
 	var path := "%s%s.png" % [TEXTURE_DIR, tex]

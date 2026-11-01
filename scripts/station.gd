@@ -26,6 +26,7 @@ const Fx = preload("res://scripts/fx.gd")
 enum Kind { MEMORY, CANDLE, HAUNT, MIRROR, PLAN, KNOCK, EVIDENCE, CIRCLE, EGG }
 
 const LAST_POWER := "hands"  ## MIRROR: memory 4's power, the knock needs it later
+const STAND_LID := {"barrel_small": 0.895, "box_small": 0.878}  ## height of the sunken lid inside the rim, of the whole model (else its top)
 const COOLDOWN := {Kind.CANDLE: 1.5, Kind.HAUNT: 4.0, Kind.EGG: 1.0}
 const WITNESS_RANGE := 7.0  ## an archaeologist this close sees what you do
 const HEAR_KNOCK := 4.0  ## KNOCK: has to be in your room (not the passage outside)
@@ -46,6 +47,8 @@ const SMOKE := Color(0.55, 0.55, 0.58, 0.7)
 @export var need := ""  ## power from GameState.POWERS, "" = none
 @export var memory_id := 0  ## MEMORY: 1..5
 @export var lit := true  ## CANDLE
+@export var stand := ""  ## CANDLE: the art/decor model it stands on, fitted so that its top meets the candle's foot
+@export var stand_turn := 0.0  ## degrees
 @export var size := Vector3(0.5, 0.5, 0.5):
 	set(v):
 		size = v
@@ -62,6 +65,7 @@ var knock_misses := 0  ## KNOCK: attempts broken off (hud.gd shakes the dots)
 var _mesh: Node3D  ## placeholder box (MeshInstance3D) or the final model from art/models/<node name>
 var _label: Label3D
 var _light: OmniLight3D
+var _stand: Node3D  ## CANDLE: the prop under it
 var _flame: MeshInstance3D  ## CANDLE with a final model: there's no box to glow, so this shows it's lit
 var _writing: MeshInstance3D  ## HAUNT "write": ТУТ traced through the dust (DUST_WRITING, tools/draw_dust.py); Memory5: your name scratched in the wall (NAME_SCRATCH, tools/draw_name.py)
 var _glass: MeshInstance3D  ## MIRROR: the reflecting pane (mirror.gd)
@@ -505,6 +509,8 @@ func _build() -> void:
 			_flame.mesh = drop
 			_flame.position.y = size.y / 2 + 0.04
 			add_child(_flame)
+	if kind == Kind.CANDLE and stand != "":
+		_build_stand()
 	_label = Label3D.new()
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_label.visibility_range_end = UI.LABEL_RANGE  ## first person: only nearby things are labelled
@@ -519,3 +525,21 @@ func _build() -> void:
 	_label.add_to_group("world_label")
 	_label.modulate = {Kind.MEMORY: UI.CYAN, Kind.HAUNT: UI.ORANGE, Kind.CANDLE: UI.GOLD, Kind.EVIDENCE: UI.GOLD, Kind.CIRCLE: UI.MOM}.get(kind, UI.PAPER)
 	add_child(_label)
+
+
+## The prop under a candle, from the floor up to the candle's foot (a rim may rise around it). Decoration like art/decor: no collision, no shadow.
+func _build_stand() -> void:
+	var top := position.y - size.y / 2
+	_stand = Node3D.new()
+	_stand.position.y = -size.y / 2 - top
+	_stand.rotation.y = deg_to_rad(stand_turn)
+	var n: Node3D = load("res://art/decor/%s.glb" % stand).instantiate()
+	var box := Wall.bounds(n)
+	var fit: float = top / (box.size.y * STAND_LID.get(stand, 1.0))
+	n.scale *= fit
+	var c := box.get_center()
+	n.position = Vector3(-c.x, -box.position.y, -c.z) * fit
+	for m: MeshInstance3D in n.find_children("*", "MeshInstance3D", true, false):
+		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_stand.add_child(n)
+	add_child(_stand)

@@ -91,8 +91,8 @@ func _ready() -> void:
 	Fx.sound(candle, "no_such_sound")
 	Fx.sound_ui(get_tree(), "no_such_sound")
 	p._wisp(candle.global_position)  # the E streak
-	p._overlay(candle, p._aim_mat)  # the aim rim reaches every mesh of a station
-	assert(candle.find_children("*", "MeshInstance3D", true, false).all(func(m): return m.material_overlay == p._aim_mat))
+	p._overlay(candle, p._aim_mat)  # the aim rim reaches every mesh of a station, but a candle's stand
+	assert(candle.find_children("*", "MeshInstance3D", true, false).all(func(m): return (m.material_overlay == p._aim_mat) != candle._stand.is_ancestor_of(m)))
 	p._overlay(candle, null)
 
 	assert(hud._prompt.mouse_filter == Control.MOUSE_FILTER_IGNORE)
