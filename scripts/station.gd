@@ -18,6 +18,7 @@ const Fx = preload("res://scripts/fx.gd")
 
 enum Kind { MEMORY, CANDLE, HAUNT, MIRROR, PLAN, KNOCK, EVIDENCE, CIRCLE, EGG }
 
+const LAST_POWER := "hands"  ## MIRROR: memory 4's power, the knock needs it later
 const COOLDOWN := {Kind.CANDLE: 1.5, Kind.HAUNT: 4.0, Kind.EGG: 1.0}
 const WITNESS_RANGE := 7.0  ## an archaeologist this close sees what you do
 const HEAR_KNOCK := 4.0  ## KNOCK: has to be in your room (not the passage outside)
@@ -183,7 +184,7 @@ func can_use() -> bool:
 		Kind.CANDLE, Kind.HAUNT, Kind.EGG:
 			return true
 		Kind.MIRROR:
-			return not GameState.mirror_written and GameState.stage == GameState.Stage.HAUNT and witness()
+			return _mirror_ready() and witness()
 		Kind.KNOCK:
 			return not GameState.wall_knocked and GameState.stage == GameState.Stage.EVIDENCE and GameState.name_known() and witness()
 		Kind.CIRCLE:
@@ -224,6 +225,8 @@ func _deny() -> void:
 		return
 	if need != "" and not GameState.has_power(need):
 		GameState.think("Я ще не пам'ятаю, як це…")
+	elif kind == Kind.MIRROR and not GameState.has_power(LAST_POWER):
+		GameState.think("Ще рано кликати на допомогу… Я не все про себе згадав.")
 	elif _unseen():
 		GameState.think("Ніхто не побачить…")
 	else:
@@ -236,8 +239,13 @@ func _unseen() -> bool:
 	if witness():
 		return false
 	if kind == Kind.MIRROR:
-		return not GameState.mirror_written and GameState.stage == GameState.Stage.HAUNT
+		return _mirror_ready()
 	return kind == Kind.KNOCK and not GameState.wall_knocked and GameState.stage == GameState.Stage.EVIDENCE and GameState.name_known()
+
+
+## The priest is called only once every memory 1–4 is back: without Сила рук the knock in your room is impossible.
+func _mirror_ready() -> bool:
+	return not GameState.mirror_written and GameState.stage == GameState.Stage.HAUNT and GameState.has_power(LAST_POWER)
 
 
 ## Right after a use: the sound and what the thing itself does.

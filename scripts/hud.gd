@@ -508,7 +508,11 @@ func _prompt_hint(t) -> String:
 			var cd = t.get("cooldown")
 			return "ще %d с тиші" % ceili(cd) if cd is float and cd > 0 else "люди поруч підуть на звук"
 		"MIRROR":
-			return "напис уже є" if GameState.mirror_written else "напиши на склі · археолог має бути поруч"
+			if GameState.mirror_written:
+				return "напис уже є"
+			if not GameState.has_power("hands"):
+				return "спершу згадай усі чотири спогади"
+			return "напиши на склі · археолог має бути поруч"
 		"KNOCK":
 			return "три удари, пауза, один · хтось має бути в кімнаті"
 		"EVIDENCE":

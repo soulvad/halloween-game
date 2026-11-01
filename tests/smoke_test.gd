@@ -146,6 +146,11 @@ func _ready() -> void:
 	t = await _until(func(): return 3 in GameState.memories, 30)
 	print("Memory 3 found after %.1f s" % t)
 	assert(GameState.has_power("write"))
+	var taras = st.call("Taras")  # writing alone can't call the priest yet: memory 4 (Сила рук) first
+	var taras_at: Vector3 = taras.global_position
+	taras.global_position = near.call(st.call("Mirror"), -2.0)
+	assert(not st.call("Mirror").can_use())
+	taras.global_position = taras_at
 
 	# memory 4: writing in the dust of the steward's closet
 	var dust = st.call("Dust")

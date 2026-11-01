@@ -106,7 +106,7 @@ func remember(id: int) -> void:
 	hint("memory")
 	if id < 4:
 		hint("find")
-	if p == "write":
+	if p == "hands":  # the mirror opens with the last power (station.gd _mirror_ready)
 		hint("mirror")
 
 
