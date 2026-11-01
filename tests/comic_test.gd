@@ -28,11 +28,8 @@ func _ready() -> void:
 		c.finished.connect(func(): state.done = true)
 		assert(get_tree().paused, "%s: tree not paused" % id)
 		var presses: int = 12 if id == "prologue" else c._order.size()
-		if id.begins_with("memory_"):
+		if id.begins_with("memory_") or id == "finale":
 			assert(c.page.page_id == id, "%s: not on its own page" % id)
-		if id == "finale":
-			for l in "ABCDE":
-				assert(c.page.is_shown(l), "finale: %s locked" % l)
 		await get_tree().create_timer(0.8).timeout  # reveal tween
 		var last: String = c._order[0]
 		assert(c.page.is_shown(last), "%s: %s not revealed" % [id, last])

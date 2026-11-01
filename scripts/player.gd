@@ -233,6 +233,8 @@ func _wisp(to: Vector3) -> void:
 ## The ghost as others would see it, shown only in the guide: in play nothing shows you, not even a mirror.
 func show_body(on: bool) -> void:
 	body.visible = on
+	if _veil_rect:  # seen from outside (guide, time-lapse): no wall veil, the paused _process would leave it stuck on
+		_veil_rect.get_parent().visible = not on
 
 
 ## A pale grey-blue cloud in the shape of the boy: puffs for the head, shoulders, chest and a trailing hem.
