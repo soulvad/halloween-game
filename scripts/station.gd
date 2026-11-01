@@ -15,6 +15,8 @@ const UI = preload("res://scripts/ui.gd")
 const Visitor = preload("res://scripts/visitor.gd")
 const MirrorGlass = preload("res://scripts/mirror.gd")
 const PAINT_TEX := "res://art/textures/help_writing.png"
+const DUST_PATCH := "res://art/textures/dust_patch.png"
+const DUST_WRITING := "res://art/textures/dust_writing.png"
 const PAINT_SHADER = preload("res://scripts/paint.gdshader")
 const Fx = preload("res://scripts/fx.gd")
 
@@ -57,7 +59,7 @@ var _mesh: Node3D  ## placeholder box (MeshInstance3D) or the final model from a
 var _label: Label3D
 var _light: OmniLight3D
 var _flame: MeshInstance3D  ## CANDLE with a final model: there's no box to glow, so this shows it's lit
-var _writing: Label3D  ## HAUNT "write": ТУТ in the dust
+var _writing: MeshInstance3D  ## HAUNT "write": ТУТ traced through the dust (DUST_WRITING, tools/draw_dust.py)
 var _glass: MeshInstance3D  ## MIRROR: the reflecting pane (mirror.gd)
 var _paint: MeshInstance3D  ## MIRROR: ДОПОМОЖІТЬ finger-painted on the glass (PAINT_TEX, tools/draw_writing.py)
 var _denied := false  ## the ghost already said why E does nothing here (once until it works)
@@ -79,6 +81,8 @@ func _ready() -> void:
 	if kind == Kind.MIRROR:
 		_glass = MirrorGlass.new(size)
 		add_child(_glass)
+	if kind == Kind.HAUNT and need == "write":
+		_dust()
 	_refresh()
 
 
@@ -311,19 +315,42 @@ func _flicker() -> void:
 		_fade.chain().tween_callback(_refresh)  # hides light and flame (unless lit again since)
 
 
-## Writing appears letter by letter (the word was put up by _refresh / here).
-func _letters(text: String, time: float) -> void:
-	if not _writing:  # HAUNT "write": lying in the dust
-		_writing = Label3D.new()
-		_writing.font = UI.font()
-		_writing.font_size = 96
-		_writing.pixel_size = 0.003
-		_writing.modulate = Color(0.85, 0.8, 0.7, 0.85)
-		_writing.position.y = size.y / 2 + 0.005
-		_writing.rotation.x = -PI / 2
-		add_child(_writing)
-	var w := _writing  # Label3D has no visible_ratio: grow the text itself
-	create_tween().tween_method(func(n: int): w.text = text.left(n), 0, text.length(), time)
+## HAUNT "write": a patch of dust on the floor instead of the placeholder box (kept, invisible, for the aim rim), and the
+## finger strokes over it, hidden until written.
+func _dust() -> void:
+	if _mat():
+		_mat().transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_mat().albedo_color.a = 0.0
+	var patch := StandardMaterial3D.new()
+	patch.albedo_texture = load(DUST_PATCH)
+	patch.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	patch.roughness = 1.0
+	add_child(_floor_quad(patch, 1.5, 0.002))
+	var strokes := ShaderMaterial.new()
+	strokes.shader = PAINT_SHADER
+	strokes.set_shader_parameter("tex", load(DUST_WRITING))
+	strokes.set_shader_parameter("gloss", 0.0)
+	_writing = _floor_quad(strokes, 1.5, 0.004)
+	_writing.set_instance_shader_parameter("reveal", 0.0)
+	add_child(_writing)
+
+
+func _floor_quad(mat: Material, scale_: float, lift: float) -> MeshInstance3D:
+	var q := QuadMesh.new()
+	q.size = Vector2(size.x, size.z) * scale_
+	q.material = mat
+	var m := MeshInstance3D.new()
+	m.mesh = q
+	m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	m.position.y = -size.y / 2 + lift  # on the floor
+	m.rotation.x = -PI / 2
+	return m
+
+
+## The finger traces the word in the dust, left to right.
+func _letters(_text: String, time: float) -> void:
+	_writing.set_instance_shader_parameter("reveal", 0.0)
+	create_tween().tween_method(func(k: float): _writing.set_instance_shader_parameter("reveal", k), 0.0, 1.0, time)
 
 
 ## EVIDENCE: the archaeologists have looked it over (game.gd).

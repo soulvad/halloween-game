@@ -4,6 +4,7 @@ shader_type spatial;
 
 uniform sampler2D tex : source_color, filter_linear_mipmap;
 instance uniform float reveal = 1.0;
+uniform float gloss = 1.0;  // 1 wet paint (mirror), 0 dry dust (the floor writing)
 
 float hash(float y) {
 	return fract(sin(y * 91.7) * 4375.85);
@@ -14,7 +15,7 @@ void fragment() {
 	float edge = reveal * 1.1 - 0.05 + (hash(floor(UV.y * 24.0)) - 0.5) * 0.06;
 	ALBEDO = c.rgb;
 	ALPHA = c.a * (1.0 - smoothstep(edge - 0.02, edge, UV.x));
-	EMISSION = c.rgb * 0.35;  // reads in the dark room and against the red light
-	ROUGHNESS = 0.25;
-	SPECULAR = 0.7;
+	EMISSION = c.rgb * 0.35 * gloss;  // reads in the dark room and against the red light
+	ROUGHNESS = mix(1.0, 0.25, gloss);
+	SPECULAR = mix(0.2, 0.7, gloss);
 }
