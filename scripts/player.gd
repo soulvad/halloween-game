@@ -58,6 +58,8 @@ var _edge := 0.0
 var _edge_told := false
 var _probe := SphereShape3D.new()
 var _veil: ShaderMaterial
+var _veil_rect: ColorRect  ## hidden while clear: the shader copies the whole screen
+var _travel := 0.0  ## m flown inside walls: the stone in the veil rushes past (phase.gdshader)
 var _aim_mat := ShaderMaterial.new()
 var _aimed: Node3D  ## the station wearing the rim
 
@@ -88,6 +90,7 @@ func _ready() -> void:
 	_veil = ShaderMaterial.new()
 	_veil.shader = load("res://scripts/phase.gdshader")
 	rect.material = _veil
+	_veil_rect = rect
 	layer.add_child(rect)
 	add_child(layer)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -153,6 +156,10 @@ func _process(delta: float) -> void:
 	phase = move_toward(phase, _phase_target, delta * 6.0)
 	_veil.set_shader_parameter("amount", phase)
 	_veil.set_shader_parameter("edge", _edge)
+	_veil_rect.visible = phase > 0.001 or _edge > 0.001
+	if phase > 0.0:
+		_travel += Vector2(velocity.x, velocity.z).length() * delta
+		_veil.set_shader_parameter("travel", _travel)
 	camera.fov = FOV + PHASE_FOV * phase
 	_aim()
 
