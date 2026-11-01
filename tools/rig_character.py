@@ -1,3 +1,12 @@
+"""Rigs and animates a static character model (ComfyUI / Hunyuan GLB) for the game: scales it to `height`, turns it to
+face -Y, optionally projects a clean front picture onto the face, builds a simple armature with auto weights and bakes
+procedural clips. `ghost` (Тиміш): idle, fly, reach, look, release, floating. `walker` (people): idle, walk.
+Textures are capped at 2048 for the web build. By Ostap (make_tymish.py), generalised.
+
+blender -b -P tools/rig_character.py -- <source.glb> <out.glb> <name> <height> <ghost|walker> [front.png] [save.blend] [flip]
+`flip` turns the model around when the toes-vs-ankles guess of its facing is wrong (Taras).
+Made so far: Tymish 1.52 ghost, Olena 1.65 walker, Taras 1.78 walker flip (sources in art/comfy-models/).
+"""
 import math
 import os
 import sys
@@ -7,14 +16,17 @@ import numpy as np
 from mathutils import Euler, Matrix, Vector
 
 args = sys.argv[sys.argv.index("--") + 1:]
-SOURCE, FRONT, OUT = [os.path.abspath(a) for a in args[:3]]
-SAVE_BLEND = os.path.abspath(args[3]) if len(args) > 3 else None
-HEIGHT = 1.52
+FLIP = "flip" in args
+args = [a for a in args if a != "flip"]
+SOURCE, OUT = [os.path.abspath(a) for a in args[:2]]
+NAME, HEIGHT, STYLE = args[2], float(args[3]), args[4]
+FRONT = os.path.abspath(args[5]) if len(args) > 5 and args[5] else None
+SAVE_BLEND = os.path.abspath(args[6]) if len(args) > 6 else None
 FPS = 30
-TEXTURE = 4096
+TEXTURE = 2048
 NORMAL_TEXTURE = 2048
 FACES = 40000
-FLOAT = 0.12
+FLOAT = 0.12 if STYLE == "ghost" else 0.0
 HEAD_FROM = 0.78
 HEAD_FADE = 0.03
 FACING_FROM = 0.25
@@ -42,8 +54,8 @@ select_only(meshes)
 if len(meshes) > 1:
     bpy.ops.object.join()
 body = bpy.context.view_layer.objects.active
-body.name = "Tymish"
-body.data.name = "Tymish"
+body.name = NAME
+body.data.name = NAME
 body.parent = None
 bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
@@ -82,7 +94,7 @@ def facing():
     return -1 if toes.y < ankles.y else 1
 
 
-if facing() > 0:
+if (facing() > 0) != FLIP:
     move(Matrix.Rotation(math.pi, 4, "Z"))
 print("facing fixed, forward is -Y")
 
@@ -246,7 +258,7 @@ def project_front(base):
     links.new(next(o for o in mix.outputs if o.identifier == "Result_Color"), glow.inputs["Color"])
     out = nodes.new("ShaderNodeOutputMaterial")
     links.new(glow.outputs["Emission"], out.inputs["Surface"])
-    baked = bpy.data.images.new("TymishBase", TEXTURE, TEXTURE)
+    baked = bpy.data.images.new(NAME + "Base", TEXTURE, TEXTURE)
     target = nodes.new("ShaderNodeTexImage")
     target.image = baked
     nodes.active = target
@@ -272,7 +284,7 @@ def project_front(base):
 
 old = body.data.materials[0]
 normal = texture_of(old, "Normal")
-base = project_front(texture_of(old, "Base Color"))
+base = project_front(texture_of(old, "Base Color")) if FRONT else texture_of(old, "Base Color")
 
 
 def arm_line(side):
@@ -338,8 +350,8 @@ for tag, side in (("L", 1), ("R", -1)):
 for name, p in sorted(joints.items()):
     print("%-12s %6.3f %6.3f %6.3f" % (name, p.x, p.y, p.z))
 
-arm_data = bpy.data.armatures.new("TymishRig")
-rig = bpy.data.objects.new("TymishRig", arm_data)
+arm_data = bpy.data.armatures.new(NAME + "Rig")
+rig = bpy.data.objects.new(NAME + "Rig", arm_data)
 scene.collection.objects.link(rig)
 select_only([rig])
 bpy.ops.object.mode_set(mode="EDIT")
@@ -415,7 +427,7 @@ body.parent = rig
 body.modifiers.new("Armature", "ARMATURE").object = rig
 
 
-skin = bpy.data.materials.new("Tymish")
+skin = bpy.data.materials.new(NAME)
 skin.use_nodes = True
 nodes = skin.node_tree.nodes
 links = skin.node_tree.links
@@ -544,7 +556,37 @@ def release(t):
         dangling(t, tag, back=0.02, bend=0.12 + 0.1 * k, point=0.45 + 0.2 * k)
 
 
-CLIPS = {"idle": (idle, 120), "fly": (fly, 60), "reach": (reach, 48), "look": (look, 120), "release": (release, 90)}
+def stand(t):
+    pose("Root", offset=(0, 0, 0.004 * wave(t, 0, 2)))
+    pose("Spine", (0.01 * wave(t, 1.6), 0, 0))
+    pose("Chest", (0.015 * wave(t, 1.8), 0, 0))
+    pose("Head", (0.02 * wave(t, 2.4), 0.03 * wave(t, 0.7), 0))
+    relaxed(t, "L", sway=0.02, phase=0.0)
+    relaxed(t, "R", sway=0.02, phase=1.7)
+
+
+STRIDE = 0.42  # rad of thigh swing each way: ~0.7 m steps at 1.6 m/s with a 26-frame cycle (visitor.gd SPEED)
+
+
+def walk(t):
+    pose("Root", offset=(0, 0, 0.025 * abs(wave(t)) - 0.02))
+    pose("Hips", (0, 0, 0.06 * wave(t)))
+    pose("Chest", (-0.03, 0, -0.08 * wave(t)))
+    pose("Head", (0.02, 0, 0.04 * wave(t)))
+    for tag, ph in (("L", 0.0), ("R", math.pi)):
+        swing = wave(t, ph)  # +1 = this leg back
+        pose("Thigh." + tag, side_rot(tag, STRIDE * swing))
+        pose("Shin." + tag, side_rot(tag, 0.05 + 0.55 * max(0.0, wave(t, ph - 0.9))))  # knee bends as the leg comes through
+        pose("Foot." + tag, side_rot(tag, -0.15 * swing))
+        pose("UpperArm." + tag, side_rot(tag, -0.35 * swing, 0.32))  # arms against the legs
+        pose("ForeArm." + tag, side_rot(tag, -0.3 + 0.1 * swing, 0.05))
+        pose("Hand." + tag, side_rot(tag, -0.1, 0.1))
+
+
+if STYLE == "ghost":
+    CLIPS = {"idle": (idle, 120), "fly": (fly, 60), "reach": (reach, 48), "look": (look, 120), "release": (release, 90)}
+else:
+    CLIPS = {"idle": (stand, 120), "walk": (walk, 26)}
 
 for clip, (fn, length) in CLIPS.items():
     action = bpy.data.actions.new(clip)

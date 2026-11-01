@@ -2,24 +2,23 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://brn4o8q8eny37"
-path.s3tc="res://.godot/imported/Priest_robe.jpg-60f2cff7c312bd847e6a45d7bbcaff6f.s3tc.ctex"
+uid="uid://yynpwh0cn63n"
+path="res://.godot/imported/priest_gold_Image_0.jpg-a346e074205dde0563c5c2a4d3611457.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
+"vram_texture": false
 }
 generator_parameters={
-"md5": "b97394cc14246a3068057332ffc7c702"
+"md5": "619c5566959af1dbc617ce0a27740f7e"
 }
 
 [deps]
 
-source_file="res://art/models/Priest_robe.jpg"
-dest_files=["res://.godot/imported/Priest_robe.jpg-60f2cff7c312bd847e6a45d7bbcaff6f.s3tc.ctex"]
+source_file="res://art/models/src/priest_gold_Image_0.jpg"
+dest_files=["res://.godot/imported/priest_gold_Image_0.jpg-a346e074205dde0563c5c2a4d3611457.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -41,4 +40,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1

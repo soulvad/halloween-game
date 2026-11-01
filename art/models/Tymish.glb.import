@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bcum6hyy7cyeb"
-path="res://.godot/imported/Priest.glb-67ad030f273c93da30e34aaae58b2ce3.scn"
+uid="uid://cxn08en07g237"
+path="res://.godot/imported/Tymish.glb-ff922899adabc3f770e1ab1f5f78f88d.scn"
 
 [deps]
 
-source_file="res://art/models/Priest.glb"
-dest_files=["res://.godot/imported/Priest.glb-67ad030f273c93da30e34aaae58b2ce3.scn"]
+source_file="res://art/models/Tymish.glb"
+dest_files=["res://.godot/imported/Tymish.glb-ff922899adabc3f770e1ab1f5f78f88d.scn"]
 
 [params]
 
