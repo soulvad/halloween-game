@@ -41,6 +41,17 @@ func _ready() -> void:
 	for m in bones._mesh.find_children("*", "MeshInstance3D", true, false):
 		assert(m.layers == Eggs.LAYER_HIDDEN)
 
+	# the skeleton and the cat have sealed rooms of their own, the cat's is the bigger one; no way in for people
+	var rooms: Dictionary = g.get_meta("rooms")
+	var bones_at := Vector2(bones.global_position.x, bones.global_position.z)
+	var cat_at: Vector2 = Vector2(g.get_node("Stations/Pedestal").global_position.x, g.get_node("Stations/Pedestal").global_position.z)
+	assert(rooms["BonesRoom"].has_point(bones_at) and rooms["CatRoom"].has_point(cat_at))
+	assert(rooms["CatRoom"].get_area() > rooms["BonesRoom"].get_area())
+	var map := g.get_world_3d().navigation_map as RID
+	var entrance: Vector3 = g.get_node("Markers/Entrance").global_position
+	assert(not g.get_node("Lanterns").in_dungeon(map, entrance, Vector3(cat_at.x, 0, cat_at.y)))
+	assert(not g.get_node("Lanterns").in_dungeon(map, entrance, Vector3(bones_at.x + 0.5, 0, bones_at.y)))
+
 	# cat: nothing until E on the pedestal (no text); it rises, waits, spins for the track's length, stays frozen
 	var pedestal = g.get_node("Stations/Pedestal")
 	p.global_position = pedestal.global_position + Vector3(1, -pedestal.global_position.y, 0)
@@ -110,6 +121,7 @@ func _ready() -> void:
 	p.global_position = eggs._room_center
 	await _frames(2)
 	assert(not eggs._room.visible and "turtles" not in eggs.found)
+	assert(p.wall_depth() < 0 and not p.hollow)  # just rock
 	p.global_position = Vector3(-11, 0, -2)
 	await _frames(2)
 	p.global_position = Vector3(-8, 0, 1)
@@ -118,6 +130,7 @@ func _ready() -> void:
 	p.global_position = Vector3(-8.7, 0, 1)
 	await _frames(2)
 	assert(eggs._room.visible and eggs._rat.visible and "turtles" in eggs.found and eggs._turtles.size() == 4)
+	assert(p.hollow)  # dug in the rock: no veil, no drift
 	p.global_position = Vector3(-11, 0, -2)
 	await _frames(2)
 	assert(not eggs._room.visible)

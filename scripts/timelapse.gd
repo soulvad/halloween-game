@@ -130,7 +130,7 @@ func _plan_route() -> void:
 	var rooms: Dictionary = game.get_meta("rooms", {})
 	var plan := _plan()
 	var plan_room := _room_key(rooms, plan.global_position) if plan else ""
-	var used := ["YourRoom", plan_room]
+	var used := ["YourRoom", "BonesRoom", "CatRoom", plan_room]  # no way in for people
 	var at := _centre()
 	var stops: Array[Vector3] = []
 	for i in 2:
