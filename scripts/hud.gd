@@ -18,6 +18,10 @@ const ROOM := Rect2(17.5, -12.5, 6, 4.7)
 const ROOM_BANNER_TIME := 1.8
 const STAGE_CARD_TIME := 2.6  ## seconds the stage title card stays (counts only while the game runs)
 const FLY_TIME := 0.7  ## a new power's icon flying from the screen centre into its slot
+const END_ARROW := "res://art/ui/to_be_continued.png"  ## python tools/draw_continued.py
+const END_ARROW_W := 560.0  ## px
+const END_MUSIC := "res://audio/music/end_knocks.ogg"  ## python tools/make_end_music.py, made of the knock sound
+const END_MUSIC_DB := -12.0  ## light and quiet
 const KNOCK_DOT := 64.0  ## px, the beat dots ●●● ● while aiming at the knock wall
 const RUBBLE_POS := Vector3(17.5, 0, -10)
 
@@ -1188,6 +1192,31 @@ func _on_finished(_won: bool) -> void:
 	rt.custom_minimum_size.x = 480
 	line.add_child(rt)
 	_pin(line, Control.PRESET_CENTER_BOTTOM, 0, 60, _end)
+	_to_be_continued()
+
+
+## The end screen's sign-off: the chalk «Ту бі контіньюд» arrow slides in from the left, a quiet loop of knocks plays.
+func _to_be_continued() -> void:
+	var arrow := TextureRect.new()
+	arrow.texture = load(END_ARROW)
+	arrow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	arrow.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
+	arrow.custom_minimum_size = Vector2(END_ARROW_W, END_ARROW_W * arrow.texture.get_height() / arrow.texture.get_width())
+	arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pin(arrow, Control.PRESET_BOTTOM_LEFT, 40, 50, _end)
+	var x := arrow.position.x
+	arrow.position.x = -END_ARROW_W - 40
+	var tw := arrow.create_tween()
+	tw.tween_interval(1.5)
+	tw.tween_property(arrow, "position:x", x, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var music := AudioStreamPlayer.new()
+	var loop: AudioStreamOggVorbis = load(END_MUSIC)
+	loop.loop = true
+	music.stream = loop
+	music.volume_db = -40.0
+	_end.add_child(music)
+	music.play()
+	music.create_tween().tween_property(music, "volume_db", END_MUSIC_DB + Fx.MIX_DB, 2.0)
 
 
 func _on_said(who: String, text: String, color: Color) -> void:

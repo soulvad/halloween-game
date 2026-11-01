@@ -49,3 +49,4 @@ Played by `scripts/ambient.gd` from each unfound memory 1–4.
 - `memory/memory_2.ogg`: "Metal, movement, rattle, handle, carabiner, small, handling, shaking, clink" by Oldome, https://freesound.org/s/854142/
 - `memory/memory_3.ogg`: "rustling paper.wav" by keweldog, https://freesound.org/s/181774/
 - `memory/memory_4.ogg`: "Keys jingling" by k398jfks93hfbvk, https://freesound.org/s/465342/
+- `music/end_knocks.ogg`: end screen loop, made by `tools/make_end_music.py` from `sfx/knock.ogg` (an original tune).
