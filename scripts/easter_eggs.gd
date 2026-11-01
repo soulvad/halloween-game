@@ -1,6 +1,6 @@
 extends Node3D
-## Easter eggs, none of them touch the story. Hidden in the rock between rooms, where only a ghost can go; a coloured
-## light leaking through the wall is the clue. Cat: E on the pedestal (no text on purpose), the cat rises, spins until
+## Easter eggs, none of them touch the story. Cat and skeleton sit in sealed rooms (BonesRoom, CatRoom in the generator),
+## where only a ghost can go; a coloured light leaking through the wall is the clue. Cat: E on the pedestal (no text on purpose), the cat rises, spins until
 ## its track ends, freezes; E again, it spins again. Skeleton: E on the bones, it dances. Rat: runs from you along ROUTE, through a hole in a
 ## wall; the turtles' pizza room behind it exists only if you pass through that wall. Phone: Тарас's phone lies on the
 ## camp table (air_raid_phone.gd), the air-raid alert goes off on it once. Stations of Kind.EGG call touched().
@@ -205,7 +205,7 @@ func _build_skeleton() -> void:
 	if not players.is_empty():
 		_dance_anim = players[0]
 		_dance_anim.assigned_animation = _dance_anim.get_animation_list()[0]
-	var glow := _glow(self, Color(0.7, 0.4, 1), 4.5, 1.2)  # not on the skeleton: stays on while the bones lie still
+	var glow := _glow(self, Color(0.7, 0.4, 1), 4.5, 0.7)  # not on the skeleton: stays on while the bones lie still
 	glow.position = _skeleton.position + Vector3(0, 1.7, 0)
 	_music = _sound(self, "skeleton", 18.0)
 	_music.position = _skeleton.position
@@ -309,6 +309,7 @@ func _update_room(ghost: Vector3) -> void:
 	elif _ghost_x >= WALL_INNER:
 		_room.visible = true
 	_ghost_x = ghost.x
+	GameState.player.hollow = _room.visible
 	if _room.visible and _flat(ghost, _room_center) < ROOM_NEAR:
 		_found("turtles", [["Зелений", "Чуваче, ти ж привид. Тобі піца не положена.", ARCH_COLOR],
 			["Ти", "…А що таке піца?", GameState.GHOST_COLOR]])
@@ -328,6 +329,7 @@ func _build_room() -> void:
 	_part(room, Vector3(ROOM.size.x, ROOM_H, t), brick, Vector3(c.x, ROOM_H / 2, ROOM.position.y - t / 2))
 	_part(room, Vector3(ROOM.size.x, ROOM_H, t), brick, Vector3(c.x, ROOM_H / 2, ROOM.end.y + t / 2))
 	_part(room, Vector3(t, ROOM_H, ROOM.size.y + t * 2), brick, Vector3(ROOM.position.x - t / 2, ROOM_H / 2, c.y))
+	_part(room, Vector3(t, ROOM_H, ROOM.size.y + t * 2), brick, Vector3(ROOM.end.x + t / 2, ROOM_H / 2, c.y))  # in the rock: nothing else stops the eye
 	_part(room, Vector3(1.0, 0.45, 1.0), Color(0.42, 0.28, 0.16), _room_center + Vector3(0, 0.225, 0))
 	var pizza := Node3D.new()
 	pizza.position = _room_center + Vector3(0, 0.45, 0)

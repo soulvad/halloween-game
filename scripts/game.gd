@@ -121,6 +121,7 @@ func _bake_nav() -> void:
 	nm.agent_radius = 0.5  # multiples of the 0.25 cell size
 	nm.agent_height = 1.75
 	nm.agent_max_climb = 0.25
+	nm.filter_baking_aabb = AABB(Vector3(-16, -0.2, -15), Vector3(42, 1.7, 30))  # the floor, not the top of the rock; starts at its underside, lower lifts the whole mesh
 	_region = NavigationRegion3D.new()
 	_region.navigation_mesh = nm
 	add_child(_region)

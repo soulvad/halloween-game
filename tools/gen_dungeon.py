@@ -1,5 +1,5 @@
 # Generates scenes/game.tscn: "Підземелля старого міста" from the user's sketch.
-# Carved spaces (rooms, corridors, doors) are rectangles on a 0.25 m grid; walls go on every carved/rock edge.
+# Carved spaces (rooms, corridors, doors) are rectangles on a 0.25 m grid; all the rest is solid rock.
 import sys, math
 
 OUT = sys.argv[1]
@@ -26,6 +26,8 @@ rooms = {
     "PassageUp": (10.25, -11.75, 12, -7.0),
     "PassageTop": (10.25, -11.75, 17.5, -10.0),
     "YourRoom": (17.5, -12.5, 23.5, -7.75),
+    # sealed, no doors: only the ghost gets in (easter eggs); a passage would let the visitors and lanterns in too
+    "BonesRoom": (-0.5, -10.5, 1.25, -7.5), "CatRoom": (17.5, -7.25, 22.5, -3.25),
 }
 doors = [  # >= 1.75 m wide, or the navmesh (agent radius 0.5) closes them
     (-12, -7.0, -11.5, -5.25),  # far left
@@ -44,47 +46,27 @@ for (a, b, c, d) in list(rooms.values()) + doors:
 def carved(i, k): return 0 <= i < NX and 0 <= k < NZ and grid[i][k]
 
 WALL = (0.36, 0.33, 0.38); BOUND = (0.12, 0.1, 0.14); FURN = (0.4, 0.28, 0.18)
-walls = []  # (name, (x, z), size, solid_from, color)
-T = 0.3
-def depth(beyond):  # a wall's thickness: rock one cell thin is shared, or the two walls poke through each other
-    return G / 2 if any(carved(*c) for c in beyond) else T
-# horizontal edges (between k-1 and k), runs along x
-for k in range(NZ + 1):
-    for side in (-1, 1):  # -1: rock is at k-1 (north edge of cell k), 1: rock at k (south edge of cell k-1)
-        i = 0
-        while i < NX:
-            cell = k if side == -1 else k - 1
-            rock = k - 1 if side == -1 else k
-            if carved(i, cell) and not carved(i, rock):
-                j = i
-                while j < NX and carved(j, cell) and not carved(j, rock):
-                    j += 1
-                x0 = X0 + i * G - (T / 2 if not carved(i - 1, rock) else 0)  # ends reach on only into rock: a stub in
-                x1 = X0 + j * G + (T / 2 if not carved(j, rock) else 0)  # the open would notch the corner it turns
-                d = depth((n, 2 * rock - cell) for n in range(i, j))
-                z = Z0 + k * G + (-d / 2 if side == -1 else d / 2)
-                walls.append(((x0 + x1) / 2, z, (x1 - x0, H, d)))
-                i = j
-            else:
-                i += 1
-for i in range(NX + 1):
-    for side in (-1, 1):
-        k = 0
-        while k < NZ:
-            cell = i if side == -1 else i - 1
-            rock = i - 1 if side == -1 else i
-            if carved(cell, k) and not carved(rock, k):
-                j = k
-                while j < NZ and carved(cell, j) and not carved(rock, j):
-                    j += 1
-                z0 = Z0 + k * G - (T / 2 if not carved(rock, k - 1) else 0)
-                z1 = Z0 + j * G + (T / 2 if not carved(rock, j) else 0)
-                d = depth((2 * rock - cell, n) for n in range(k, j))
-                x = X0 + i * G + (-d / 2 if side == -1 else d / 2)
-                walls.append((x, (z0 + z1) / 2, (d, H, z1 - z0)))
-                k = j
-            else:
-                k += 1
+# Everything that isn't carved is rock: boxes grown over the free cells, their faces are the walls of the rooms.
+HOLLOW = (-14.5, -0.75, -8.5, 3.75)  # around the turtles' room (easter_eggs.gd), one box: no rock face inside the room
+rock = [HOLLOW]
+taken = [row[:] for row in grid]
+def take(i0, k0, i1, k1):
+    for i in range(i0, i1):
+        taken[i][k0:k1] = [True] * (k1 - k0)
+take(*[round((v - o) / G) for v, o in zip(HOLLOW, (X0, Z0, X0, Z0))])
+for i in range(NX):
+    for k in range(NZ):
+        if taken[i][k]:
+            continue
+        k1 = k
+        while k1 < NZ and not taken[i][k1]:
+            k1 += 1
+        i1 = i + 1
+        while i1 < NX and not any(taken[i1][k:k1]):
+            i1 += 1
+        take(i, k, i1, k1)
+        rock.append((X0 + i * G, Z0 + k * G, X0 + i1 * G, Z0 + k1 * G))
+walls = [((a + c) / 2, (b + e) / 2, (c - a, H, e - b)) for a, b, c, e in rock]
 wall_nodes = [(f"Wall{n}", (x, z), s, 2, WALL) for n, (x, z, s) in enumerate(walls)]
 cx, cz, w, d = (X0 + X1) / 2, (Z0 + Z1) / 2, X1 - X0, Z1 - Z0
 wall_nodes += [
@@ -137,15 +119,16 @@ stations = [
     ("Plan", (8.0, 5.2), PLAN, "План маєтку", "", (0.9, 0.04, 0.6), (0.85, 0.75, 0.55), {"y": 0.8}),
     ("Wall", (17.68, -8.4), KNOCK, "Стіна сусідньої камери", "hands", (0.08, 1.2, 0.9), (0.5, 0.3, 0.25), {"y": 0.6}),  # west wall, at the bunk's head
     # easter eggs, the rest of them in scripts/easter_eggs.gd; the pedestal has no text on purpose
-    ("Bones", (12.5, 1.5), EGG, "Купа кісток: вселитися", "", (0.9, 0.25, 0.7), (0.88, 0.85, 0.72), {}),
-    ("Pedestal", (20.5, -5.5), EGG, "", "", (0.7, 0.8, 0.7), (0.36, 0.33, 0.34), {}),
+    ("Bones", (0.375, -9.2), EGG, "Купа кісток: вселитися", "", (0.9, 0.25, 0.7), (0.88, 0.85, 0.72), {}),
+    ("Pedestal", (20.0, -5.25), EGG, "", "", (0.7, 0.8, 0.7), (0.36, 0.33, 0.34), {}),
 ]
 dig_sites = [(-5, -9), (5.5, -9), (-5, -2.8), (5.5, -2.6), (-5, 1.5), (5.5, 2), (-5, 7), (6, 7),
              (-13, -6), (14.4, -6), (0, 3), (0, -5.9)]
 ARCH, PRIEST = 0, 1
 visitors = [("Olena", (0, 11.0), ARCH, "Олена", (0.35, 0.55, 0.4)), ("Taras", (0.8, 11.6), ARCH, "Тарас", (0.55, 0.45, 0.3)),
             ("Priest", (0, 11.8), PRIEST, "Отець Василь", (0.12, 0.1, 0.12))]
-lights = [((0, 2.4, -5.9), 7), ((0, 2.4, 4), 7), ((-11, 2.4, -6), 6), ((11.1, 2.4, -9), 6), ((-5, 2.4, 7), 6), ((5.5, 2.4, -2.6), 6)]
+lights = [((0, 2.4, -5.9), 7), ((0, 2.4, 4), 7), ((-11, 2.4, -6), 6), ((11.1, 2.4, -9), 6), ((-5, 2.4, 7), 6), ((5.5, 2.4, -2.6), 6),
+          ((0.375, 2.4, -9), 3.5), ((20, 2.4, -5.25), 6)]
 
 o = ["""[gd_scene format=3]
 
