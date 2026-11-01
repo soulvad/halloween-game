@@ -107,6 +107,7 @@ GLINT = (0.18, 0.18, 0.18); CANDLE_SIZE = (0.12, 0.3, 0.12)
 # R4R archaeologists' camp, FarLeft steward's closet, PassageUp/Top to your room, YourRoom behind the collapsed wall.
 # Memories 2-4: `need` = the power that lures an archaeologist there (a station with that power stands next to it).
 # name, (x, z), kind, title, need, size, color, extra exports (y = height of the base)
+# Candles: y = the height of the prop under them (`stand`, art/decor, fitted to it; station.gd); keep it within reach of a wall: visitors walk through it.
 stations = [
     ("Memory1", (-7.5, -9.6), MEMORY, "Свистулька-пташка", "", GLINT, CYAN, {"memory_id": 1, "y": 0.9}),
     ("Memory2", (-9.5, -6.7), MEMORY, "Бляха «17»", "breath", GLINT, CYAN, {"memory_id": 2, "y": 0.6}),
@@ -117,13 +118,13 @@ stations = [
     ("Shackles", (18.2, -12.35), EVIDENCE, "Кайдани", "", (0.7, 0.4, 0.3), DULL, {}),
     ("Tally", (23.44, -9.6), EVIDENCE, "Подряпини-дні", "", (0.12, 1.2, 1.6), DULL, {}),
     ("Bowl", (21.6, -8.2), EVIDENCE, "Миска", "", (0.5, 0.2, 0.5), DULL, {}),
-    ("CandleEntrance", (0.9, 5.5), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.8}),
-    ("CandleHall", (0.9, -1.0), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.8}),
-    ("CandleMirror", (5.5, -1.4), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "false", "y": 0.8}),
-    ("CandleKitchen", (8.5, 1.0), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.8}),
-    ("CandleCorridor", (-0.9, -6.8), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.8}),
-    ("CandleBedroom", (-5.0, -9.9), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "false", "y": 0.8}),
-    ("CandleShackles", (-8.3, -5.2), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "false", "y": 0.8}),
+    ("CandleEntrance", (0.9, 5.5), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.6, "stand": '"barrel_small"', "stand_turn": 25}),
+    ("CandleHall", (0.9, -1.0), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.5, "stand": '"box_small"', "stand_turn": 0}),
+    ("CandleMirror", (5.5, -1.4), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "false", "y": 0.6, "stand": '"barrel_small"', "stand_turn": 130}),
+    ("CandleKitchen", (9.15, 1.0), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.5, "stand": '"box_small"', "stand_turn": 0}),
+    ("CandleCorridor", (-0.9, -6.7), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "true", "y": 0.45, "stand": '"box_small"', "stand_turn": 0}),
+    ("CandleBedroom", (-5.0, -10.15), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "false", "y": 0.6, "stand": '"barrel_small"', "stand_turn": 70}),
+    ("CandleShackles", (-8.9, -5.1), CANDLE, "Свічка", "breath", CANDLE_SIZE, FLAME, {"lit": "false", "y": 0.333, "stand": '"stool"', "stand_turn": 40}),
     ("Chains", (-10.5, -6.85), HAUNT, "Кайдани на стіні", "sound", (0.4, 0.9, 0.2), ORANGE, {"power": 1}),
     ("Bell", (-6.0, -6.7), HAUNT, "Дзвоник слуг", "sound", (0.3, 0.4, 0.3), ORANGE, {"power": 1}),
     ("Jug", (6.0, 2.0), HAUNT, "Глиняний глек", "sound", (0.4, 0.5, 0.4), ORANGE, {"power": 1}),

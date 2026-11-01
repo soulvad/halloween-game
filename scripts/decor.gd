@@ -4,6 +4,7 @@ extends Node3D
 ## so a list entry only says where it goes and how big its longest side is.
 ## Floor things stay within 0.45 m of a wall: visitors keep 0.5 m away from walls and walk through anything else.
 
+const Wall = preload("res://scripts/wall.gd")
 const DIR := "res://art/decor/%s.glb"
 const E := 90.0  ## on a wall facing +X
 const W := -90.0  ## facing -X
@@ -50,7 +51,6 @@ const ON_FLOOR := [
 	["box_small", -0.95, -3.6, 15.0, 0.5],
 	["mushroom", -0.92, -1.0, 75.0, 0.3],
 	["skull_candle", -10.1, -5.05, 170.0, 0.22],
-	["stool", -8.9, -5.1, 40.0, 0.5],
 	["plate_small", -6.6, -5.05, 0.0, 0.22],
 	["rubble_half", -4.5, -6.65, 0.0, 0.7],
 	["skull", -1.8, -6.7, 150.0, 0.2],
@@ -142,7 +142,7 @@ func _place(model: String, at: Vector3, turn_deg: float, longest: float, on_wall
 	holder.position = at
 	holder.rotation.y = deg_to_rad(turn_deg)
 	var n: Node3D = _scene(model).instantiate()
-	var box := _bounds(n)
+	var box := Wall.bounds(n)
 	var fit := longest / maxf(box.size.x, maxf(box.size.y, box.size.z))
 	n.scale *= fit
 	var c := box.get_center()
@@ -159,22 +159,6 @@ func _scene(model: String) -> PackedScene:
 	if not _scenes.has(model):
 		_scenes[model] = load(DIR % model)
 	return _scenes[model]
-
-
-## Bounds of all the meshes in the model's own space (works out of the tree).
-func _bounds(root: Node3D) -> AABB:
-	var box := AABB()
-	var first := true
-	for m: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
-		var tr := m.transform
-		var p := m.get_parent()
-		while p != root and p is Node3D:
-			tr = p.transform * tr
-			p = p.get_parent()
-		var a: AABB = tr * m.get_aabb()
-		box = a if first else box.merge(a)
-		first = false
-	return box
 
 
 ## The torch model has no fire of its own: a little emissive flame and a warm light at its head.
