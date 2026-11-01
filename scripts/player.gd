@@ -3,7 +3,7 @@ extends CharacterBody3D
 ## Ghost, first person: mouse look, WASD float (no gravity), Shift sprint, E interact.
 ## Collides only with layer 1 (outer walls): floats through inner walls, furniture, doors and the bricked wall.
 ## Passing through: the screen fades into a cyan-rimmed dark veil as the eye nears a wall's surface, the view widens a
-## little, and a ghost left inside a wall with no input drifts out by the nearest face (never stuck in the dark).
+## little, and a ghost left inside a wall with no input drifts out to open floor (never stuck in the dark).
 ## Pushing into an outer wall frosts the screen edges instead.
 ## Aim: the station under the crosshair glows at the rim (cyan = E does something now, dim = not yet); E sends a cyan wisp to it.
 
@@ -36,6 +36,7 @@ const LAYER_SELF := 4  ## visual layer 3: the own body, hidden from the first-pe
 const PHASE_MASK := 2 | 4 | 64  ## inner walls, furniture, bricked wall / closed doors: what the ghost floats through
 const PHASE_NEAR := 0.45  ## the veil starts this far (m) from a wall's surface
 const PHASE_DRIFT := 3.0  ## m/s out of a wall when no key is held
+const DRIFT_AHEAD := 2.0  ## m: open floor this close along its heading and a drifting ghost keeps going that way
 const FOV := 75.0
 const PHASE_FOV := 9.0  ## extra degrees deep inside a wall
 const AIM_ON := Color(0.66, 0.86, 0.85, 1.0)  ## rim on a station E can use (UI.CYAN)
@@ -52,6 +53,7 @@ var _held_visual: Node3D
 var _t := 0.0
 var phase := 0.0  ## 0 clear .. 1 deep inside a wall (smoothed; the HUD and tests read it)
 var _phase_target := 0.0
+var hollow := false  ## in a space dug in the rock that only it sees (turtles' room, easter_eggs.gd): no veil, no drift
 var _exit_dir := Vector3.ZERO  ## shortest way out of the wall the eye is in
 var _drift := Vector3.ZERO  ## locked while inside a wall
 var _edge := 0.0
@@ -101,13 +103,13 @@ func _physics_process(delta: float) -> void:
 	var dir := transform.basis * Vector3(input.x, 0, input.y)
 	sprinting = Input.is_action_pressed("sprint") and dir != Vector3.ZERO
 	var want := dir * (SPRINT if sprinting else WALK)
-	var depth := wall_depth()
+	var depth := PHASE_NEAR if hollow else wall_depth()
 	_phase_target = clampf(1.0 - depth / PHASE_NEAR, 0.0, 1.0)
-	if depth >= 0.0:
+	if depth >= 0.0 or dir != Vector3.ZERO:
 		_drift = Vector3.ZERO
-	elif _drift == Vector3.ZERO:  # just went in: keep going the way you came (walls touch back to back), else out the nearest side
+	elif _drift == Vector3.ZERO:  # let go: keep going the way you came (rooms are a thin wall apart), else out the nearest side
 		var flat := Vector3(velocity.x, 0, velocity.z)
-		_drift = flat.normalized() if flat.length() > 0.5 else _exit_dir
+		_drift = _out_of_rock(flat.normalized() if flat.length() > 0.5 else _exit_dir)
 	if depth < 0.0 and dir == Vector3.ZERO:
 		want = _drift * PHASE_DRIFT
 	velocity = velocity.lerp(want, minf(ACCEL * delta, 1))
@@ -120,6 +122,24 @@ func _physics_process(delta: float) -> void:
 	if pushing and not _edge_told:
 		_edge_told = true
 		GameState.think("Далі не пускає… Тут кінчається підземелля.")
+
+
+## Deep in the rock that heading may only lead to the next block or the outer wall: take the shortest way to open floor.
+func _out_of_rock(heading: Vector3) -> Vector3:
+	var at := Vector2(global_position.x, global_position.z)
+	var open: Array = get_parent().get_meta("rooms", {}).values() + get_parent().get_meta("doors", [])
+	var way := Vector2(heading.x, heading.z)
+	var best := Vector2.INF
+	for r: Rect2 in open:
+		if r.has_point(at):  # furniture in a room, not rock
+			return heading
+		for d in range(1, int(DRIFT_AHEAD / 0.25) + 1):
+			if r.has_point(at + way * d * 0.25):
+				return heading
+		var nearest := at.clamp(r.position, r.end)
+		if nearest.distance_to(at) < best.distance_to(at):
+			best = nearest
+	return heading if open.is_empty() else Vector3(best.x - at.x, 0, best.y - at.y).normalized()
 
 
 ## Signed distance (m) from the eye to the nearest wall it floats through: < 0 inside, PHASE_NEAR if none near.
@@ -164,7 +184,7 @@ func _process(delta: float) -> void:
 	_aim()
 
 
-## Rim the station under the aim: an overlay on every mesh it has (placeholder box or imported model).
+## Rim the station under the aim: an overlay on every mesh it has (placeholder box or imported model), not on a candle's stand.
 func _aim() -> void:
 	var t = target_station() if camera.current else null
 	if t != _aimed:
@@ -178,8 +198,10 @@ func _aim() -> void:
 
 
 func _overlay(n: Node, mat: Material) -> void:
+	var stand = n.get("_stand")
 	for m in n.find_children("*", "MeshInstance3D", true, false):
-		m.material_overlay = mat
+		if not stand or not stand.is_ancestor_of(m):
+			m.material_overlay = mat
 
 
 ## Mouse look before the GUI: with the mouse captured the cursor sits mid-screen, and a HUD control under it

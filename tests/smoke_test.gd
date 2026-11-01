@@ -91,8 +91,8 @@ func _ready() -> void:
 	Fx.sound(candle, "no_such_sound")
 	Fx.sound_ui(get_tree(), "no_such_sound")
 	p._wisp(candle.global_position)  # the E streak
-	p._overlay(candle, p._aim_mat)  # the aim rim reaches every mesh of a station
-	assert(candle.find_children("*", "MeshInstance3D", true, false).all(func(m): return m.material_overlay == p._aim_mat))
+	p._overlay(candle, p._aim_mat)  # the aim rim reaches every mesh of a station, but a candle's stand
+	assert(candle.find_children("*", "MeshInstance3D", true, false).all(func(m): return (m.material_overlay == p._aim_mat) != candle._stand.is_ancestor_of(m)))
 	p._overlay(candle, null)
 
 	assert(hud._prompt.mouse_filter == Control.MOUSE_FILTER_IGNORE)
@@ -237,6 +237,13 @@ func _ready() -> void:
 	assert(p.wall_depth() < 0)
 	await get_tree().create_timer(1.5).timeout
 	assert(p.wall_depth() > 0 and p.phase < 0.5)
+	# outside the rooms it is solid rock: the veil is on, and let go deep inside, the ghost drifts out to a room
+	p.global_position = Vector3(18, 0, 6)
+	p.velocity = Vector3.ZERO
+	await _frames(2)
+	assert(p.wall_depth() < 0)
+	await _until(func(): return p.wall_depth() >= 0, 8.0)
+	assert(p.wall_depth() >= 0 and hud._map_view.room_at(p.global_position) != "")
 	assert(hud._map_view.to_map(Vector3(-30, 0, 0)).x < 0)
 	g.queue_free()
 	await _frames(2)

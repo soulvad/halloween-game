@@ -25,7 +25,7 @@ func _ready() -> void:
 		add_child(Lantern.new(map, from))
 
 
-## A random point in the dungeon. The navmesh also covers the rock around the rooms, so keep only what the entrance reaches.
+## A random point in the dungeon. The navmesh also covers the sealed rooms, so keep only what the entrance reaches.
 func _spawn_point(map: RID) -> Vector3:
 	var entrance: Vector3 = get_parent().get_node("Markers/Entrance").global_position
 	for i in SPAWN_TRIES:

@@ -35,7 +35,11 @@ func _build() -> void:
 			c.free()
 	_mesh = visual(name, size, color)
 	if _mesh is MeshInstance3D and solid_from < 3:
-		textured(_mesh.mesh.material, "wall")
+		if solid_from == 1:  # outer walls: their far side shows in the cut-away, must melt into the background
+			_mesh.mesh.material = _black()
+		else:
+			textured(_mesh.mesh.material, "wall")
+		_rock_top()
 	add_child(_mesh)
 	var shape := CollisionShape3D.new()
 	shape.shape = BoxShape3D.new()
@@ -43,6 +47,26 @@ func _build() -> void:
 	add_child(shape)
 	collision_layer = LAYER_PEOPLE_ONLY if people_only else 1 << (solid_from - 1)
 	collision_mask = 0
+
+
+## The top of the rock in the cut-away views: pure black like the background, the rooms float in it.
+func _rock_top() -> void:
+	var top := PlaneMesh.new()
+	top.size = Vector2(size.x, size.z)
+	top.material = _black()
+	var m := MeshInstance3D.new()
+	m.mesh = top
+	m.position.y = size.y / 2 + 0.01
+	add_child(m)
+
+
+## No light and no fog reach it, so the screen pass leaves it at 0.
+static func _black() -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color.BLACK
+	mat.disable_fog = true
+	return mat
 
 
 ## `art/models/<node_name>.glb|.gltf|.tscn`, else the name's first word (CandleHall → Candle, CrateR1L → Crate,
@@ -66,6 +90,22 @@ static func visual(node_name: String, s: Vector3, c: Color) -> Node3D:
 	var n: Node3D = ps.instantiate()
 	n.position.y = -s.y / 2
 	return n
+
+
+## Bounds of all the meshes in a model's own space (works out of the tree).
+static func bounds(root: Node3D) -> AABB:
+	var box := AABB()
+	var first := true
+	for m: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+		var tr := m.transform
+		var p := m.get_parent()
+		while p != root and p is Node3D:
+			tr = p.transform * tr
+			p = p.get_parent()
+		var a: AABB = tr * m.get_aabb()
+		box = a if first else box.merge(a)
+		first = false
+	return box
 
 
 ## Put `art/textures/<tex>.png` on a material (triplanar, so any box size tiles), if the file exists.

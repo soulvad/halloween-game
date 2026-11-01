@@ -3,7 +3,8 @@ extends Node
 ## Node `Look`, added by game.gd. Nothing here touches the generated scene file.
 
 const ENV := {
-	"background_color": Color(0.05, 0.04, 0.08),
+	"background_color": Color.BLACK,
+	"fog_sky_affect": 0.0,
 	"ambient_light_color": Color(0.5, 0.45, 0.6), "ambient_light_energy": 0.6,
 	"tonemap_mode": Environment.TONE_MAPPER_LINEAR,
 	"fog_density": 0.015,

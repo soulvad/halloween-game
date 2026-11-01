@@ -86,7 +86,7 @@ func _build_ui() -> void:
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
-	var shade := UI.vignette(UI.NIGHT)
+	var shade := UI.vignette(Color.BLACK)  # any other colour paints a ring over the black around the rooms
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(shade)
 

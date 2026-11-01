@@ -13,7 +13,7 @@ const ROOM_NAMES := {
 	"R1L": "Спальня слуг", "R1R": "Комора", "R2L": "Нари", "R2R": "Кімната з дзеркалом",
 	"R3L": "Майстерня", "R3R": "Кухня", "R4L": "Льох", "R4R": "Табір археологів",
 	"RightTall": "Склеп", "PassageUp": "Прохід за дверима", "PassageTop": "Прохід за дверима",
-	"YourRoom": "Твоя кімната",
+	"YourRoom": "Твоя кімната", "BonesRoom": "Келія", "CatRoom": "Постамент",
 }
 const ROCK := Color(0.78, 0.71, 0.6)
 const FLOOR := Color("EBDDBF")

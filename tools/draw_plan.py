@@ -11,7 +11,7 @@ OUT = "art/textures/plan.png"
 FONT = "fonts/Caveat.ttf"
 W, H = 1800, 1200  # 3:2, the paper is 0.9 x 0.6 m
 PX = 41  # px per metre
-HIDDEN = {"YourRoom"}
+HIDDEN = {"YourRoom", "BonesRoom", "CatRoom"}
 NAMES = {
     "CorridorV": "Сходи", "CorridorH": "Галерея", "FarLeft": "Управитель", "R1L": "Челядь", "R1R": "Комора",
     "R2L": "Нари", "R2R": "Туалетна", "R3L": "Майстерня", "R3R": "Кухня", "R4L": "Льох", "R4R": "Винний погріб",

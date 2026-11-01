@@ -23,8 +23,7 @@ const END_ARROW_W := 560.0  ## px
 const END_MUSIC := "res://audio/music/end_roundabout.ogg"  ## Yes «Roundabout» from 0:29 of youtu.be/7uBqNgxAuBA (ffmpeg -ss 29)
 const END_MUSIC_DB := -6.0
 ## Credits behind the «Ту бі контіньюд» arrow: [nick, role]. shortcut: roles are placeholders, the team fills them in.
-const CREDITS := [["soulvad", "роль уточнюється"], ["firemanC4", "роль уточнюється"], ["oskr", "роль уточнюється"],
-		["nastya", "роль уточнюється"], ["ostap", "роль уточнюється"]]
+const CREDITS := ["soulvad", "firemanC4", "oskr", "nastya", "svyatoslav"]
 const END_ARROW_AT := 15.5  ## s into END_MUSIC: 0:44.5 of the video, the arrow on the beat
 const KNOCK_DOT := 64.0  ## px, the beat dots ●●● ● while aiming at the knock wall
 const RUBBLE_POS := Vector3(17.5, 0, -10)
@@ -1243,18 +1242,14 @@ func _credits() -> void:
 	over.add_child(UI.backdrop(Color(UI.INK, 0.75)))
 	_end.add_child(over)
 	var card := UI.panel(UI.PAPER, 26, 7, 40)
-	var col := UI.vbox(14)
+	var col := UI.vbox(10)
 	var head := UI.label("Над грою працювали", 40, UI.INK, "display", 700)
 	head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(head)
-	for c in CREDITS:
-		var row := UI.vbox(0)
-		var nick := UI.label(c[0], 44, UI.GHOST_INK, "hand", 700)
-		var role := UI.label(c[1], 20, UI.LABEL, "body", 600)
-		for l in [nick, role]:
-			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			row.add_child(l)
-		col.add_child(row)
+	for nick in CREDITS:
+		var l := UI.label(nick, 44, UI.GHOST_INK, "hand", 700)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		col.add_child(l)
 	var hint := UI.label("клік або Esc — закрити", 16, UI.LABEL, "body", 600)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(hint)

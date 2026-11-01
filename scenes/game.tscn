@@ -35,7 +35,7 @@ size = Vector3(40.5, 0.2, 27.5)
 
 [node name="Game" type="Node3D"]
 script = ExtResource("1_game")
-metadata/rooms = {"CorridorV": Rect2(-1.25, -7, 2.5, 19), "CorridorH": Rect2(-11.5, -7, 24, 2.25), "FarLeft": Rect2(-14, -9.5, 2, 6.75), "R1L": Rect2(-9, -10.5, 8, 3), "R1R": Rect2(1.75, -10.5, 7.75, 3), "R2L": Rect2(-9, -4.25, 7.25, 2.75), "R2R": Rect2(1.75, -4.25, 7.75, 3.25), "R3L": Rect2(-8.5, -0.5, 6.75, 4), "R3R": Rect2(1.75, 0, 7.75, 3.75), "R4L": Rect2(-8, 4.5, 6.25, 5.25), "R4R": Rect2(1.75, 4.25, 8.25, 5.25), "RightTall": Rect2(13, -9.75, 2.75, 7), "PassageUp": Rect2(10.25, -11.75, 1.75, 4.75), "PassageTop": Rect2(10.25, -11.75, 7.25, 1.75), "YourRoom": Rect2(17.5, -12.5, 6, 4.75)}
+metadata/rooms = {"CorridorV": Rect2(-1.25, -7, 2.5, 19), "CorridorH": Rect2(-11.5, -7, 24, 2.25), "FarLeft": Rect2(-14, -9.5, 2, 6.75), "R1L": Rect2(-9, -10.5, 8, 3), "R1R": Rect2(1.75, -10.5, 7.75, 3), "R2L": Rect2(-9, -4.25, 7.25, 2.75), "R2R": Rect2(1.75, -4.25, 7.75, 3.25), "R3L": Rect2(-8.5, -0.5, 6.75, 4), "R3R": Rect2(1.75, 0, 7.75, 3.75), "R4L": Rect2(-8, 4.5, 6.25, 5.25), "R4R": Rect2(1.75, 4.25, 8.25, 5.25), "RightTall": Rect2(13, -9.75, 2.75, 7), "PassageUp": Rect2(10.25, -11.75, 1.75, 4.75), "PassageTop": Rect2(10.25, -11.75, 7.25, 1.75), "YourRoom": Rect2(17.5, -12.5, 6, 4.75), "BonesRoom": Rect2(-0.5, -10.5, 1.75, 3), "CatRoom": Rect2(17.5, -7.25, 5, 4)}
 metadata/doors = [Rect2(-12, -7, 0.5, 1.75), Rect2(-3.75, -7.5, 1.75, 0.5), Rect2(2.5, -7.5, 1.75, 0.5), Rect2(-3.75, -4.75, 1.75, 0.5), Rect2(2.5, -4.75, 1.75, 0.5), Rect2(-1.75, 0.25, 0.5, 1.75), Rect2(1.25, 0.25, 0.5, 1.75), Rect2(-1.75, 6.25, 0.5, 1.75), Rect2(1.25, 6.25, 0.5, 1.75), Rect2(12.5, -7, 0.5, 1.75)]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -53,660 +53,352 @@ layers = 8
 mesh = SubResource("Mesh_ceiling")
 
 [node name="Wall0" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.5, 1.5, -12.65)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 1.5, 1.5)
 script = ExtResource("2_wall")
-size = Vector3(6.3, 3, 0.3)
+size = Vector3(6, 3, 4.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall1" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.8, 1.5, -11.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.25, 1.5, -6.875)
 script = ExtResource("2_wall")
-size = Vector3(7.4, 3, 0.3)
+size = Vector3(0.5, 3, 12.25)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall2" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1.5, -10.65)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.25, 1.5, 8.125)
 script = ExtResource("2_wall")
-size = Vector3(8.3, 3, 0.3)
+size = Vector3(6.5, 3, 8.75)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall3" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.625, 1.5, -10.65)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 1.5, -11.25)
 script = ExtResource("2_wall")
-size = Vector3(8.05, 3, 0.3)
+size = Vector3(5, 3, 3.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall4" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.75, 1.5, -9.938)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 1.5, -1.75)
 script = ExtResource("2_wall")
-size = Vector3(5.5, 3, 0.125)
+size = Vector3(5, 3, 2)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall5" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.375, 1.5, -9.812)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 1.5, -8.25)
 script = ExtResource("2_wall")
-size = Vector3(3.05, 3, 0.125)
+size = Vector3(3, 3, 2.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall6" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 1.5, -9.65)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.75, 1.5, -4)
 script = ExtResource("2_wall")
-size = Vector3(2.3, 3, 0.3)
+size = Vector3(0.5, 3, 2.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall7" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.5, 1.5, -7.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.25, 1.5, -3.75)
 script = ExtResource("2_wall")
-size = Vector3(6.3, 3, 0.3)
+size = Vector3(2.5, 3, 2)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall8" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.45, 1.5, -7.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.625, 1.5, -11.75)
 script = ExtResource("2_wall")
-size = Vector3(5.4, 3, 0.3)
+size = Vector3(19.25, 3, 2.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall9" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.425, 1.5, -7.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.375, 1.5, -7.25)
 script = ExtResource("2_wall")
-size = Vector3(1.15, 3, 0.3)
+size = Vector3(5.25, 3, 0.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall10" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.05, 1.5, -7.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.375, 1.5, -4.5)
 script = ExtResource("2_wall")
-size = Vector3(0.9, 3, 0.3)
+size = Vector3(5.25, 3, 0.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall11" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.95, 1.5, -7.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.125, 1.5, -1.125)
 script = ExtResource("2_wall")
-size = Vector3(5.4, 3, 0.3)
+size = Vector3(7.75, 3, 0.75)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall12" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.875, 1.5, -7.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.875, 1.5, -0.625)
 script = ExtResource("2_wall")
-size = Vector3(8.25, 3, 0.3)
+size = Vector3(7.25, 3, 0.25)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall13" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.25, 1.5, -7.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.875, 1.5, 3.625)
 script = ExtResource("2_wall")
-size = Vector3(4.5, 3, 0.3)
+size = Vector3(7.25, 3, 0.25)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall14" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.25, 1.5, -7.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.625, 1.5, 4.125)
 script = ExtResource("2_wall")
-size = Vector3(6, 3, 0.3)
+size = Vector3(6.75, 3, 0.75)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall15" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 1.5, -7.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.625, 1.5, 11.125)
 script = ExtResource("2_wall")
-size = Vector3(1, 3, 0.3)
+size = Vector3(6.75, 3, 2.75)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall16" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.75, 1.5, -5.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.25, 1.5, -7.25)
 script = ExtResource("2_wall")
-size = Vector3(0.5, 3, 0.3)
+size = Vector3(4.5, 3, 0.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall17" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.75, 1.5, -5.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.625, 1.5, -4.5)
 script = ExtResource("2_wall")
-size = Vector3(0.5, 3, 0.3)
+size = Vector3(0.75, 3, 0.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall18" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.7, 1.5, -4.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.5, -2.875)
 script = ExtResource("2_wall")
-size = Vector3(7.9, 3, 0.3)
+size = Vector3(0.5, 3, 2.75)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall19" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.625, 1.5, -4.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.5, -0.125)
 script = ExtResource("2_wall")
-size = Vector3(0.75, 3, 0.3)
+size = Vector3(0.5, 3, 0.75)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall20" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.875, 1.5, -4.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.5, 2.75)
 script = ExtResource("2_wall")
-size = Vector3(1.25, 3, 0.3)
+size = Vector3(0.5, 3, 1.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall21" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.45, 1.5, -4.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.5, 5.375)
 script = ExtResource("2_wall")
-size = Vector3(8.4, 3, 0.3)
+size = Vector3(0.5, 3, 1.75)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall22" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.45, 1.5, -4.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.5, 8.875)
 script = ExtResource("2_wall")
-size = Vector3(5.4, 3, 0.3)
+size = Vector3(0.5, 3, 1.75)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall23" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 1.5, -4.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.375, 1.5, 12.25)
 script = ExtResource("2_wall")
-size = Vector3(0.4, 3, 0.3)
+size = Vector3(25.25, 3, 0.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall24" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.05, 1.5, -4.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 1.5, -9)
 script = ExtResource("2_wall")
-size = Vector3(0.9, 3, 0.3)
+size = Vector3(0.5, 3, 3)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall25" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.95, 1.5, -4.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, -9)
 script = ExtResource("2_wall")
-size = Vector3(5.4, 3, 0.3)
+size = Vector3(0.5, 3, 3)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall26" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 1.5, -2.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, -2.25)
 script = ExtResource("2_wall")
-size = Vector3(2.3, 3, 0.3)
+size = Vector3(0.5, 3, 5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall27" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.375, 1.5, -2.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, 4.125)
 script = ExtResource("2_wall")
-size = Vector3(3.05, 3, 0.3)
+size = Vector3(0.5, 3, 4.25)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall28" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.375, 1.5, -1.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, 10)
 script = ExtResource("2_wall")
-size = Vector3(7.55, 3, 0.3)
+size = Vector3(0.5, 3, 4)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall29" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.625, 1.5, -0.85)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.125, 1.5, -4.5)
 script = ExtResource("2_wall")
-size = Vector3(8.05, 3, 0.3)
+size = Vector3(0.75, 3, 0.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall30" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.125, 1.5, -0.65)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.875, 1.5, -0.5)
 script = ExtResource("2_wall")
-size = Vector3(7.05, 3, 0.3)
+size = Vector3(22.25, 3, 1)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall31" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.625, 1.5, -0.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.875, 1.5, 4)
 script = ExtResource("2_wall")
-size = Vector3(8.05, 3, 0.3)
+size = Vector3(22.25, 3, 0.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall32" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.5, 0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.875, 1.5, 10.75)
 script = ExtResource("2_wall")
-size = Vector3(0.5, 3, 0.3)
+size = Vector3(22.25, 3, 2.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall33" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, 0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.25, 1.5, -7.25)
 script = ExtResource("2_wall")
-size = Vector3(0.5, 3, 0.3)
+size = Vector3(6, 3, 0.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall34" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.5, 2.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.625, 1.5, -4.5)
 script = ExtResource("2_wall")
-size = Vector3(0.5, 3, 0.3)
+size = Vector3(8.75, 3, 0.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall35" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, 2.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.875, 1.5, -9)
 script = ExtResource("2_wall")
-size = Vector3(0.5, 3, 0.3)
+size = Vector3(0.75, 3, 3)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall36" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.125, 1.5, 3.65)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.25, 1.5, -2.625)
 script = ExtResource("2_wall")
-size = Vector3(7.05, 3, 0.3)
+size = Vector3(3.5, 3, 3.25)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall37" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.625, 1.5, 3.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.75, 1.5, 1.875)
 script = ExtResource("2_wall")
-size = Vector3(8.05, 3, 0.3)
+size = Vector3(14.5, 3, 3.75)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall38" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.875, 1.5, 4.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 1.5, 6.875)
 script = ExtResource("2_wall")
-size = Vector3(8.55, 3, 0.3)
+size = Vector3(14, 3, 5.25)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall39" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.875, 1.5, 4.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.875, 1.5, -12.375)
 script = ExtResource("2_wall")
-size = Vector3(6.55, 3, 0.3)
+size = Vector3(7.25, 3, 1.25)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall40" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.5, 6.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 1.5, -8.5)
 script = ExtResource("2_wall")
-size = Vector3(0.5, 3, 0.3)
+size = Vector3(1, 3, 3)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall41" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, 6.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.75, 1.5, -5)
 script = ExtResource("2_wall")
-size = Vector3(0.5, 3, 0.3)
+size = Vector3(0.5, 3, 0.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall42" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.5, 8.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.25, 1.5, -9.875)
 script = ExtResource("2_wall")
-size = Vector3(0.5, 3, 0.3)
+size = Vector3(4.5, 3, 0.25)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall43" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, 8.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.5, 1.5, -1.875)
 script = ExtResource("2_wall")
-size = Vector3(0.5, 3, 0.3)
+size = Vector3(11, 3, 1.75)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall44" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.875, 1.5, 9.65)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.625, 1.5, -6.25)
 script = ExtResource("2_wall")
-size = Vector3(8.55, 3, 0.3)
+size = Vector3(1.75, 3, 7)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall45" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.875, 1.5, 9.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.75, 1.5, -12.75)
 script = ExtResource("2_wall")
-size = Vector3(6.55, 3, 0.3)
+size = Vector3(6.5, 3, 0.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall46" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 12.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.75, 1.5, -7.5)
 script = ExtResource("2_wall")
-size = Vector3(2.8, 3, 0.3)
+size = Vector3(6.5, 3, 0.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall47" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.15, 1.5, -6.125)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.75, 1.5, -3)
 script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 7.05)
+size = Vector3(6.5, 3, 0.5)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall48" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.85, 1.5, -8.325)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.25, 1.5, -5.25)
 script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 2.65)
+size = Vector3(1.5, 3, 4)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
 [node name="Wall49" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.85, 1.5, -3.925)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.75, 1.5, -10.125)
 script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 2.65)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall50" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.65, 1.5, -4.925)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 0.65)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall51" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.15, 1.5, -9)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 3.3)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall52" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.15, 1.5, -2.875)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 3.05)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall53" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.65, 1.5, 1.5)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 4.3)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall54" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.15, 1.5, 7.125)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 5.55)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall55" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9, 1.5, -7.25)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 0.5)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall56" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9, 1.5, -4.5)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 0.5)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall57" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.85, 1.5, -7.25)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 0.5)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall58" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.85, 1.5, -4.5)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 0.5)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall59" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 1.5, -2.875)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 3.05)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall60" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 1.5, -0.2)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 0.9)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall61" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 1.5, 2.825)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 1.65)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall62" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 1.5, 5.3)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 1.9)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall63" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 1.5, 8.95)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 1.9)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall64" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, 1.5, -2.25)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 5)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall65" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, 1.5, 4.125)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 4.25)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall66" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, 1.5, 10.075)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 4.15)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall67" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85, 1.5, -9)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 3.3)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall68" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 1.5, -2.25)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 5)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall69" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 1.5, 4.125)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 4.25)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall70" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 1.5, 10.075)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 4.15)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall71" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 1.5, -9)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 3.3)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall72" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 1.5, -2.625)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 3.55)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall73" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 1.5, 0.05)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 0.4)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall74" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 1.5, 2.95)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 1.9)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall75" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 1.5, 5.175)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 2.15)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall76" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 1.5, 8.825)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 1.65)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall77" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 1.5, -7.25)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 0.5)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall78" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 1.5, -4.5)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 0.5)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall79" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 1.5, -7.25)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 0.5)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall80" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 1.5, -4.5)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 0.5)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall81" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.65, 1.5, -9)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 3.3)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall82" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.65, 1.5, -2.625)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 3.55)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall83" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.65, 1.5, 1.875)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 4.05)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall84" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.15, 1.5, 6.875)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 5.55)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall85" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.1, 1.5, -9.45)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 4.9)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall86" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.15, 1.5, -8.5)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 3)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall87" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.65, 1.5, -4.925)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 0.65)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall88" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.85, 1.5, -8.45)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 2.9)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall89" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.85, 1.5, -3.925)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 2.65)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall90" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.9, 1.5, -6.25)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 7.3)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall91" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.35, 1.5, -12.2)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 0.9)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall92" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.35, 1.5, -8.8)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 2.4)
-solid_from = 2
-color = Color(0.36, 0.33, 0.38, 1)
-
-[node name="Wall93" type="StaticBody3D" parent="Level"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.65, 1.5, -10.125)
-script = ExtResource("2_wall")
-size = Vector3(0.3, 3, 5.05)
+size = Vector3(0.5, 3, 4.75)
 solid_from = 2
 color = Color(0.36, 0.33, 0.38, 1)
 
@@ -854,6 +546,18 @@ light_color = Color(1, 0.62, 0.32, 1)
 light_energy = 0.9
 omni_range = 6
 
+[node name="Brazier6" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.375, 2.4, -9)
+light_color = Color(1, 0.62, 0.32, 1)
+light_energy = 0.9
+omni_range = 3.5
+
+[node name="Brazier7" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 2.4, -5.25)
+light_color = Color(1, 0.62, 0.32, 1)
+light_energy = 0.9
+omni_range = 6
+
 [node name="YourRoomGlow" type="OmniLight3D" parent="Lights"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.5, 2.4, -10)
 light_color = Color(0.6, 0.9, 1, 1)
@@ -949,7 +653,7 @@ size = Vector3(0.5, 0.2, 0.5)
 color = Color(0.45, 0.4, 0.38, 1)
 
 [node name="CandleEntrance" type="StaticBody3D" parent="Stations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9, 0.95, 5.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9, 0.75, 5.5)
 script = ExtResource("3_station")
 kind = 1
 title_text = "Свічка"
@@ -957,9 +661,11 @@ need = "breath"
 size = Vector3(0.12, 0.3, 0.12)
 color = Color(1, 0.75, 0.35, 1)
 lit = true
+stand = "barrel_small"
+stand_turn = 25
 
 [node name="CandleHall" type="StaticBody3D" parent="Stations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9, 0.95, -1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9, 0.65, -1)
 script = ExtResource("3_station")
 kind = 1
 title_text = "Свічка"
@@ -967,9 +673,11 @@ need = "breath"
 size = Vector3(0.12, 0.3, 0.12)
 color = Color(1, 0.75, 0.35, 1)
 lit = true
+stand = "box_small"
+stand_turn = 0
 
 [node name="CandleMirror" type="StaticBody3D" parent="Stations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.95, -1.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.75, -1.4)
 script = ExtResource("3_station")
 kind = 1
 title_text = "Свічка"
@@ -977,9 +685,11 @@ need = "breath"
 size = Vector3(0.12, 0.3, 0.12)
 color = Color(1, 0.75, 0.35, 1)
 lit = false
+stand = "barrel_small"
+stand_turn = 130
 
 [node name="CandleKitchen" type="StaticBody3D" parent="Stations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 0.95, 1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.15, 0.65, 1)
 script = ExtResource("3_station")
 kind = 1
 title_text = "Свічка"
@@ -987,9 +697,11 @@ need = "breath"
 size = Vector3(0.12, 0.3, 0.12)
 color = Color(1, 0.75, 0.35, 1)
 lit = true
+stand = "box_small"
+stand_turn = 0
 
 [node name="CandleCorridor" type="StaticBody3D" parent="Stations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9, 0.95, -6.8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9, 0.6, -6.7)
 script = ExtResource("3_station")
 kind = 1
 title_text = "Свічка"
@@ -997,9 +709,11 @@ need = "breath"
 size = Vector3(0.12, 0.3, 0.12)
 color = Color(1, 0.75, 0.35, 1)
 lit = true
+stand = "box_small"
+stand_turn = 0
 
 [node name="CandleBedroom" type="StaticBody3D" parent="Stations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.95, -9.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.75, -10.15)
 script = ExtResource("3_station")
 kind = 1
 title_text = "Свічка"
@@ -1007,9 +721,11 @@ need = "breath"
 size = Vector3(0.12, 0.3, 0.12)
 color = Color(1, 0.75, 0.35, 1)
 lit = false
+stand = "barrel_small"
+stand_turn = 70
 
 [node name="CandleShackles" type="StaticBody3D" parent="Stations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.3, 0.95, -5.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.9, 0.483, -5.1)
 script = ExtResource("3_station")
 kind = 1
 title_text = "Свічка"
@@ -1017,6 +733,8 @@ need = "breath"
 size = Vector3(0.12, 0.3, 0.12)
 color = Color(1, 0.75, 0.35, 1)
 lit = false
+stand = "stool"
+stand_turn = 40
 
 [node name="Chains" type="StaticBody3D" parent="Stations"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 0.45, -6.85)
@@ -1136,7 +854,7 @@ size = Vector3(0.08, 1.2, 0.9)
 color = Color(0.5, 0.3, 0.25, 1)
 
 [node name="Bones" type="StaticBody3D" parent="Stations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.5, 0.125, 1.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.375, 0.125, -9.2)
 script = ExtResource("3_station")
 kind = 8
 title_text = "Купа кісток: вселитися"
@@ -1145,7 +863,7 @@ size = Vector3(0.9, 0.25, 0.7)
 color = Color(0.88, 0.85, 0.72, 1)
 
 [node name="Pedestal" type="StaticBody3D" parent="Stations"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.5, 0.4, -5.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.4, -5.25)
 script = ExtResource("3_station")
 kind = 8
 title_text = ""
