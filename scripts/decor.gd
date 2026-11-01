@@ -97,9 +97,12 @@ func _ready() -> void:
 
 ## The door the archaeologists came in by: the plank door in a stone frame, night light leaking under it.
 func _entrance() -> void:
+	var e := Node3D.new()
+	e.name = "Entrance"
+	add_child(e)
 	var door: Node3D = DOOR.instantiate()
 	door.position = DOOR_AT + Vector3(0, 0.06, -0.1)  # a finger's gap under it
-	add_child(door)
+	e.add_child(door)
 	for b in [[Vector3(-1.0, 1.3, -0.12), Vector3(0.3, 2.6, 0.24)], [Vector3(1.0, 1.3, -0.12), Vector3(0.3, 2.6, 0.24)],
 			[Vector3(0, 2.6, -0.14), Vector3(2.4, 0.4, 0.28)], [Vector3(0, 0.03, -0.42), Vector3(2.0, 0.06, 0.3)]]:
 		var m := MeshInstance3D.new()
@@ -111,7 +114,7 @@ func _entrance() -> void:
 		box.material = mat
 		m.mesh = box
 		m.position = DOOR_AT + b[0]
-		add_child(m)
+		e.add_child(m)
 	var glow := StandardMaterial3D.new()
 	glow.albedo_color = NIGHT
 	glow.emission_enabled = true
@@ -124,13 +127,13 @@ func _entrance() -> void:
 	var under := MeshInstance3D.new()
 	under.mesh = slit
 	under.position = DOOR_AT + Vector3(0, 0.03, -0.1)
-	add_child(under)
+	e.add_child(under)
 	var light := OmniLight3D.new()
 	light.light_color = NIGHT
 	light.light_energy = 0.5
 	light.omni_range = 2.2
 	light.position = DOOR_AT + Vector3(0, 0.15, -0.4)
-	add_child(light)
+	e.add_child(light)
 
 
 ## A model on the wall sits with its back on the surface; on the floor, centred on the point. Its lowest point is at `at.y`.

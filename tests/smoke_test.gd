@@ -51,7 +51,7 @@ func _ready() -> void:
 	assert(glass.get_script().resource_path.ends_with("mirror.gd") and glass.CULL & p.LAYER_SELF == 0)
 
 	var decor = g.get_node("Decor")
-	assert(decor.get_child_count() == decor.ON_WALLS.size() + decor.ON_FLOOR.size() + decor.WEBS.size())
+	assert(decor.get_child_count() == decor.ON_WALLS.size() + decor.ON_FLOOR.size() + decor.WEBS.size() + 1)  # + the entrance door
 	assert(decor.find_children("*", "CollisionObject3D", true, false).is_empty())
 
 	var lanterns = g.get_node("Lanterns")
