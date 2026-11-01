@@ -1,0 +1,3 @@
+# Godot always writes .import files with LF. A CRLF checkout changes their md5,
+# which forces a full reimport on the next editor or --import run.
+*.import text eol=lf

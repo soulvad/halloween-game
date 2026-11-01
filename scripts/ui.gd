@@ -22,7 +22,8 @@ const LABEL := Color("6B5A4C")
 const DIM := Color("C9B593")
 const SHADE := Color(0.09, 0.067, 0.055, 0.9)
 const LEVEL_COLORS := [Color.WHITE, CYAN, GOLD, MOM]
-const LABEL_NEAR := 2.0
+const LABEL_NEAR := 2.0  ## m: world labels keep their full size up to here, then shrink with distance (world_label)
+const LABEL_RANGE := 4.0  ## m: world labels vanish past this; the farthest label from where the aim ray still reaches its station is 3.97 m (the ritual circle)
 
 const ICONS_DIR := "res://art/ui/icons/%s.png"
 const TITLES_DIR := "res://art/ui/titles/title_%s_%s.png"

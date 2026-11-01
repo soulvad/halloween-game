@@ -122,15 +122,54 @@ func _ready() -> void:
 	await _frames(2)
 	assert(not eggs._room.visible)
 
-	# phone: not while far away, once when near after the time has come
+	# phone: lies flat on the real top of the table, inside its edges, clear of the plan, screen in the picture's proportions
+	var phone = eggs._phone
+	var table = g.get_node("Level/TableR4R")
+	var table_box := AABB()
+	for m: MeshInstance3D in table.find_children("*", "MeshInstance3D", true, false):
+		table_box = m.global_transform * m.get_aabb()
+	assert(absf(phone.global_position.y - table_box.end.y) < 0.005)
+	assert(phone.rotation.x == 0.0 and phone.rotation.z == 0.0)
+	var reach: float = Vector2(phone.BODY.x, phone.BODY.z).length() / 2.0
+	var at := Vector2(phone.global_position.x, phone.global_position.z)
+	assert(Rect2(table_box.position.x, table_box.position.z, table_box.size.x, table_box.size.z).grow(-reach).has_point(at))
+	var plan = g.get_node("Stations/Plan")
+	assert(absf(at.x - plan.global_position.x) > plan.size.x / 2.0 + reach)
+	var screen: Vector2 = phone.screen_size()
+	assert(is_equal_approx(screen.x / screen.y, 277.0 / 600.0))
+	assert(screen.x < phone.BODY.x and screen.y < phone.BODY.z)
+	assert(phone.get_node("Screen").layers == Eggs.LAYER_HIDDEN)
+
+	# the screen wakes when the ghost is close and sleeps again; a close look brings up the close-up, looking away drops it
+	phone.level = phone.LEVEL_ASLEEP
+	eggs.phone_at = INF
+	p.global_position = phone.global_position + Vector3(phone.WAKE_NEAR + 2, 0, 0)
+	await _frames(3)
+	assert(is_equal_approx(phone.level, phone.LEVEL_ASLEEP) and phone.closeup == 0.0)
+	p.global_position = Vector3(phone.global_position.x, 0, phone.global_position.z + 0.5)
+	p.rotation.y = 0.0  # facing -Z, at the phone
+	p.head.rotation.x = -atan2(p.head.position.y - phone.global_position.y, 0.5)
+	await _until(func(): return phone.closeup >= 1.0, 3)
+	assert(is_equal_approx(phone.level, phone.LEVEL_AWAKE) and phone.closeup == 1.0 and phone._overlay.visible)
+	p.head.rotation.x = 0.5
+	await _until(func(): return phone.closeup <= 0.0, 3)
+	assert(not phone._overlay.visible)
+	p.head.rotation.x = 0.0
+
+	# the alert: not while far away, once when near after the time has come; it plays on the phone, pulses, then ends
 	eggs.phone_at = 0.0
-	var taras = g.get_node("Visitors/Taras")
-	p.global_position = taras.global_position + Vector3(Eggs.PHONE_NEAR + 5, 0, 0)
+	p.global_position = phone.global_position + Vector3(Eggs.PHONE_NEAR + 5, 0, 0)
 	await _frames(2)
-	assert("phone" not in eggs.found)
-	p.global_position = taras.global_position + Vector3(2, 0, 0)
+	assert("phone" not in eggs.found and phone.alert_left == 0.0)
+	p.global_position = phone.global_position + Vector3(2, 0, 0)
 	await _frames(2)
 	assert("phone" in eggs.found and eggs.found.size() == Eggs.EGGS.size())
+	assert(phone.alert_left > 0.0)
+	assert(not phone.find_children("*", "AudioStreamPlayer3D", true, false).is_empty())
+	await _until(func(): return phone._light.light_energy > 0.1, 2)
+	phone.alert_left = 0.01
+	await _frames(3)
+	assert(phone.alert_left == 0.0 and phone._light.light_energy == 0.0)
 
 	# no effect on the story
 	assert(GameState.stage == stage and GameState.haunts == 0 and GameState.memories.is_empty())

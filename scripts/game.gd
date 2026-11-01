@@ -11,6 +11,7 @@ const Wall = preload("res://scripts/wall.gd")
 const Ambient = preload("res://scripts/ambient.gd")
 const Lanterns = preload("res://scripts/lanterns.gd")
 const Decor = preload("res://scripts/decor.gd")
+const Paintings = preload("res://scripts/paintings.gd")
 const Look = preload("res://scripts/look.gd")
 const Fx = preload("res://scripts/fx.gd")
 const UI = preload("res://scripts/ui.gd")
@@ -78,6 +79,9 @@ func _ready() -> void:
 	var decor := Decor.new()
 	decor.name = "Decor"
 	add_child(decor)
+	var paintings := Paintings.new()
+	paintings.name = "Paintings"
+	add_child(paintings)
 	var look := Look.new()
 	look.name = "Look"
 	add_child(look)

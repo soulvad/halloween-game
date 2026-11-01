@@ -46,6 +46,8 @@ def carved(i, k): return 0 <= i < NX and 0 <= k < NZ and grid[i][k]
 WALL = (0.36, 0.33, 0.38); BOUND = (0.12, 0.1, 0.14); FURN = (0.4, 0.28, 0.18)
 walls = []  # (name, (x, z), size, solid_from, color)
 T = 0.3
+def depth(beyond):  # a wall's thickness: rock one cell thin is shared, or the two walls poke through each other
+    return G / 2 if any(carved(*c) for c in beyond) else T
 # horizontal edges (between k-1 and k), runs along x
 for k in range(NZ + 1):
     for side in (-1, 1):  # -1: rock is at k-1 (north edge of cell k), 1: rock at k (south edge of cell k-1)
@@ -57,9 +59,11 @@ for k in range(NZ + 1):
                 j = i
                 while j < NX and carved(j, cell) and not carved(j, rock):
                     j += 1
-                x0, x1 = X0 + i * G - T / 2, X0 + j * G + T / 2
-                z = Z0 + k * G + (-T / 2 if side == -1 else T / 2)
-                walls.append(((x0 + x1) / 2, z, (x1 - x0, H, T)))
+                x0 = X0 + i * G - (T / 2 if not carved(i - 1, rock) else 0)  # ends reach on only into rock: a stub in
+                x1 = X0 + j * G + (T / 2 if not carved(j, rock) else 0)  # the open would notch the corner it turns
+                d = depth((n, 2 * rock - cell) for n in range(i, j))
+                z = Z0 + k * G + (-d / 2 if side == -1 else d / 2)
+                walls.append(((x0 + x1) / 2, z, (x1 - x0, H, d)))
                 i = j
             else:
                 i += 1
@@ -73,9 +77,11 @@ for i in range(NX + 1):
                 j = k
                 while j < NZ and carved(cell, j) and not carved(rock, j):
                     j += 1
-                z0, z1 = Z0 + k * G - T / 2, Z0 + j * G + T / 2
-                x = X0 + i * G + (-T / 2 if side == -1 else T / 2)
-                walls.append((x, (z0 + z1) / 2, (T, H, z1 - z0)))
+                z0 = Z0 + k * G - (T / 2 if not carved(rock, k - 1) else 0)
+                z1 = Z0 + j * G + (T / 2 if not carved(rock, j) else 0)
+                d = depth((2 * rock - cell, n) for n in range(k, j))
+                x = X0 + i * G + (-d / 2 if side == -1 else d / 2)
+                walls.append((x, (z0 + z1) / 2, (d, H, z1 - z0)))
                 k = j
             else:
                 k += 1
