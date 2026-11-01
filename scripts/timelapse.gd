@@ -9,6 +9,8 @@ signal finished
 
 const UI = preload("res://scripts/ui.gd")
 const Station = preload("res://scripts/station.gd")
+const FILM = preload("res://scripts/film.gdshader")
+const EDGE := 170  ## px: the pills stay clear of the film strips at the sides
 const LAYER_CEILING := 8  ## visual layer 4: the ceiling, cut away
 const LAYER_LABELS := 2  ## visual layer 2: world labels
 const SPEED := 5.0  ## m/s on screen: people walk sped up
@@ -80,16 +82,19 @@ func _build_ui() -> void:
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
-	var shade := UI.vignette(UI.NIGHT)
-	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(shade)
+	var film := ColorRect.new()  # old film reel over the whole view, the pills and lines sit on top
+	film.set_anchors_preset(Control.PRESET_FULL_RECT)
+	film.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	film.material = ShaderMaterial.new()
+	film.material.shader = FILM
+	root.add_child(film)
 	var pill := UI.pill("", UI.GOLD, 20, "moon")
 	root.add_child(pill)
-	pill.position = Vector2(40, 36)
+	pill.position = Vector2(EDGE, 36)
 	_clock = pill.get_child(0).get_child(-1)
 	var hint := UI.pill("Пробіл / Esc — пропустити", UI.LILAC, 15)
 	root.add_child(hint)
-	hint.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 36)
+	hint.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, EDGE)
 	hint.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_line = RichTextLabel.new()  # the HUD (and its subtitles) is hidden while this plays
 	_line.bbcode_enabled = true

@@ -56,12 +56,17 @@ var _region: NavigationRegion3D
 @onready var player = $Player
 
 
+## Before the children's _ready: stations read GameState when they build (the mirror's writing), a restart must
+## not show them the last round.
+func _enter_tree() -> void:
+	GameState.reset()
+
+
 func _ready() -> void:
 	_bake_nav()
 	Wall.textured($Level/Floor.mesh.material, "floor", 0.25)
 	Wall.uneven($Level/Floor)
 	Wall.textured($Level/Ceiling.mesh.material, "ceiling", 0.25)
-	GameState.reset()
 	var ambient := Ambient.new()
 	ambient.name = "Ambient"
 	add_child(ambient)
