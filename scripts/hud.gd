@@ -1202,12 +1202,11 @@ func _on_finished(_won: bool) -> void:
 	rt.custom_minimum_size.x = 480
 	line.add_child(rt)
 	_pin(line, Control.PRESET_CENTER_BOTTOM, 0, 60, _end)
-	_to_be_continued()
 
 
-## The end screen's sign-off: «Roundabout» plays from the start of the screen, the chalk «Ту бі контіньюд» arrow
+## The end screen's sign-off, after the finale comic (game.gd): «Roundabout» starts, the chalk «Ту бі контіньюд» arrow
 ## slides in from the left at END_ARROW_AT.
-func _to_be_continued() -> void:
+func to_be_continued() -> void:
 	var arrow := TextureRect.new()
 	arrow.texture = load(END_ARROW)
 	arrow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE

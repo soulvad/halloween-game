@@ -3,7 +3,7 @@ extends CanvasLayer
 ##   "prologue"  — two prologue pages, panels A..F appear one by one on each
 ##   "memory_N"  — that memory's own page, panel by panel; with no such page yet, the memories sheet: found memories
 ##                 (GameState.memories) shown, others locked, panel N (A..E) reveals
-##   "finale"    — memories page, A..E shown, F reveals
+##   "finale"    — its own page, panel by panel
 ## Usage: var c = preload("res://scenes/comic.tscn").instantiate(); add_child(c); c.play("memory_2"); await c.finished
 ## E / Space / Enter / click = next panel (finish after the last one), Esc = skip all.
 
@@ -66,11 +66,11 @@ func play(id: String) -> void:
 	if id == "prologue" or Data.PAGES.has(id):
 		page.show_locked = false
 		_open(id)
-	elif n >= 1 and n <= MEMORY_LETTERS.length() or id == "finale":
+	elif n >= 1 and n <= MEMORY_LETTERS.length():
 		page.setup("memories")
 		for i in MEMORY_LETTERS.length():
-			page.set_panel_state(MEMORY_LETTERS[i], id == "finale" or (i + 1 in GameState.memories and i + 1 != n))
-		_order = [MEMORY_LETTERS[n - 1] if n > 0 else "F"]
+			page.set_panel_state(MEMORY_LETTERS[i], i + 1 in GameState.memories and i + 1 != n)
+		_order = [MEMORY_LETTERS[n - 1]]
 	else:
 		_finish.call_deferred()  # deferred: the caller has not reached `await finished` yet
 		return

@@ -1320,22 +1320,6 @@
   }
  },
  "titles": {
-  "title_vidpusty_light": {
-   "file": "titles/title_vidpusty_light.png",
-   "size": [
-    987,
-    297
-   ],
-   "text": "ВІДПУСТИ"
-  },
-  "title_vidpusty_ink": {
-   "file": "titles/title_vidpusty_ink.png",
-   "size": [
-    885,
-    244
-   ],
-   "text": "ВІДПУСТИ"
-  },
   "title_pauza_light": {
    "file": "titles/title_pauza_light.png",
    "size": [
@@ -1415,6 +1399,22 @@
     219
    ],
    "text": "Ти вільний"
+  },
+  "title_simnadtsiatyi_light": {
+   "file": "titles/title_simnadtsiatyi_light.png",
+   "size": [
+    1004,
+    298
+   ],
+   "text": "Сімнадцятий"
+  },
+  "title_simnadtsiatyi_ink": {
+   "file": "titles/title_simnadtsiatyi_ink.png",
+   "size": [
+    938,
+    185
+   ],
+   "text": "Сімнадцятий"
   }
  },
  "textures": {

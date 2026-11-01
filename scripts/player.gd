@@ -255,10 +255,29 @@ func _wisp(to: Vector3) -> void:
 ## The ghost as others would see it, shown only in the guide: in play nothing shows you, not even a mirror.
 func show_body(on: bool) -> void:
 	body.visible = on
+	if _veil_rect:  # seen from outside (guide, time-lapse): no wall veil, the paused _process would leave it stuck on
+		_veil_rect.get_parent().visible = not on
 
 
-## A pale grey-blue cloud in the shape of the boy: puffs for the head, shoulders, chest and a trailing hem.
+## Тиміш's model (art/models/Tymish.glb, tools/rig_character.py) with a blue glow, floating in its idle clip; without the
+## model, a pale grey-blue cloud in the shape of the boy: puffs for the head, shoulders, chest and a trailing hem.
 func _build_cloud() -> void:
+	var ps := Wall.model("Tymish")
+	if ps:
+		var model: Node3D = ps.instantiate()
+		model.position.y = -1.1  # the body node floats at chest height, the model's origin is at its feet
+		body.add_child(model)
+		var glow := ShaderMaterial.new()
+		glow.shader = load("res://scripts/ghost.gdshader")
+		for g: GeometryInstance3D in model.find_children("*", "GeometryInstance3D", true, false):
+			g.layers = LAYER_SELF
+			g.material_overlay = glow
+		var anim: AnimationPlayer = model.find_children("*", "AnimationPlayer", true, false)[0]
+		anim.process_mode = Node.PROCESS_MODE_ALWAYS  # the guide and the time-lapse pause the tree
+		anim.get_animation("idle").loop_mode = Animation.LOOP_LINEAR
+		anim.play("idle")
+		body.mesh = null
+		return
 	var mat := ShaderMaterial.new()
 	mat.shader = load("res://scripts/cloud.gdshader")
 	body.mesh = null

@@ -56,9 +56,17 @@ PAGES = {
         [(530, 408), (1034, 325), (1034, 757), (620, 810)],
         [(28, 908), (1034, 772), (1034, 1458), (28, 1458)],
     ]),
+    "finale": ("фінал/finale.jpg", [
+        [(28, 16), (375, 16), (555, 519), (28, 519)],
+        [(391, 16), (1039, 16), (1039, 519), (569, 519)],
+        [(28, 524), (554, 524), (689, 967), (28, 967)],
+        [(570, 524), (1039, 524), (1039, 967), (704, 967)],
+        [(28, 976), (584, 976), (504, 1452), (28, 1452)],
+        [(598, 976), (1039, 976), (1039, 1452), (518, 1452)],
+    ]),
 }
-# art/comic/memories: 3 × 2 sheet of whole pages; letter -> page. F (finale) has no art yet.
-GRID = {"A": "memory_1", "B": "memory_2", "C": "memory_3", "D": "memory_4", "E": "memory_5"}
+# art/comic/memories: 3 × 2 sheet of whole pages; letter -> page.
+GRID = {"A": "memory_1", "B": "memory_2", "C": "memory_3", "D": "memory_4", "E": "memory_5", "F": "finale"}
 CELL = (530, 744)
 GAP = 20
 
@@ -73,6 +81,8 @@ def mask(size, polys):
 
 src, out = sys.argv[1:3]
 for page, (file, panels) in PAGES.items():
+    if not os.path.exists(os.path.join(src, file)):
+        continue  # cut only the pages whose source is in the folder, keep the rest as they are
     img = Image.open(os.path.join(src, file)).convert("RGBA")
     os.makedirs(os.path.join(out, page), exist_ok=True)
     w, h = img.size
@@ -91,6 +101,8 @@ for page, (file, panels) in PAGES.items():
 sheet = (CELL[0] * 3 + GAP * 4, CELL[1] * 2 + GAP * 3)
 os.makedirs(os.path.join(out, "memories"), exist_ok=True)
 for letter, page in GRID.items():
+    if not os.path.exists(os.path.join(src, PAGES[page][0])):
+        continue
     i = "ABCDEF".index(letter)
     at = (GAP + (i % 3) * (CELL[0] + GAP), GAP + (i // 3) * (CELL[1] + GAP))
     layer = Image.new("RGBA", sheet, (0, 0, 0, 0))
