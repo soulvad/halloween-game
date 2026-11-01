@@ -6,3 +6,4 @@ engine/
 
 # local Claude Code tooling (session-sync hooks)
 .claude/
+build/

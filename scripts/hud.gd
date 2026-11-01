@@ -91,6 +91,7 @@ var _mem_seen := 0
 var _hint_list: VBoxContainer
 var _read := {}
 var _mouse_before := Input.MOUSE_MODE_VISIBLE
+var _captured := false  ## web: the mouse was captured last frame
 var _priest: Node3D
 var _visitors: Array = []
 
@@ -178,6 +179,12 @@ func _process(delta: float) -> void:
 		_toast_t -= delta
 	if _end:
 		return
+	if OS.has_feature("web"):  # the browser's Esc only drops the pointer lock, the game never gets the key: pause
+		var captured := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+		if _captured and not captured and not get_tree().paused and not _pause:
+			open_pause()
+			_mouse_before = Input.MOUSE_MODE_CAPTURED  # «Продовжити» locks it again (a click is a user gesture)
+		_captured = captured
 	var t = game.player.target_station()
 	if not t is Station:
 		t = null
@@ -1214,14 +1221,20 @@ func _to_be_continued() -> void:
 	_pin(arrow, Control.PRESET_BOTTOM_LEFT, 40, 50, _end)
 	var x := arrow.position.x
 	arrow.position.x = -END_ARROW_W - 40
-	var tw := arrow.create_tween()
-	tw.tween_interval(END_ARROW_AT)
-	tw.tween_property(arrow, "position:x", x, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_slide_arrow(arrow, x, Time.get_ticks_msec())
 	var music := AudioStreamPlayer.new()
 	music.stream = load(END_MUSIC)
 	music.volume_db = END_MUSIC_DB + Fx.MIX_DB
 	_end.add_child(music)
 	music.play()
+
+
+## The arrow comes in END_ARROW_AT s after the music starts, by the wall clock: frame deltas on a slow browser fall behind it.
+func _slide_arrow(arrow: Control, x: float, t0: int) -> void:
+	while is_instance_valid(arrow) and Time.get_ticks_msec() - t0 < END_ARROW_AT * 1000.0:
+		await get_tree().process_frame
+	if is_instance_valid(arrow):
+		arrow.create_tween().tween_property(arrow, "position:x", x, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 ## The team, over the end screen; a click or Esc closes it.

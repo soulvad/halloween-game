@@ -10,6 +10,7 @@ const OUTLINE := 2.0  ## × the label's own outline: a heavy ink rim so the text
 const SHADOW := Color(0, 0, 0, 0.5)  ## a wider dark halo behind the rim
 
 var _canvas := Control.new()
+var _hide := ShaderMaterial.new()  ## on every world label: draws nothing (Compatibility, the web build, ignores `transparency`)
 
 
 func _ready() -> void:
@@ -18,10 +19,14 @@ func _ready() -> void:
 	_canvas.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_canvas.draw.connect(_draw_labels)
+	_hide.shader = Shader.new()
+	_hide.shader.code = "shader_type spatial; render_mode unshaded; void vertex() { POSITION = vec4(2.0, 2.0, 2.0, 1.0); } void fragment() { ALBEDO = vec3(0.0); ALPHA = 0.0; }"
 	add_child(_canvas)
 
 
 func _process(_delta: float) -> void:
+	for l: Label3D in get_tree().get_nodes_in_group("world_label"):
+		l.material_override = _hide
 	_canvas.queue_redraw()
 
 

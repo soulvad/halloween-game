@@ -8,6 +8,7 @@ Old cooking prototype is backed up in `_archive_cooking/` (ignored by Godot).
 - Smoke test (headless, must print `ALL TESTS OK`; if it hangs, an `assert` failed — read the output):
   `engine/Godot_v4.7.2-stable_win64_console.exe --headless --path . res://tests/smoke_test.tscn`
 - After editing scripts, run the smoke test. Update it when gameplay rules change.
+- Web build (committed in `builds/web/`, `.gdignore`d): `engine/Godot_v4.7.2-stable_win64_console.exe --headless --path . --export-release "Web" builds/web/index.html` (templates in `engine/editor_data/export_templates/4.7.2.stable/`, web ones only; single-threaded, so any static host works). The web runs the **Compatibility** renderer: no `GeometryInstance3D.transparency` (world labels hide via `labels.gd` `_hide` instead), light limits raised in `project.godot` `[rendering]` (floor/ceiling are one mesh each, 33 lights). Preset "WebTest" (debug, feature `web_test`) runs `tests/web_walk.tscn` as main scene: an autopilot through the whole story with comics on, prints `WALK OK` in the browser console; it goes to `build/webtest/` (git-ignored). Big PNGs import as lossy WebP 0.85 (pck 95 → 48 MB).
 
 ## Game loop — «Підземелля старого міста»
 Story: `docs/comic_script.md` (comic script) + the team's story doc. Тиміш, a servant boy walled up by count Auersberg, forgot who he was. Linear, **no resources, no enemies, no way to lose, one (good) ending**. The ghost floats through every inner wall; only the outer walls stop it.
