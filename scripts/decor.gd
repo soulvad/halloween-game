@@ -73,6 +73,10 @@ const CEILING := 3.0
 const FLAME := Color(1.0, 0.55, 0.15)
 const TORCH_LIGHT := 0.8
 const TORCH_RANGE := 4.0
+const DOOR := preload("res://art/models/Door.tscn")
+const DOOR_AT := Vector3(0, 0, 12.0)  ## the way in: the end wall of the main corridor, behind where the visitors start
+const STONE := Color(0.27, 0.25, 0.28)
+const NIGHT := Color(0.62, 0.72, 1.0)  ## moonlight under the door
 
 var _scenes := {}
 var _flames: Array[Node3D] = []
@@ -88,6 +92,45 @@ func _ready() -> void:
 		_place(e[0], Vector3(e[1], 0.0, e[2]), e[3], e[4], false)
 	for e in WEBS:
 		_place("cobweb", Vector3(e[0], CEILING - WEB_SIZE, e[1]), e[2], WEB_SIZE, true)
+	_entrance()
+
+
+## The door the archaeologists came in by: the plank door in a stone frame, night light leaking under it.
+func _entrance() -> void:
+	var door: Node3D = DOOR.instantiate()
+	door.position = DOOR_AT + Vector3(0, 0.06, -0.1)  # a finger's gap under it
+	add_child(door)
+	for b in [[Vector3(-1.0, 1.3, -0.12), Vector3(0.3, 2.6, 0.24)], [Vector3(1.0, 1.3, -0.12), Vector3(0.3, 2.6, 0.24)],
+			[Vector3(0, 2.6, -0.14), Vector3(2.4, 0.4, 0.28)], [Vector3(0, 0.03, -0.42), Vector3(2.0, 0.06, 0.3)]]:
+		var m := MeshInstance3D.new()
+		var box := BoxMesh.new()
+		box.size = b[1]
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = STONE
+		mat.roughness = 0.95
+		box.material = mat
+		m.mesh = box
+		m.position = DOOR_AT + b[0]
+		add_child(m)
+	var glow := StandardMaterial3D.new()
+	glow.albedo_color = NIGHT
+	glow.emission_enabled = true
+	glow.emission = NIGHT
+	glow.emission_energy_multiplier = 2.0
+	glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	var slit := BoxMesh.new()
+	slit.size = Vector3(1.6, 0.025, 0.02)
+	slit.material = glow
+	var under := MeshInstance3D.new()
+	under.mesh = slit
+	under.position = DOOR_AT + Vector3(0, 0.03, -0.1)
+	add_child(under)
+	var light := OmniLight3D.new()
+	light.light_color = NIGHT
+	light.light_energy = 0.5
+	light.omni_range = 2.2
+	light.position = DOOR_AT + Vector3(0, 0.15, -0.4)
+	add_child(light)
 
 
 ## A model on the wall sits with its back on the surface; on the floor, centred on the point. Its lowest point is at `at.y`.
