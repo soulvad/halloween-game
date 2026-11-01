@@ -4,6 +4,7 @@ extends Node3D
 ## the eye is too far to see it, and pauses with the tree during comics and menus. Added by game.gd.
 
 const Wall = preload("res://scripts/wall.gd")
+const Fx = preload("res://scripts/fx.gd")
 const DIR := "res://art/paintings/%s"
 const E := 90.0  ## on a wall facing +X
 const W := -90.0  ## facing -X
@@ -62,7 +63,7 @@ func _process(_delta: float) -> void:
 	var eye := get_viewport().get_camera_3d()
 	var d := eye.global_position.distance_to(_screen.global_position) if eye else INF
 	_video.paused = d > PLAY_RANGE
-	_video.volume_db = linear_to_db(gain(d))  # gain 0 → -inf dB → truly silent
+	_video.volume_db = linear_to_db(gain(d)) + Fx.MIX_DB  # gain 0 → -inf dB → truly silent
 	var mat: StandardMaterial3D = _screen.mesh.material
 	var tex := _video.get_video_texture()
 	if mat.albedo_texture != tex:

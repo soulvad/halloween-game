@@ -5,6 +5,7 @@ extends Node3D
 ## «Голос спогаду»: every memory 1–4 not yet found calls from its station every 8–12 s, heard through walls
 ## (no occlusion), until GameState.memory_found fires for it. Files: audio/memory/memory_<id>.ogg|wav.
 
+const Fx = preload("res://scripts/fx.gd")
 const DIR := "res://audio/ambient/"
 const BED := {"air": -8.0, "deep": -10.0}  ## looped everywhere: file → volume dB
 const DRIPS: Array[Vector3] = [Vector3(-13, 1, -6), Vector3(8, 1, 7)]
@@ -40,7 +41,7 @@ func _ready() -> void:
 	for sound in BED:
 		var p := AudioStreamPlayer.new()
 		p.stream = _stream(sound, true)
-		p.volume_db = BED[sound]
+		p.volume_db = BED[sound] + Fx.MIX_DB
 		p.autoplay = true
 		add_child(p)
 		_bed.append(p)
@@ -125,5 +126,6 @@ func _emitter(stream: AudioStream, db: float, reach: float) -> AudioStreamPlayer
 	p.volume_db = db
 	p.max_distance = reach
 	p.unit_size = reach / 3.0
+	Fx.tame(p)
 	add_child(p)
 	return p

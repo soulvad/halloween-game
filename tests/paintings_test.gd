@@ -60,7 +60,7 @@ func _ready() -> void:
 	# next to it: playing and audible; just past the range: silent, still playing; far off: paused
 	assert(a._video.stream is VideoStreamTheora and a._video.loop and a._video.is_playing())
 	await _eye_at(g, a, 0.6)
-	assert(not a._video.paused and absf(a._video.volume - Paintings.gain(0.6)) < 0.001)
+	assert(not a._video.paused and absf(a._video.volume - Paintings.gain(0.6) * db_to_linear(Paintings.Fx.MIX_DB)) < 0.001)
 	await _eye_at(g, a, Paintings.HEAR_RANGE + 0.01)
 	assert(not a._video.paused and a._video.volume == 0.0)
 	await _eye_at(g, a, Paintings.PLAY_RANGE + 1.0)

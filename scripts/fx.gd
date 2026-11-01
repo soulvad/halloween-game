@@ -7,6 +7,8 @@ extends RefCounted
 const SFX_DIR := "res://audio/sfx/"
 const HEAR := 22.0  ## m: 3D sounds fade out by here
 const FLASH_LAYER := 90  ## over the HUD, under the pause menu
+const MIX_DB := -3.0  ## every game sound sits this far under its own level; the master slider stays at 100 %
+const NEAR_DB := -2.0  ## 3D sounds stop growing this far under their level, so the source itself doesn't blast
 
 static var _cache := {}
 
@@ -29,6 +31,7 @@ static func sound(at: Node3D, sfx: String, db := 0.0, pitch := 1.0) -> AudioStre
 	p.pitch_scale = pitch * randf_range(0.93, 1.07)
 	p.max_distance = HEAR
 	p.unit_size = 4.0
+	tame(p)
 	p.process_mode = Node.PROCESS_MODE_ALWAYS
 	at.get_tree().root.add_child(p)
 	p.global_position = at.global_position
@@ -44,12 +47,20 @@ static func sound_ui(tree: SceneTree, sfx: String, db := 0.0, pitch := 1.0) -> A
 		return null
 	var p := AudioStreamPlayer.new()
 	p.stream = s
-	p.volume_db = db
+	p.volume_db = db + MIX_DB
 	p.pitch_scale = pitch
 	p.process_mode = Node.PROCESS_MODE_ALWAYS
 	tree.root.add_child(p)
 	p.finished.connect(p.queue_free)
 	p.play()
+	return p
+
+
+## A 3D player's level under the mix, and no near-field boost: Godot gets up to +3 dB louder inside `unit_size`, which
+## made sounds harsh right at the source while they were fine from afar. Call after setting volume_db.
+static func tame(p: AudioStreamPlayer3D) -> AudioStreamPlayer3D:
+	p.volume_db += MIX_DB
+	p.max_db = p.volume_db + NEAR_DB
 	return p
 
 

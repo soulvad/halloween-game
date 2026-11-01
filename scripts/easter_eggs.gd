@@ -11,6 +11,7 @@ extends Node3D
 const Wall = preload("res://scripts/wall.gd")
 const UI = preload("res://scripts/ui.gd")
 const EggAudio = preload("res://scripts/egg_audio.gd")
+const Fx = preload("res://scripts/fx.gd")
 const AirRaidPhone = preload("res://scripts/air_raid_phone.gd")
 
 const EGGS := ["cat", "skeleton", "phone", "turtles"]
@@ -427,6 +428,7 @@ func _sound(parent: Node3D, sound: String, reach: float) -> AudioStreamPlayer3D:
 	p.stream = EggAudio.stream(sound)
 	p.max_distance = reach
 	p.unit_size = reach / 3.0
+	Fx.tame(p)
 	parent.add_child(p)
 	return p
 
