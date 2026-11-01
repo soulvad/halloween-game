@@ -15,10 +15,8 @@ const N := 180.0  ## facing -Z
 const ON_WALLS := [
 	# main corridor, from the entrance up
 	["torch_mounted", -1.25, 1.5, 10.0, E, 0.55],
-	["vines", 1.25, 1.2, 11.2, W, 1.7],
 	["banner_thin_red", 1.25, 0.9, 4.2, W, 1.7],
 	["shelf_small_candles", -1.25, 1.2, 4.6, E, 0.7],
-	["vines", -1.25, 1.1, 3.0, E, 1.8],
 	["torch_mounted", 1.25, 1.5, 2.8, W, 0.55],
 	["spider", -1.25, 1.75, 5.4, E, 0.25],
 	["torch_mounted", -1.25, 1.5, -2.2, E, 0.55],
@@ -26,12 +24,10 @@ const ON_WALLS := [
 	# cross corridor, west
 	["keyring_hanging", -8.0, 1.0, -4.75, N, 0.7],
 	["torch_mounted", -7.4, 1.5, -7.0, S, 0.55],
-	["vines", -5.0, 1.2, -4.75, N, 1.8],
 	["sword_shield_broken", -11.0, 1.0, -4.75, N, 0.9],
 	# cross corridor, east
 	["torch_mounted", 7.2, 1.5, -7.0, S, 0.55],
 	["sword_shield_broken", 5.8, 1.0, -7.0, S, 0.9],
-	["vines", 8.8, 1.1, -4.75, N, 1.8],
 	["banner_thin_red", 6.0, 0.9, -4.75, N, 1.7],
 	["torch_mounted", 11.0, 1.5, -4.75, N, 0.55],
 	["spider", 9.6, 2.0, -7.0, S, 0.25],
