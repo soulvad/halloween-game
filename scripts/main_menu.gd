@@ -28,7 +28,7 @@ func _ready() -> void:
 
 	var head := UI.vbox(4)
 	head.add_child(UI.label("Ігровий хакатон 7.0 · Прозорий + Відпускати", 20, UI.DIM, "body", 600))
-	var title := UI.painted_title("vidpusty", 270)
+	var title := UI.painted_title("simnadtsiatyi", 270)
 	title.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	head.add_child(title)
 	head.add_child(UI.label("Підземелля старого міста", 50, UI.PAPER, "italic", 400))

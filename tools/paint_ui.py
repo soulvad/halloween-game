@@ -825,10 +825,10 @@ def swash_stroke(points, width, w, h, seed):
 
 
 def build_titles():
-    items = [("vidpusty", "ВІДПУСТИ", 150, True), ("pauza", "Пауза", 112, False), ("karta", "Карта", 96, False),
+    items = [("simnadtsiatyi", "Сімнадцятий", 150, True), ("pauza", "Пауза", 112, False), ("karta", "Карта", 96, False),
              ("knyha", "Книга", 96, False), ("nalashtuvannia", "Налаштування", 96, False), ("ty_vilnyi", "Ти вільний", 128, True)]
     for i, (slug, text, size, swash) in enumerate(items):
-        title(slug, text, size, "light", 700 + i * 10, swash, (FLAME, 0.35, 22) if slug == "vidpusty" else None)
+        title(slug, text, size, "light", 700 + i * 10, swash, (FLAME, 0.35, 22) if slug == "simnadtsiatyi" else None)
         title(slug, text, size, "ink", 705 + i * 10, swash)
 
 

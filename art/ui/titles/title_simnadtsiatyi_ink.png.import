@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://kyhnd0ip4vml"
-path="res://.godot/imported/title_vidpusty_light.png-489a39a1265038125a395704fc289578.ctex"
+uid="uid://cmha1rqh2m8k"
+path="res://.godot/imported/title_simnadtsiatyi_ink.png-cedaf8119fb65e86fc4ee8b6f17d273c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/ui/titles/title_vidpusty_light.png"
-dest_files=["res://.godot/imported/title_vidpusty_light.png-489a39a1265038125a395704fc289578.ctex"]
+source_file="res://art/ui/titles/title_simnadtsiatyi_ink.png"
+dest_files=["res://.godot/imported/title_simnadtsiatyi_ink.png-cedaf8119fb65e86fc4ee8b6f17d273c.ctex"]
 
 [params]
 
