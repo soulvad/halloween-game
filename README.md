@@ -13,9 +13,11 @@
 </p>
 
 <p align="center">
+  <br><br>
   <a href="https://github.com/soulvad/halloween-game/releases/download/v1.0-jam/Simnadtsiatyi-windows.zip">
-    <img alt="Завантажити для Windows" src="docs/readme/download-button.png" width="400">
+    <img alt="Завантажити для Windows" src="docs/readme/download-button.png" width="351">
   </a>
+  <br><br>
 </p>
 
 <p align="center">
