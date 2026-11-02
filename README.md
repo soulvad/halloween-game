@@ -26,6 +26,16 @@
     <td><img src="docs/screenshots/priest.jpg" alt="Священник у підземеллі"></td>
   </tr>
   <tr>
-    <td colspan="2" align="center"><img src="docs/screenshots/guide-overview.jpg" alt="Вид згори на розтин підземелля" width="50%"></td>
+    <td><img src="docs/screenshots/guide-overview.jpg" alt="Вид згори на розтин підземелля"></td>
+    <td><img src="docs/screenshots/tutorial-guide.jpg" alt="3D-гід: картка про блакитний блиск — спогад"></td>
+  </tr>
+</table>
+
+## Комікси
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/comic-prologue.jpg" alt="Пролог: привид у руїнах старого міста"></td>
+    <td><img src="docs/screenshots/comic-memory.jpg" alt="Комікс-спогад про дерев'яну пташку"></td>
   </tr>
 </table>
