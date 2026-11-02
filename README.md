@@ -12,15 +12,33 @@
 
 <p align="center">
   <img src="docs/screenshots/menu.jpg" alt="Головне меню гри" width="100%">
-  <img src="docs/screenshots/corridor-hud.jpg" alt="Вхідний коридор від першої особи, інтерфейс з силами та мінікартою" width="100%">
-  <img src="docs/screenshots/corridor-pumpkins.jpg" alt="Коридор підземелля з гарбузами-ліхтарями" width="100%">
-  <img src="docs/screenshots/archaeologists.jpg" alt="Археологи Олена і Тарас у коридорі" width="100%">
-  <img src="docs/screenshots/priest.jpg" alt="Священник у підземеллі" width="100%">
-  <img src="docs/screenshots/guide-overview.jpg" alt="Вид згори на розтин підземелля" width="100%">
-  <img src="docs/screenshots/tutorial-guide.jpg" alt="3D-гід: картка про блакитний блиск — спогад" width="100%">
-  <img src="docs/screenshots/comic-prologue.jpg" alt="Комікс-пролог: привид у руїнах старого міста" width="100%">
-  <img src="docs/screenshots/comic-memory.jpg" alt="Комікс-спогад про дерев'яну пташку" width="100%">
-  <img src="docs/screenshots/egg-turtles.jpg" alt="Пасхалка: черепашки з піцою" width="100%">
-  <img src="docs/screenshots/egg-air-raid.jpg" alt="Пасхалка: сповіщення про повітряну тривогу на телефоні" width="100%">
-  <img src="docs/screenshots/egg-cat.jpg" alt="Пасхалка: кіт на п'єдесталі" width="100%">
 </p>
+
+---
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/corridor-hud.jpg" alt="Вхідний коридор від першої особи, інтерфейс з силами та мінікартою" width="100%"></td>
+    <td width="50%"><img src="docs/screenshots/corridor-pumpkins.jpg" alt="Коридор підземелля з гарбузами-ліхтарями" width="100%"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/archaeologists.jpg" alt="Археологи Олена і Тарас у коридорі" width="100%"></td>
+    <td width="50%"><img src="docs/screenshots/priest.jpg" alt="Священник у підземеллі" width="100%"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/guide-overview.jpg" alt="Вид згори на розтин підземелля" width="100%"></td>
+    <td width="50%"><img src="docs/screenshots/tutorial-guide.jpg" alt="3D-гід: картка про блакитний блиск — спогад" width="100%"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/comic-prologue.jpg" alt="Комікс-пролог: привид у руїнах старого міста" width="100%"></td>
+    <td width="50%"><img src="docs/screenshots/comic-memory.jpg" alt="Комікс-спогад про дерев'яну пташку" width="100%"></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td width="33%"><img src="docs/screenshots/egg-turtles.jpg" alt="Пасхалка: черепашки з піцою" width="100%"></td>
+    <td width="33%"><img src="docs/screenshots/egg-air-raid.jpg" alt="Пасхалка: сповіщення про повітряну тривогу на телефоні" width="100%"></td>
+    <td width="33%"><img src="docs/screenshots/egg-cat.jpg" alt="Пасхалка: кіт на п'єдесталі" width="100%"></td>
+  </tr>
+</table>
