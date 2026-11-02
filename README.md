@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://github.com/soulvad/halloween-game/releases/download/v1.0-jam/Simnadtsiatyi-windows.zip">
-    <img alt="Завантажити для Windows" src="https://img.shields.io/badge/%D0%97%D0%B0%D0%B2%D0%B0%D0%BD%D1%82%D0%B0%D0%B6%D0%B8%D1%82%D0%B8_%D0%B4%D0%BB%D1%8F_Windows-e8590c?style=for-the-badge&logo=windows&logoColor=white">
+    <img alt="Завантажити для Windows" src="docs/readme/download-button.png" width="400">
   </a>
 </p>
 
@@ -102,13 +102,13 @@ godot --path .
 
 ## Команда
 
-| Учасник | Роль |
+| Учасник | GitHub |
 |---|---|
-| Soulvad | Embedded |
-| FiremanC4 | Embedded |
-| Oskr | Fullstack |
-| Nastya | Data Scientist |
-| Svyatoslav | ML Engineer |
+| Soulvad | [soulvad](https://github.com/soulvad) |
+| FiremanC4 | [FiremanC4](https://github.com/FiremanC4) |
+| Oskr | [ostapkreminets5-afk](https://github.com/ostapkreminets5-afk) |
+| Nastya | [ZabolotnaAnastasya](https://github.com/ZabolotnaAnastasya) |
+| Svyatoslav | [svyatoslavbr](https://github.com/svyatoslavbr) |
 
 ## Подяки
 
