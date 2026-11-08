@@ -149,9 +149,18 @@ func _ready() -> void:
 	var plan = g.get_node("Stations/Plan")
 	assert(absf(at.x - plan.global_position.x) > plan.size.x / 2.0 + reach)
 	var screen: Vector2 = phone.screen_size()
-	assert(is_equal_approx(screen.x / screen.y, 277.0 / 600.0))
+	var tex: Texture2D = phone.SCREEN_TEX
+	assert(is_equal_approx(screen.x / screen.y, float(tex.get_width()) / tex.get_height()))
 	assert(screen.x < phone.BODY.x and screen.y < phone.BODY.z)
 	assert(phone.get_node("Screen").layers == Eggs.LAYER_HIDDEN)
+	# the foldable rests on its hinge: its lowest point on the table top, nothing under it, nothing floating
+	var lowest := INF
+	for m: MeshInstance3D in phone.find_children("*", "MeshInstance3D", true, false):
+		var b: AABB = m.global_transform * m.get_aabb()
+		lowest = minf(lowest, b.position.y)
+	assert(absf(lowest - table_box.end.y) < 0.0005)
+	var screen_aabb: AABB = phone.get_node("Screen").global_transform * phone.get_node("Screen").get_aabb()
+	assert(screen_aabb.position.y > table_box.end.y + phone.BODY.y)  # over the body, facing up
 
 	# the screen wakes when the ghost is close and sleeps again; a close look brings up the close-up, looking away drops it
 	phone.level = phone.LEVEL_ASLEEP
