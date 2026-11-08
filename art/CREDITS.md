@@ -18,7 +18,7 @@
 | Підлога | `art/textures/floor.png` | [Poly Haven, T Brick Floor 002](https://polyhaven.com/a/t_brick_floor_002) |
 | Стеля | `art/textures/ceiling.png` | [Poly Haven, Rock Wall 12](https://polyhaven.com/a/rock_wall_12) |
 
-Не CC0: `art/textures/air_raid_phone.jpg` (екран телефона) — тестовий скриншот сповіщень про тривогу, який дала команда. Джерело і право на використання ще треба уточнити.
+Не CC0: `art/textures/air_raid_phone.jpg` (екран телефона) — мемний скриншот застосунку тривог (українською: «Радіаційна небезпека», «Напад котів» тощо), який дала команда. Автор і джерело невідомі, право на використання ще треба уточнити. Сам телефон — розкладачка без марки, зібрана в коді (`scripts/air_raid_phone.gd`).
 
 Моделі збирають `tools/make_props.py`, `tools/make_people.py`, `tools/make_priest.py` і `tools/make_skeleton.py`.
 
