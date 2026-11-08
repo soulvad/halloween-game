@@ -53,7 +53,7 @@ func _ready() -> void:
 	var vs = ver.get_theme_stylebox("panel")
 	vs.content_margin_left = 16
 	vs.content_margin_right = 16
-	ver.add_child(UI.label("v0.2 · Godot 4.7 · білд для хакатону", 17, UI.DIM, "body", 600))
+	ver.add_child(UI.label("v%s · Godot 4.7 · білд для хакатону" % ProjectSettings.get_setting("application/config/version", "1.0.1"), 17, UI.DIM, "body", 600))
 	Screens.place(self, ver, -40, -24)
 
 	play.grab_focus()

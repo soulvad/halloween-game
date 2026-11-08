@@ -14,7 +14,7 @@
 
 <p align="center">
   <br><br>
-  <a href="https://github.com/soulvad/halloween-game/releases/download/v1.0-jam/Simnadtsiatyi-windows.zip">
+  <a href="https://github.com/soulvad/halloween-game/releases/latest/download/Simnadtsiatyi-windows.zip">
     <img alt="Завантажити для Windows" src="docs/readme/download-button.png" width="351">
   </a>
   <br><br>
@@ -90,7 +90,7 @@
 
 ## Як запустити
 
-**Грати.** Завантаж архів кнопкою вгорі (або зі [сторінки релізу](https://github.com/soulvad/halloween-game/releases/tag/v1.0-jam)), розпакуй і запусти `.exe`.
+**Грати.** Завантаж архів кнопкою вгорі (або зі [сторінки релізу](https://github.com/soulvad/halloween-game/releases/latest)), розпакуй і запусти `.exe`.
 
 **Із вихідників.** Потрібен [Godot 4.7](https://godotengine.org/download) (стандартна збірка, без C#):
 
